@@ -11,11 +11,15 @@ use Restserver\Libraries\REST_Controller;
 
 class MY_REST_Controller extends REST_Controller
 {
+    protected $modelToResponseFields = [
+        'db_field' => 'inputField',
+        'another_db_field' => 'anotherInputField'
+    ];
+
     public function __construct ()
     {
         parent::__construct();
-
-
+        
 		$this->lang->load('user_strings', 'english', FALSE);
 
         // autoload exceptions
@@ -127,6 +131,9 @@ class MY_REST_Controller extends REST_Controller
      */
     protected final function respondError ($statusCode, $message = '', $domain = 'Global', array $fields = null)
     {
+		if (is_null($domain))
+            $domain = 'Global';
+		
         $response = array(
             'error' => [
                 'domain' => $domain,
@@ -146,7 +153,7 @@ class MY_REST_Controller extends REST_Controller
         // transform fields for response
         if (!is_null($data))
         {
-            $isDefaultErrorResponse = (isset($data['status']) && $data['status'] === false);
+            $isDefaultErrorResponse = (is_array($data) && isset($data['status']) && $data['status'] === false);
             if ($isDefaultErrorResponse)
             {
                 // reformat default error response dari REST_Controller
@@ -157,9 +164,96 @@ class MY_REST_Controller extends REST_Controller
                 );
                 return;
             }
+            else
+            {
+                $data = $this->transformToResponseData($data);
+            }
         }
 
         parent::response($data, $http_code, $continue);
+    }
+
+    private function transformToResponseData ($data)
+    {
+        if (is_array($data) || is_object($data))
+        {
+            $responseData = array();
+            foreach ($data as $key => $value)
+            {
+                if (isset($this->modelToResponseFields[ $key ]))
+                    $field = $this->modelToResponseFields[ $key ];
+                else
+                    $field = $key;
+
+                $responseData[ $field ] = $this->transformToResponseData($value);
+                if (isset($this->booleanModelToResponseFields[$key]))
+                    $responseData[ $field ] = (bool) $responseData[ $field ];
+            }
+
+            return $responseData;
+        }
+        else
+        {
+            return $data;
+        }
+    }
+
+    protected function transformToModelData ($requestData)
+    {
+        if (is_array($requestData) || is_object($requestData))
+        {
+            $modelData = array();
+
+            $requestToModelFields = array_flip($this->modelToResponseFields);
+            foreach ($requestData as $key => $value)
+            {
+                if (isset($requestToModelFields[ $key ]))
+                    $field = $requestToModelFields[ $key ];
+                else
+                    $field = $key;
+
+                $modelData[ $field ] = $this->transformToModelData($value);
+            }
+
+            return $modelData;
+        }
+        else
+        {
+            return $requestData;
+        }
+    }
+
+    protected function transformToModelField ($field)
+    {
+        $requestToModelFields = array_flip($this->modelToResponseFields);
+        if (isset($requestToModelFields[ $field ]))
+            return $requestToModelFields[ $field ];
+        else
+            return $field;
+    }
+
+    protected function getModelData ($requestData)
+    {
+        if (is_array($requestData) || is_object($requestData))
+        {
+            $modelData = array();
+
+            $requestToModelFields = array_flip($this->modelToResponseFields);
+            foreach ($requestData as $key => $value)
+            {
+                if (isset($requestToModelFields[ $key ]))
+                {
+                    $field = $requestToModelFields[ $key ];
+                    $modelData[ $field ] = $this->getModelData($value);
+                }
+            }
+
+            return $modelData;
+        }
+        else
+        {
+            return $requestData;
+        }
     }
 
     /**
