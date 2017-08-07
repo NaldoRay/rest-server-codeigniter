@@ -40,6 +40,18 @@ class MY_REST_Controller extends REST_Controller
         {
             $this->respondNotFound($this->getString('resource_not_found'));
         }
+        else if ($e instanceof ValidationException)
+        {
+            /** @var ValidationException $validationException */
+            $validationException = $e;
+
+            $this->respondError(
+                self::HTTP_BAD_REQUEST,
+                $this->getString('validation_error'),
+                $validationException->getDomain(),
+                $validationException->getValidationErrors()
+            );
+        }
         else
         {
             $this->respondInternalError();

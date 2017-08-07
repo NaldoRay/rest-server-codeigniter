@@ -14,3 +14,4 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['resource_not_found'] = 'Resource not found';
 $lang['invalid_parameters'] = 'Invalid parameters';
 $lang['invalid_credentials'] = 'Wrong username/password';
+$lang['validation_error'] = 'Validation error';

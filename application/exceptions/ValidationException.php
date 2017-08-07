@@ -8,12 +8,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class ValidationException extends Exception
 {
+    private $domain;
     private $errors;
 
-    public function __construct (array $errors)
+    public function __construct (array $errors, $domain = 'API')
     {
         parent::__construct();
+        $this->domain = $domain;
         $this->errors = $errors;
+    }
+
+    public function getDomain ()
+    {
+        return $this->domain;
     }
 
     public function getValidationErrors ()
