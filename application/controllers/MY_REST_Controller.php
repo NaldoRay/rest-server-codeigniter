@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 /** @noinspection PhpIncludeInspection */
-require_once APPPATH . '/libraries/REST_Controller.php';
+require_once(APPPATH . '/libraries/REST_Controller.php');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -25,7 +25,13 @@ class MY_REST_Controller extends REST_Controller
         // autoload exceptions
         spl_autoload_register(function ($class)
         {
-            include_once (APPPATH.'exceptions/' . $class . '.php');
+            $filepath = APPPATH.'exceptions/' . $class . '.php';
+            if (file_exists($filepath))
+                include_once(APPPATH.'exceptions/' . $class . '.php');
+            else
+            {
+                $filepath = APPPATH.'exceptions/' . $class . '.php';
+            }
         });
     }
 
