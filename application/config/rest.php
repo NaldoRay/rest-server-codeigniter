@@ -248,8 +248,7 @@ $config['rest_handle_exceptions'] = TRUE;
 | 127.0.0.1 and 0.0.0.0 are allowed by default
 |
 */
-$config['rest_ip_whitelist'] = '10.210.1.122, 10.210.1.95, 10.210.1.18,
-    10.1.11.87, 10.210.1.133'; // TODO remove dev ip
+$config['rest_ip_whitelist'] = '10.1.11.87'; // TODO remove dev ip
 
 /*
 |--------------------------------------------------------------------------
