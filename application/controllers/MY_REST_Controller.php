@@ -27,11 +27,7 @@ class MY_REST_Controller extends REST_Controller
         {
             $filepath = APPPATH.'exceptions/' . $class . '.php';
             if (file_exists($filepath))
-                include_once(APPPATH.'exceptions/' . $class . '.php');
-            else
-            {
-                $filepath = APPPATH.'exceptions/' . $class . '.php';
-            }
+                include_once($filepath);
         });
     }
 
@@ -55,7 +51,7 @@ class MY_REST_Controller extends REST_Controller
                 self::HTTP_BAD_REQUEST,
                 $this->getString('validation_error'),
                 $validationException->getDomain(),
-                $validationException->getValidationErrors()
+                $validationException->getErrors()
             );
         }
         else

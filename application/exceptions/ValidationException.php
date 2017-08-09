@@ -23,7 +23,11 @@ class ValidationException extends Exception
         return $this->domain;
     }
 
-    public function getValidationErrors ()
+    /**
+     * Get validation errors.
+     * @return array
+     */
+    public function getErrors ()
     {
         return $this->errors;
     }
