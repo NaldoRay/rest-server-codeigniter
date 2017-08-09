@@ -60,7 +60,7 @@ class ArrayValidator
     }
 
     /**
-     * @return string
+     * @return array
      */
     public function getAllErrors ()
     {
