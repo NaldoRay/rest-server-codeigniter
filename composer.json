@@ -1,0 +1,14 @@
+{
+    "name": "bti/api",
+	"type": "project",
+    "authors": [
+        {
+            "name": "Ray Naldo",
+            "email": "narudor@gmail.com"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "kenjis/ci-phpunit-test": "^0.15.0"
+    }
+}
