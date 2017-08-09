@@ -174,4 +174,12 @@ class ValueValidator implements Validation
         else
             return $this->errors[0];
     }
+
+    /**
+     * @return array
+     */
+    public function getAllErrors ()
+    {
+        return $this->errors;
+    }
 }

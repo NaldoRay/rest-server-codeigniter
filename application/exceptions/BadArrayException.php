@@ -6,7 +6,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * Date: 6/13/2017
  * Time: 13:28
  */
-class ValidationException extends Exception
+class BadArrayException extends Exception
 {
     private $domain;
     private $errors;
@@ -24,10 +24,10 @@ class ValidationException extends Exception
     }
 
     /**
-     * Get validation errors.
+     * Get error messages.
      * @return array
      */
-    public function getErrors ()
+    public function getAllErrors ()
     {
         return $this->errors;
     }

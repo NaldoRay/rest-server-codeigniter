@@ -37,6 +37,17 @@ class Validation_test extends TestCase
         $this->validation->forArray($data);
     }
 
+    public function testValueValidation ()
+    {
+        $this->setExpectedException(BadValueException::class);
+
+        $this->validation->forValue('pwd', 'Password')
+            ->required()
+            ->lengthBetween(8, 16);
+
+        $this->validation->validate();
+    }
+
     public function testRequiredShouldSuccess ()
     {
         $this->validation->field('name')->required();
@@ -46,7 +57,7 @@ class Validation_test extends TestCase
 
     public function testRequiredShouldFailed ()
     {
-        $this->setExpectedException(ValidationException::class);
+        $this->setExpectedException(BadArrayException::class);
 
         $data = [
             'address' => ' '
@@ -65,7 +76,7 @@ class Validation_test extends TestCase
 
     public function testEmailShouldInvalid ()
     {
-        $this->setExpectedException(ValidationException::class);
+        $this->setExpectedException(BadArrayException::class);
 
         $this->validation->field('email')->validEmail();
         $this->validation->validate();
@@ -81,7 +92,7 @@ class Validation_test extends TestCase
 
     public function testMinLengthShouldFailed()
     {
-        $this->setExpectedException(ValidationException::class);
+        $this->setExpectedException(BadArrayException::class);
 
         $this->validation->field('address')->lengthMin(1);
         $this->validation->field('name')->lengthMin(10);
@@ -99,7 +110,7 @@ class Validation_test extends TestCase
 
     public function testMaxLengthShouldFailed ()
     {
-        $this->setExpectedException(ValidationException::class);
+        $this->setExpectedException(BadArrayException::class);
 
         $data = [
             'name' => 'Super long name of a person'
@@ -119,7 +130,7 @@ class Validation_test extends TestCase
 
     public function testLengthBetweenShouldFailed ()
     {
-        $this->setExpectedException(ValidationException::class);
+        $this->setExpectedException(BadArrayException::class);
 
         $this->validation->field('address')->lengthBetween(1, 50);
         $this->validation->field('username')->lengthBetween(6, 10);
@@ -138,9 +149,9 @@ class Validation_test extends TestCase
             $this->validation->validate();
             $this->assertTrue(false);
         }
-        catch (ValidationException $e)
+        catch (BadArrayException $e)
         {
-            $errors = $e->getErrors();
+            $errors = $e->getAllErrors();
             $this->assertTrue(!isset($errors['username']));
             $this->assertTrue(!isset($errors['name']));
 

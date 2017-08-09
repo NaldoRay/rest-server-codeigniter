@@ -42,17 +42,18 @@ class MY_REST_Controller extends REST_Controller
         {
             $this->respondNotFound($this->getString('resource_not_found'));
         }
-        else if ($e instanceof ValidationException)
+        else if ($e instanceof BadArrayException)
         {
-            /** @var ValidationException $validationException */
-            $validationException = $e;
-
             $this->respondError(
                 self::HTTP_BAD_REQUEST,
                 $this->getString('validation_error'),
-                $validationException->getDomain(),
-                $validationException->getErrors()
+                $e->getDomain(),
+                $e->getAllErrors()
             );
+        }
+        else if ($e instanceof BadValueException)
+        {
+            $this->respondBadRequest($e->getMessage(), $e->getDomain());
         }
         else
         {

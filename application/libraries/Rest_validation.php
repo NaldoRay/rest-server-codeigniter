@@ -9,12 +9,23 @@ include_once('validation/ArrayValidator.php');
  */
 class Rest_validation
 {
-    /** @var ArrayValidator */
+    /** @var ArrayValidator|ValueValidator */
     private $validator;
 
     public function forArray (array $arr)
     {
         $this->validator = new ArrayValidator($arr);
+    }
+
+    /**
+     * @param mixed $value
+     * @param string $label
+     * @return Validation
+     */
+    public function forValue ($value, $label)
+    {
+        $this->validator = new ValueValidator($value, $label);
+        return $this->validator;
     }
 
     /**
@@ -24,18 +35,25 @@ class Rest_validation
      */
     public function field ($name, $label = null)
     {
-        return $this->validator->field($name, $label);
+        /** @var ArrayValidator $validator */
+        $validator = $this->validator;
+
+        return $validator->field($name, $label);
     }
 
     /**
      * Run validation.
-     * @throws ValidationException if failed
+     * @throws BadArrayException
+     * @throws BadValueException
      */
     public function validate ()
     {
         if (!$this->validator->validate())
         {
-            throw new ValidationException($this->validator->getAllErrors());
+            if ($this->validator instanceof ArrayValidator)
+                throw new BadArrayException($this->validator->getAllErrors());
+            else
+                throw new BadValueException($this->validator->getError());
         }
     }
 }
