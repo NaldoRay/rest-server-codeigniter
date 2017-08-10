@@ -8,7 +8,9 @@ require_once(APPPATH . '/libraries/REST_Controller.php');
 // use namespace
 use Restserver\Libraries\REST_Controller;
 
-
+/**
+ * @property Rest_validation $validation
+ */
 class MY_REST_Controller extends REST_Controller
 {
     protected $modelToResponseFields = [
@@ -19,7 +21,8 @@ class MY_REST_Controller extends REST_Controller
     public function __construct ()
     {
         parent::__construct();
-        
+
+        $this->load->library('rest_validation', null, 'validation');
 		$this->lang->load('user_strings', 'english', FALSE);
 
         // autoload exceptions
