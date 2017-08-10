@@ -14,6 +14,7 @@ class ValueValidator implements Validation
     private static $IDX_LENGTH_MAX = 2;
     private static $IDX_LENGTH_BETWEEN = 3;
     private static $IDX_VALID_EMAIL = 3;
+    private static $IDX_NUMERIC = 4;
 
     /** @var mixed */
     private $value;
@@ -131,6 +132,19 @@ class ValueValidator implements Validation
         $this->addValidation(self::$IDX_VALID_EMAIL, function ()
         {
             return (filter_var($this->value, FILTER_VALIDATE_EMAIL) !== false);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    public function numeric ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be numeric', $this->label);
+
+        $this->addValidation(self::$IDX_NUMERIC, function ()
+        {
+            return is_numeric($this->value);
         }, $errorMessage);
 
         return $this;
