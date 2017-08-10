@@ -10,11 +10,13 @@ require_once('Validation.php');
 class ValueValidator implements Validation
 {
     private static $IDX_REQUIRED = 0;
-    private static $IDX_LENGTH_MIN = 1;
-    private static $IDX_LENGTH_MAX = 2;
-    private static $IDX_LENGTH_BETWEEN = 3;
-    private static $IDX_VALID_EMAIL = 3;
-    private static $IDX_NUMERIC = 4;
+    private static $IDX_ONLY_NUMERIC = 1;
+    private static $IDX_VALID_EMAIL = 2;
+    private static $IDX_LENGTH_MIN = 3;
+    private static $IDX_LENGTH_MAX = 4;
+    private static $IDX_LENGTH_BETWEEN = 5;
+
+    private static $IDX_OTHER = 10;
 
     /** @var mixed */
     private $value;
@@ -25,8 +27,8 @@ class ValueValidator implements Validation
     private $validations;
     /** @var array */
     private $errorMessages;
-    /** @var array */
-    private $errors;
+    /** @var string */
+    private $error;
 
 
     public function __construct ($value, $label = 'Value')
@@ -36,12 +38,10 @@ class ValueValidator implements Validation
 
         $this->validations = array();
         $this->errorMessages = array();
-        $this->errors = array();
+        $this->error = null;
     }
 
     /**
-     * Validasi gagal jika value sama dengan null, '', atau hanya berisi whitespace.
-     * @param string $errorMessage custom error message
      * @return $this
      */
     public function required ($errorMessage = null)
@@ -49,12 +49,12 @@ class ValueValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s is required', $this->label);
 
-        $this->addValidation(self::$IDX_REQUIRED, function ()
+        $this->setValidation(self::$IDX_REQUIRED, function ($value)
         {
-            if (isset($this->value))
+            if (isset($value))
             {
-                if (is_scalar($this->value))
-                    return (trim($this->value) !== '');
+                if (is_scalar($value))
+                    return (trim($value) !== '');
                 else
                     return true;
             }
@@ -65,8 +65,6 @@ class ValueValidator implements Validation
     }
 
     /**
-     * @param int $length
-     * @param string $errorMessage
      * @return $this
      */
     public function lengthMin ($length, $errorMessage = null)
@@ -74,17 +72,15 @@ class ValueValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s must be at least %s characters', $this->label, $length);
 
-        $this->addValidation(self::$IDX_LENGTH_MIN, function () use ($length)
+        $this->setValidation(self::$IDX_LENGTH_MIN, function ($value) use ($length)
         {
-            return (strlen($this->value) >= $length);
+            return (strlen($value) >= $length);
         }, $errorMessage);
 
         return $this;
     }
 
     /**
-     * @param int $length
-     * @param string $errorMessage
      * @return $this
      */
     public function lengthMax ($length, $errorMessage = null)
@@ -92,18 +88,15 @@ class ValueValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s must not be more than %s characters', $this->label, $length);
 
-        $this->addValidation(self::$IDX_LENGTH_MAX, function () use ($length)
+        $this->setValidation(self::$IDX_LENGTH_MAX, function ($value) use ($length)
         {
-            return (strlen($this->value) <= $length);
+            return (strlen($value) <= $length);
         }, $errorMessage);
 
         return $this;
     }
 
     /**
-     * @param int $minLength
-     * @param int $maxLength
-     * @param string $errorMessage
      * @return $this
      */
     public function lengthBetween ($minLength, $maxLength, $errorMessage = null)
@@ -111,9 +104,9 @@ class ValueValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s must be between %s to %s characters ', $this->label, $minLength, $maxLength);
 
-        $this->addValidation(self::$IDX_LENGTH_BETWEEN, function () use ($minLength, $maxLength)
+        $this->setValidation(self::$IDX_LENGTH_BETWEEN, function ($value) use ($minLength, $maxLength)
         {
-            $length = strlen($this->value);
+            $length = strlen($value);
             return ($length >= $minLength) && ($length <= $maxLength);
         }, $errorMessage);
 
@@ -121,7 +114,6 @@ class ValueValidator implements Validation
     }
 
     /**
-     * @param string $errorMessage
      * @return $this
      */
     public function validEmail ($errorMessage = null)
@@ -129,33 +121,59 @@ class ValueValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s must be a valid email', $this->label);
 
-        $this->addValidation(self::$IDX_VALID_EMAIL, function ()
+        $this->setValidation(self::$IDX_VALID_EMAIL, function ($value)
         {
-            return (filter_var($this->value, FILTER_VALIDATE_EMAIL) !== false);
+            return (filter_var($value, FILTER_VALIDATE_EMAIL) !== false);
         }, $errorMessage);
 
         return $this;
     }
 
-    public function numeric ($errorMessage = null)
+    /**
+     * @return $this
+     */
+    public function onlyNumeric ($errorMessage = null)
     {
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s must be numeric', $this->label);
 
-        $this->addValidation(self::$IDX_NUMERIC, function ()
+        $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
-            return is_numeric($this->value);
+            return is_numeric($value);
         }, $errorMessage);
 
         return $this;
     }
 
-    private function addValidation ($idx, Closure $validation, $errorMessage)
+    /**
+     * @return $this
+     */
+    public function addValidation (Closure $validation, $errorMessage)
     {
-        if (!isset($this->validations[$idx]))
+        // custom validation start at 'other' index
+        if (empty($this->validations))
         {
-            $this->validations[$idx] = $validation;
+            $idx = self::$IDX_OTHER;
         }
+        else
+        {
+            // get the last index
+            $idx = max(array_keys($this->validations));
+            // if the last index is less than the start of 'other' index, start at 'other' index
+            if ($idx < self::$IDX_OTHER)
+                $idx = self::$IDX_OTHER;
+            else // next of the last index
+                $idx += 1;
+        }
+
+        $this->setValidation($idx, $validation, $errorMessage);
+
+        return $this;
+    }
+
+    private function setValidation ($idx, Closure $validation, $errorMessage)
+    {
+        $this->validations[$idx] = $validation;
         $this->errorMessages[$idx] = $errorMessage;
     }
 
@@ -165,17 +183,20 @@ class ValueValidator implements Validation
      */
     public function validate ()
     {
-        $this->errors = array();
+        $this->error = null;
 
-        foreach ($this->validations as $idx => $validation)
+        $indexes = array_keys($this->validations);
+        sort($indexes);
+        foreach ($indexes as $idx)
         {
-            if (!$validation())
+            if (!$this->validations[$idx]($this->value))
             {
-                $this->errors[] = $this->errorMessages[$idx];
+                $this->error = $this->errorMessages[$idx];
+                return false;
             }
         }
 
-        return empty($this->errors);
+        return true;
     }
 
     /**
@@ -183,17 +204,6 @@ class ValueValidator implements Validation
      */
     public function getError ()
     {
-        if (empty($this->errors))
-            return '';
-        else
-            return $this->errors[0];
-    }
-
-    /**
-     * @return array
-     */
-    public function getAllErrors ()
-    {
-        return $this->errors;
+        return $this->error;
     }
 }

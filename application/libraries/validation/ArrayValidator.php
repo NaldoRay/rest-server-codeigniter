@@ -60,17 +60,6 @@ class ArrayValidator
     }
 
     /**
-     * @return string
-     */
-    public function getError ()
-    {
-        if (empty($this->errors))
-            return '';
-        else
-            return reset($this->errors);
-    }
-
-    /**
      * @return array
      */
     public function getAllErrors ()

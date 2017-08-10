@@ -41,4 +41,17 @@ interface Validation
      * @return $this
      */
     public function validEmail ($errorMessage = null);
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyNumeric ($errorMessage = null);
+
+    /**
+     * @param Closure $validation
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function addValidation (Closure $validation, $errorMessage);
 }
