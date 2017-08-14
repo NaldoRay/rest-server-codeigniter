@@ -52,6 +52,6 @@ fabric.properties
 !*/cache/index.html
 !*/cache/.htaccess
 
-/rest-server.zip
+/*.zip
 
 /vendor/

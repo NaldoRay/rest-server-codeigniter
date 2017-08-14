@@ -23,7 +23,6 @@ class MY_REST_Controller extends REST_Controller
         parent::__construct();
 
         $this->load->library('rest_validation', null, 'validation');
-		$this->lang->load('user_strings', 'english', FALSE);
 
         // autoload exceptions
         spl_autoload_register(function ($class)
@@ -39,17 +38,17 @@ class MY_REST_Controller extends REST_Controller
         if ($e instanceof MissingArgumentException || $e instanceof InvalidArgumentException || $e instanceof InvalidFormatException
             || $e instanceof SecurityException)
         {
-            $this->respondBadRequest($this->getString('invalid_parameters'));
+            $this->respondBadRequest($e->getMessage());
         }
         else if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
         {
-            $this->respondNotFound($this->getString('resource_not_found'));
+            $this->respondNotFound($e->getMessage());
         }
         else if ($e instanceof BadArrayException)
         {
             $this->respondError(
                 self::HTTP_BAD_REQUEST,
-                $this->getString('validation_error'),
+                'Validation error',
                 $e->getDomain(),
                 $e->getAllErrors()
             );
@@ -68,7 +67,7 @@ class MY_REST_Controller extends REST_Controller
     {
         if ($e instanceof TypeError || $e instanceof ParseError)
         {
-            $this->respondBadRequest($this->getString('invalid_parameters'));
+            $this->respondBadRequest('Invalid parameters');
         }
         else
         {
@@ -282,7 +281,7 @@ class MY_REST_Controller extends REST_Controller
         $auth = $this->getBasicAuth();
         if (is_null($auth))
         {
-            $this->respondUnauthorized($this->getString('invalid_credentials'));
+            $this->respondUnauthorized('Invalid credentials');
             exit;
         }
         else
@@ -320,12 +319,7 @@ class MY_REST_Controller extends REST_Controller
         ];
         if (!in_array($this->input->ip_address(), $allowedIps))
         {
-            $this->respondNotFound($this->getString('resource_not_found'));
+            $this->respondNotFound('Not found');
         }
-    }
-
-    protected function getString ($key)
-    {
-        return $this->lang->line($key);
     }
 }
