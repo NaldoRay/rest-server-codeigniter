@@ -191,7 +191,11 @@ class ValueValidator implements Validation
         {
             if (!$this->validations[$idx]($this->value))
             {
-                $this->error = $this->errorMessages[$idx];
+                $errorMessage = $this->errorMessages[$idx];
+                if ($errorMessage instanceof Closure)
+                    $errorMessage = $errorMessage();
+
+                $this->error = $errorMessage;
                 return false;
             }
         }

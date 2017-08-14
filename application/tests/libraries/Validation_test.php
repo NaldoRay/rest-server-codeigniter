@@ -207,6 +207,16 @@ class Validation_test extends TestCase
             }, "Custom validation failed")
             ->lengthMin(10);
 
+        $this->validation->field('name')
+            ->required()
+            ->addValidation(function ($value)
+            {
+                return false;
+            }, function ()
+            {
+                return 'Lazy error message';
+            });
+
         try
         {
             $this->validation->validate();
@@ -217,6 +227,7 @@ class Validation_test extends TestCase
             $errors = $e->getAllErrors();
             $this->assertContains('Custom validation', $errors['username']);
             $this->assertContains('at least', $errors['address']);
+            $this->assertContains('Lazy error', $errors['name']);
         }
     }
 

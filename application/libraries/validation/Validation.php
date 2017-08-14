@@ -50,7 +50,7 @@ interface Validation
 
     /**
      * @param Closure $validation
-     * @param string $errorMessage
+     * @param string|Closure $errorMessage error message or function to return error message (called on validation failed)
      * @return $this
      */
     public function addValidation (Closure $validation, $errorMessage);
