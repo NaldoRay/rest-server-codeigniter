@@ -12,6 +12,6 @@ class Error_api extends MY_REST_Controller
 {
     public function throwNotFound ()
     {
-        $this->respondNotFound();
+        $this->respondNotFound('Resource not found');
     }
 }

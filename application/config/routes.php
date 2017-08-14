@@ -58,5 +58,7 @@ $route['translate_uri_dashes'] = FALSE;
  * API endpoints
  */
 
+$route['examples'] = 'example_endpoint/examples';
+$route['examples/(:num)'] = 'example_endpoint/existingExample/$1';
 
 
