@@ -249,22 +249,24 @@ class MY_REST_Controller extends REST_Controller
             return $field;
     }
 
-    protected function getModelData ($requestData)
+    protected function getModelData ($requestData, array $filterMap = null)
     {
         if (is_array($requestData) || is_object($requestData))
         {
-            $modelData = array();
+            if (is_null($filterMap))
+                $requestToModelFields = array_flip($this->modelToResponseFields);
+            else
+                $requestToModelFields = $filterMap;
 
-            $requestToModelFields = array_flip($this->modelToResponseFields);
+            $modelData = array();
             foreach ($requestData as $key => $value)
             {
                 if (isset($requestToModelFields[ $key ]))
                 {
                     $field = $requestToModelFields[ $key ];
-                    $modelData[ $field ] = $this->getModelData($value);
+                    $modelData[ $field ] = $this->getModelData($value, $filterMap);
                 }
             }
-
             return $modelData;
         }
         else
