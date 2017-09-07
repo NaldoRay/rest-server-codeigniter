@@ -165,6 +165,31 @@ class MY_REST_Controller extends REST_Controller
         $this->response($response, $statusCode);
     }
 
+    protected function forwardResponse ($response)
+    {
+        $forwardedResponse = null;
+        if ($response->success)
+        {
+            if (isset($response->data))
+            {
+                $forwardedResponse = array(
+                    'data' => $response->data
+                );
+            }
+        }
+        else
+        {
+            if (isset($response->error))
+            {
+                $forwardedResponse = array(
+                    'error' => $response->error
+                );
+            }
+        }
+
+        $this->response($forwardedResponse, $response->statusCode);
+    }
+
     public final function response ($data = null, $http_code = null, $continue = false)
     {
         // transform fields for response
