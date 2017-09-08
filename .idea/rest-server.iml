@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/application/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/application/tests/_ci_phpunit_test/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/release" />
     </content>
     <content url="file://D:/Projects/phpStorm-CC-Helpers/CodeIgniter" />
     <orderEntry type="inheritedJdk" />
