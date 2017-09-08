@@ -55,3 +55,4 @@ fabric.properties
 /*.zip
 
 /vendor/
+/application/tests/_ci_phpunit_test/tmp/

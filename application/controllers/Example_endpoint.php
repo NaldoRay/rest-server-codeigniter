@@ -10,6 +10,13 @@ require_once('MY_REST_Controller.php');
  */
 class Example_endpoint extends MY_REST_Controller
 {
+    protected $modelToResponseFields = [
+        'N_ID' => 'id',
+        'V_NAME' => 'name',
+        'V_DESC' => 'desc',
+        'N_AGE' => 'age'
+    ];
+
     public function examples_get ()
     {
         $data = [
@@ -47,5 +54,20 @@ class Example_endpoint extends MY_REST_Controller
             $this->respondSuccess($data[$id-1]);
         else
             $this->respondNotFound('Example not found', 'Example');
+    }
+
+    public function examples_post ()
+    {
+        $filterMap = [
+            'name' => 'V_NAME',
+            'desc' => 'V_DESC'
+        ];
+        $modelData = $this->getModelData($this->post(), $filterMap);
+
+        // insert...
+        $data = $modelData;
+        $data['N_ID'] = 3;
+
+        $this->respondCreated($data);
     }
 }

@@ -22,6 +22,7 @@ class MY_REST_Controller extends REST_Controller
     {
         parent::__construct();
 
+        $this->load->helper(['file', 'log']);
         $this->load->library('rest_validation', null, 'validation');
 
         // autoload exceptions
@@ -56,6 +57,11 @@ class MY_REST_Controller extends REST_Controller
         else if ($e instanceof BadValueException)
         {
             $this->respondBadRequest($e->getMessage(), $e->getDomain());
+        }
+        else if ($e instanceof \CIPHPUnitTestExitException)
+        {
+            // This block is for ci-phpunit-test
+            throw $e;
         }
         else
         {
@@ -240,48 +246,17 @@ class MY_REST_Controller extends REST_Controller
         }
     }
 
-    protected function transformToModelData ($requestData)
+    /**
+     * Untuk filter request data i.e. hanya field-field tertentu yang diambil/diterima.
+     * @param $requestData
+     * @param array|null $filterMap
+     * @return array request data yang sudah di-filter dan di-map ke field model
+     */
+    protected function getModelData ($requestData, array $filterMap)
     {
         if (is_array($requestData) || is_object($requestData))
         {
-            $modelData = array();
-
-            $requestToModelFields = array_flip($this->modelToResponseFields);
-            foreach ($requestData as $key => $value)
-            {
-                if (isset($requestToModelFields[ $key ]))
-                    $field = $requestToModelFields[ $key ];
-                else
-                    $field = $key;
-
-                $modelData[ $field ] = $this->transformToModelData($value);
-            }
-
-            return $modelData;
-        }
-        else
-        {
-            return $requestData;
-        }
-    }
-
-    protected function transformToModelField ($field)
-    {
-        $requestToModelFields = array_flip($this->modelToResponseFields);
-        if (isset($requestToModelFields[ $field ]))
-            return $requestToModelFields[ $field ];
-        else
-            return $field;
-    }
-
-    protected function getModelData ($requestData, array $filterMap = null)
-    {
-        if (is_array($requestData) || is_object($requestData))
-        {
-            if (is_null($filterMap))
-                $requestToModelFields = array_flip($this->modelToResponseFields);
-            else
-                $requestToModelFields = $filterMap;
+            $requestToModelFields = $filterMap;
 
             $modelData = array();
             foreach ($requestData as $key => $value)
@@ -298,6 +273,39 @@ class MY_REST_Controller extends REST_Controller
         {
             return $requestData;
         }
+    }
+
+    protected function getModelOrder ($requestOrder, array $filterMap)
+    {
+        if (is_null($requestOrder))
+            return null;
+
+        $orderFields = explode(',', $requestOrder);
+        $orders = array();
+        foreach ($orderFields as $orderField)
+        {
+            if (!empty($orderField))
+            {
+                if ($orderField[0] == '-')
+                {
+                    $field = substr($orderField, 1);
+                    $dir = 'desc';
+                }
+                else
+                {
+                    $field = $orderField;
+                    $dir = 'asc';
+                }
+
+                if (isset($filterMap[ $field ]))
+                {
+                    $field = $filterMap[ $field ];
+                    $orders[] = sprintf('%s %s', $field, $dir);
+                }
+            }
+        }
+
+        return implode(',', $orders);
     }
 
     /**

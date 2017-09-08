@@ -525,4 +525,4 @@ $config['proxy_ips'] = '';
 /*
  * To log queries
  */
-$config['app_name'] = 'SSO';
+$config['app_name'] = 'Example';
