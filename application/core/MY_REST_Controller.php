@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 /** @noinspection PhpIncludeInspection */
-require_once(APPPATH . '/libraries/REST_Controller.php');
+require_once(APPPATH . 'libraries/REST_Controller.php');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -34,6 +34,10 @@ class MY_REST_Controller extends REST_Controller
         });
     }
 
+    /**
+     * Handle uncaught exception from REST method call.
+     * @param Exception $e
+     */
     protected function handleUncaughtException (Exception $e)
     {
         if ($e instanceof MissingArgumentException || $e instanceof InvalidArgumentException || $e instanceof InvalidFormatException
@@ -65,10 +69,14 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
-            $this->respondInternalError();
+            $this->respondInternalError(ENVIRONMENT == 'production' ? '' : $e->getMessage());
         }
     }
 
+    /**
+     * Handle PHP Error e.g. index out of bound, invalid type, etc.
+     * @param Error $e
+     */
     protected function handleUncaughtError (\Error $e)
     {
         if ($e instanceof TypeError || $e instanceof ParseError)
@@ -77,28 +85,44 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
-            $this->respondInternalError();
+            $this->respondInternalError(ENVIRONMENT == 'production' ? '' : $e->getMessage());
         }
     }
 
     /*
      * Success Response
      */
+    /**
+     * Send successful response: 202 Accepted.
+     * @param array $data
+     */
     protected function respondAccepted (array $data)
     {
         $this->respondSuccess($data, self::HTTP_ACCEPTED);
     }
 
+    /**
+     * Send successful response: 204 No Content.
+     */
     protected function respondNoContent ()
     {
         $this->respondSuccess(null, self::HTTP_NO_CONTENT);
     }
 
+    /**
+     * Send successful response: 201 Created.
+     * @param $data
+     */
     protected function respondCreated ($data)
     {
         $this->respondSuccess($data, self::HTTP_CREATED);
     }
 
+    /**
+     * Send custom successful response.
+     * @param null $data
+     * @param int $httpCode
+     */
     protected final function respondSuccess ($data = null, $httpCode = self::HTTP_OK)
     {
         if (is_null($data))
@@ -117,17 +141,28 @@ class MY_REST_Controller extends REST_Controller
     /*
      * Error Response
      */
+    /**
+     * Send error response: 400 Bad Request.
+     * @param string $message
+     * @param string|null $domain
+     */
     protected function respondBadRequest ($message = '', $domain = null)
     {
         $this->respondError(self::HTTP_BAD_REQUEST, $message, $domain);
     }
 
+    /**
+     * Send error response: 401 Unauthorized.
+     * @param string $message
+     * @param string|null $domain
+     */
     protected function respondUnauthorized ($message = '', $domain = null)
     {
         $this->respondError(self::HTTP_UNAUTHORIZED, $message, $domain);
     }
 
     /**
+     * Send error response: 403 Forbidden.
      * @param string $message required for 403 Forbidden response
      * @param string|null $domain
      */
@@ -136,17 +171,28 @@ class MY_REST_Controller extends REST_Controller
         $this->respondError(self::HTTP_FORBIDDEN, $message, $domain);
     }
 
+    /**
+     * Send error response: 404 Not Found.
+     * @param string $message
+     * @param string|null $domain
+     */
     protected function respondNotFound ($message = '', $domain = null)
     {
         $this->respondError(self::HTTP_NOT_FOUND, $message, $domain);
     }
 
+    /**
+     * Send error response: 500 Internal Error.
+     * @param string $message
+     * @param string|null $domain
+     */
     protected function respondInternalError ($message = '', $domain = null)
     {
         $this->respondError(self::HTTP_INTERNAL_SERVER_ERROR, $message, $domain);
     }
 
     /**
+     * Send custom error response.
      * @param $statusCode
      * @param $domain
      * @param $message
@@ -171,6 +217,10 @@ class MY_REST_Controller extends REST_Controller
         $this->response($response, $statusCode);
     }
 
+    /**
+     * Forward/send response coming from another web service.
+     * @param $response
+     */
     protected function forwardResponse ($response)
     {
         $forwardedResponse = null;
@@ -196,6 +246,12 @@ class MY_REST_Controller extends REST_Controller
         $this->response($forwardedResponse, $response->statusCode);
     }
 
+    /**
+     * Send custom response.
+     * @param mixed|null $data
+     * @param int|null $http_code
+     * @param bool $continue
+     */
     public final function response ($data = null, $http_code = null, $continue = false)
     {
         // transform fields for response
@@ -247,10 +303,10 @@ class MY_REST_Controller extends REST_Controller
     }
 
     /**
-     * Untuk filter request data i.e. hanya field-field tertentu yang diambil/diterima.
+     * Filter request data which will only return allowed fields.
      * @param $requestData
      * @param array|null $filterMap
-     * @return array request data yang sudah di-filter dan di-map ke field model
+     * @return array request data that has been filtered and mapped to model's field
      */
     protected function getModelData ($requestData, array $filterMap)
     {

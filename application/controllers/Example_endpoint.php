@@ -1,7 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once('MY_REST_Controller.php');
 
 /**
  * Author: RN

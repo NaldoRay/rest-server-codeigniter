@@ -1,8 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require 'MY_REST_Controller.php';
-
 /**
  * User: RN
  * Date: 5/31/2017
