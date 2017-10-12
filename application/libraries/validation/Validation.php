@@ -8,50 +8,13 @@
 interface Validation
 {
     /**
-     * Validasi gagal jika value sama dengan null, '', atau hanya berisi whitespace.
-     * @param string $errorMessage custom error message
-     * @return $this
+     * Run validation.
+     * @return bool true if success, false if validation failed
      */
-    public function required ($errorMessage = null);
+    public function validate ();
 
     /**
-     * @param int $length
-     * @param string $errorMessage
-     * @return $this
+     * @return string
      */
-    public function lengthMin ($length, $errorMessage = null);
-
-    /**
-     * @param int $length
-     * @param string $errorMessage
-     * @return $this
-     */
-    public function lengthMax ($length, $errorMessage = null);
-
-    /**
-     * @param int $minLength
-     * @param int $maxLength
-     * @param string $errorMessage
-     * @return $this
-     */
-    public function lengthBetween ($minLength, $maxLength, $errorMessage = null);
-
-    /**
-     * @param string $errorMessage
-     * @return $this
-     */
-    public function validEmail ($errorMessage = null);
-
-    /**
-     * @param string $errorMessage
-     * @return $this
-     */
-    public function onlyNumeric ($errorMessage = null);
-
-    /**
-     * @param Closure $validation
-     * @param string|Closure $errorMessage error message or function to return error message (called on validation failed)
-     * @return $this
-     */
-    public function addValidation (Closure $validation, $errorMessage);
+    public function getError ();
 }

@@ -9,18 +9,14 @@ include_once('validation/ArrayValidator.php');
  */
 class Rest_validation
 {
-    /** @var ArrayValidator|ValueValidator */
+    /** @var FieldValidator|ValueValidator */
     private $validator;
 
-    public function forArray (array $arr)
-    {
-        $this->validator = new ArrayValidator($arr);
-    }
 
     /**
      * @param mixed $value
      * @param string $label
-     * @return Validation
+     * @return ValueValidator
      */
     public function forValue ($value, $label)
     {
@@ -28,14 +24,37 @@ class Rest_validation
         return $this->validator;
     }
 
+    public function forArray (array $arr)
+    {
+        $this->validator = new ArrayValidator($arr);
+    }
+
     /**
      * @param string $name
-     * @param string $label (optional)
-     * @return Validation
+     * @param string|null $label
+     * @return ValueValidator
      */
     public function field ($name, $label = null)
     {
         /** @var ArrayValidator $validator */
+        $validator = $this->validator;
+
+        return $validator->field($name, $label);
+    }
+
+    public function forFiles ()
+    {
+        $this->validator = new FilesValidator();
+    }
+
+    /**
+     * @param $name
+     * @param string|null $label
+     * @return FileValidator
+     */
+    public function file ($name, $label = null)
+    {
+        /** @var FilesValidator $validator */
         $validator = $this->validator;
 
         return $validator->field($name, $label);
@@ -50,7 +69,7 @@ class Rest_validation
     {
         if (!$this->validator->validate())
         {
-            if ($this->validator instanceof ArrayValidator)
+            if ($this->validator instanceof FieldValidator)
                 throw new BadArrayException($this->validator->getAllErrors());
             else
                 throw new BadValueException($this->validator->getError());

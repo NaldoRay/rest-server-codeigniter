@@ -190,6 +190,44 @@ class Validation_test extends TestCase
         }
     }
 
+    public function testFileValidation ()
+    {
+        $_FILES = [
+            'userfile1' => [
+                'name' => 'original.php',
+                'type' => 'text/json',
+                'size' => 1024000,
+                'tmp_name' => FCPATH.'composer.json',
+                'error' => ''
+            ],
+            'userfile2' => [
+                'name' => 'original.php',
+                'type' => 'text/php',
+                'size' => 1024000,
+                'tmp_name' => FCPATH.'index.php',
+                'error' => ''
+            ]
+        ];
+        $this->validation->forFiles();
+        $this->validation->file('notfound')->required();
+        $this->validation->file('userfile1')->required()->maxSize(512);
+        $this->validation->file('userfile2')->required()->allowTypes(['json']);
+        try
+        {
+            $this->validation->validate();
+            $this->assertTrue(false);
+        }
+        catch (BadArrayException $e)
+        {
+            $errors = $e->getAllErrors();
+            $this->assertContains('required', $errors['notfound']);
+            $this->assertContains('max file size', $errors['userfile1']);
+            $this->assertContains('512', $errors['userfile1']);
+            $this->assertContains('file type', $errors['userfile2']);
+            $this->assertContains('json', $errors['userfile2']);
+        }
+    }
+
     public function testCustomValidationShouldBeExecuted ()
     {
         $this->validation->field('username')
