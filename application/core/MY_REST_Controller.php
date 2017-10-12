@@ -62,7 +62,7 @@ class MY_REST_Controller extends REST_Controller
         {
             $this->respondBadRequest($e->getMessage(), $e->getDomain());
         }
-        else if ($e instanceof \CIPHPUnitTestExitException)
+        else if ($e instanceof CIPHPUnitTestExitException)
         {
             // This block is for ci-phpunit-test
             throw $e;

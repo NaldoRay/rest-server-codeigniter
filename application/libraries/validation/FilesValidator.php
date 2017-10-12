@@ -1,6 +1,7 @@
 <?php
 
-include_once('FileValidator.php');
+require_once('FieldValidator.php');
+require_once('FileValidator.php');
 
 /**
  * Author: RN

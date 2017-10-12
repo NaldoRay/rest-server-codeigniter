@@ -8,6 +8,4 @@
  * @property Rest_validation $validation
  */
 class MY_Model extends CI_Model
-{
-
-}
+{}

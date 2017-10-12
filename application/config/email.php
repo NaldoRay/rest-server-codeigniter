@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 	
-$config['useragent'] = 'SSO UNPAR';
+$config['useragent'] = 'SI UNPAR';
 
 $config['protocol'] = 'smtp';
 $config['smtp_host'] = 'smtp.unpar.ac.id';

@@ -20,5 +20,11 @@ $hook['pre_system'] = function ()
             $filepath = sprintf('%score/%s.php', APPPATH, $class);
             include_once $filepath;
         }
+        else if (strpos($class, 'Exception') !== false)
+        {
+            $filepath = APPPATH.'exceptions/' . $class . '.php';
+            if (file_exists($filepath))
+                include_once($filepath);
+        }
     });
 };
