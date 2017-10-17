@@ -24,14 +24,6 @@ class MY_REST_Controller extends REST_Controller
 
         $this->load->helper(['file', 'log']);
         $this->load->library('rest_validation', null, 'validation');
-
-        // autoload exceptions
-        spl_autoload_register(function ($class)
-        {
-            $filepath = APPPATH.'exceptions/' . $class . '.php';
-            if (file_exists($filepath))
-                include_once($filepath);
-        });
     }
 
     /**

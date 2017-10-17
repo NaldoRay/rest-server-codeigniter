@@ -4,6 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once('viewer/FileViewer.php');
 
 /**
+ * Generate view/download link for (local) files
  * Author: Ray N
  * Date: 10/12/2017
  * Time: 13:07

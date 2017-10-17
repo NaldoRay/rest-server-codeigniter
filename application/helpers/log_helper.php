@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 defined('MONTHLY') OR define ('MONTHLY', 1);
 defined('YEARLY') OR define ('YEARLY', 2);
-defined('LOG_PATH') OR define ('LOG_PATH', APPPATH.'../logs/');
+defined('LOG_PATH') OR define ('LOG_PATH', FCPATH.'logs/');
 
 if (!function_exists('logQuery'))
 {

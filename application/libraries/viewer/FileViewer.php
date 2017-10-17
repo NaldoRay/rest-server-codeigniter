@@ -1,126 +1,131 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+/**
+ * Author: Ray N
+ * Date: 10/2/2017
+ * Time: 16:46
+ */
 class FileViewer
 {
+    private $tmpFile;
+
 	public function viewImage ($imagePath, $imageNotFoundPath = null)
 	{
-		$shown = $this->viewLocal($imagePath);
-		if (!$shown && !is_null($imageNotFoundPath))
-		{
-			$this->viewLocal($imageNotFoundPath);
-		}
-		else
-		{
-			show_404();
+		$shown = $this->view($imagePath);
+		if ($shown)
+        {
+            return true;
+        }
+        else
+        {
+		    if (is_null($imageNotFoundPath))
+		        return false;
+		    else
+			    return $this->viewFile($imageNotFoundPath);
 		}
 	}
 
     public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null)
     {
-        $shown = $this->view($imageUrl);
-        if (!$shown && !is_null($imageNotFoundPath))
+        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl);
+        $shown = $this->view($tmpFilePath);
+        if ($shown)
         {
-            $this->viewLocal($imageNotFoundPath);
+            return true;
         }
         else
         {
-            show_404();
+            if (is_null($imageNotFoundPath))
+                return false;
+            else
+                return $this->viewFile($imageNotFoundPath);
         }
     }
 
-    public function viewFile ($filePath)
+    public function viewFile ($filePath, $renamedFilename = null)
 	{
-		$shown = $this->viewLocal($filePath);
-		if (!$shown)
-		{
-			show_404();
-		}
+		return $this->view($filePath, $renamedFilename);
 	}
 
-    public function viewRemoteFile ($fileUrl)
+    public function viewRemoteFile ($fileUrl, $renamedFilename = null)
     {
-        $shown = $this->view($fileUrl);
-        if (!$shown)
-        {
-            show_404();
-        }
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl);
+        return $this->view($tmpFilePath, $renamedFilename);
     }
 
     public function downloadFile ($filePath, $renamedFilename = null)
 	{
-		$shown = $this->downloadLocal($filePath, $renamedFilename);
-		if (!$shown)
-		{
-			show_404();
-		}
+		return $this->download($filePath, $renamedFilename);
 	}
 
     public function downloadRemoteFile ($fileUrl, $renamedFilename = null)
     {
-        $shown = $this->download($fileUrl, $renamedFilename);
-        if (!$shown)
-        {
-            show_404();
-        }
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl);
+        return $this->download($tmpFilePath, $renamedFilename);
     }
 
-    private function viewLocal ($filePath)
-	{		
-		if (is_file($filePath) && file_exists ($filePath))
-		{
-			return $this->view($filePath);
-		}
-		
-		return FALSE;
-	}
-
-    private function downloadLocal ($filePath, $renamedFilename)
-	{
-		if (is_file($filePath) && file_exists ($filePath))
-		{
-			return $this->download($filePath, $renamedFilename);
-		}
-
-		return FALSE;
-	}
-
-    private function view ($filePath)
+    private function createTemporaryRemoteFile ($fileUrl)
     {
-        $info = new finfo(FILEINFO_MIME_TYPE);
-        $contentType = $info->file($filePath);
-        $fileSize = filesize($filePath);
+        $content = file_get_contents($fileUrl);
+        if ($content === false)
+            return null;
 
-        header('Content-type: ' . $contentType);
-        header('Content-length: ' . $fileSize);
-        // jangan di-cache
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Expires: 0');
+        // automatically deleted when the script ends
+        $this->tmpFile = tmpfile();
+        fwrite($this->tmpFile, $content);
 
-        //Baca file dan kirim ke client.
-        $ret = readfile($filePath);
+        $metaDatas = stream_get_meta_data($this->tmpFile);
+        return $metaDatas['uri'];
+    }
 
-        return ($ret !== false);
+    private function view ($filePath, $renamedFilename = null)
+    {
+        if (is_file($filePath) && file_exists ($filePath))
+        {
+            $info = new finfo(FILEINFO_MIME_TYPE);
+            $contentType = $info->file($filePath);
+            $fileSize = filesize($filePath);
+
+            if (!empty($renamedFilename))
+                header('Content-Disposition: inline; filename="'.$renamedFilename.'"');
+
+            header('Content-type: ' . $contentType);
+            header('Content-length: ' . $fileSize);
+            // jangan di-cache
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Expires: 0');
+
+            //Baca file dan kirim ke client.
+            $ret = readfile($filePath);
+
+            return ($ret !== false);
+        }
+        return false;
     }
 
     private function download ($filePath, $renamedFilename)
     {
-        $info = new finfo(FILEINFO_MIME_TYPE);
-        $contentType = $info->file($filePath);
-        $fileSize = filesize($filePath);
+        if (is_file($filePath) && file_exists ($filePath))
+        {
+            $info = new finfo(FILEINFO_MIME_TYPE);
+            $contentType = $info->file($filePath);
+            $fileSize = filesize($filePath);
 
-        header('Content-Type: '.$contentType);
-        header('Content-Disposition: attachment; filename="'.$renamedFilename.'"');
-        header('Content-Length: '.$fileSize);
-        // ga perlu di-cache
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Expires: 0');
+            header('Content-Type: ' . $contentType);
+            header('Content-Disposition: attachment; filename="' . $renamedFilename . '"');
+            header('Content-Length: ' . $fileSize);
+            // ga perlu di-cache
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+            header('Expires: 0');
 
-        // matiin output buffering buat ngehindarin masalah memory pas download file besar
-        //ob_end_clean();
+            // matiin output buffering buat ngehindarin masalah memory pas download file besar
+            //ob_end_clean();
 
-        $result = readfile($filePath);
+            $result = readfile($filePath);
 
-        return ($result !== false);
+            return ($result !== false);
+        }
+        return false;
     }
 }
