@@ -70,6 +70,24 @@ class ValueValidator implements Validation
     }
 
     /**
+     * Validasi gagal jika value sama dengan null.
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function notNull ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must not be null', $this->label);
+
+        $this->setValidation(self::$IDX_REQUIRED, function ($value)
+        {
+            return !is_null($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
      * @param int $length
      * @param string $errorMessage
      * @return $this
