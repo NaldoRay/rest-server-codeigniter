@@ -21,14 +21,15 @@ class MY_DB_mysqli_driver extends CI_DB_mysqli_driver
 			$lastQuery = $this->last_query();
 			// buat query jadi one-liner, remove semua newline
 			$lastQuery = preg_replace('/[ \t\r\n]+/', ' ', $lastQuery);
-			
-			if ($ret)
+
+			$success = $ret;
+			if ($success)
 			{
 				$error = $this->error();
-				$ret = (empty($error) || empty($error['code']));
+                $success = (empty($error) || empty($error['code']));
 			}
 			
-			if ($ret)
+			if ($success)
 				logQuery($lastQuery);
 			else
 				logFailedQuery($lastQuery);
