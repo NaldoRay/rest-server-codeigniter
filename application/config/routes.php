@@ -61,10 +61,6 @@ $route['translate_uri_dashes'] = FALSE;
 $route['examples'] = 'example_endpoint/examples';
 $route['examples/(:num)'] = 'example_endpoint/existingExample/$1';
 
-/**
- * Files
- * Mengubah URI route ini harus mengubah juga $config['viewUri'] dan/atau $config['downloadUri'] pada config/file_viewer.php.
- */
-$route['files/(:any)'] = 'file_api/view/$1';
+
 
 

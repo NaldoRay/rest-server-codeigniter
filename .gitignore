@@ -56,3 +56,5 @@ fabric.properties
 /application/tests/_ci_phpunit_test/tmp/
 /release/
 /.gradle/
+/application/core/app/APP_Model.php
+/application/core/app/APP_REST_Controller.php

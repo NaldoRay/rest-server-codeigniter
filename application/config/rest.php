@@ -223,7 +223,7 @@ $config['rest_valid_logins'] = ['admin' => '1234'];
 |    restrict certain methods to IPs in your white-list
 |
 */
-$config['rest_ip_whitelist_enabled'] = TRUE;
+$config['rest_ip_whitelist_enabled'] = FALSE;
 
 /*
 |--------------------------------------------------------------------------
@@ -248,7 +248,7 @@ $config['rest_handle_exceptions'] = TRUE;
 | 127.0.0.1 and 0.0.0.0 are allowed by default
 |
 */
-$config['rest_ip_whitelist'] = '10.1.11.87'; // TODO remove dev ip
+$config['rest_ip_whitelist'] = '';
 
 /*
 |--------------------------------------------------------------------------

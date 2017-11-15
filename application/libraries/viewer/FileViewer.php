@@ -2,9 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Author: Ray N
- * Date: 10/2/2017
- * Time: 16:46
+ * @author Ray Naldo
  */
 class FileViewer
 {

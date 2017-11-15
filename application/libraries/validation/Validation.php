@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Author: RN
- * Date: 8/8/2017
- * Time: 15:24
+ * @author Ray Naldo
  */
 interface Validation
 {

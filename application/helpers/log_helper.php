@@ -10,8 +10,8 @@ if (!function_exists('logQuery'))
 	/**
 	 * Log query ke file.
 	 *
-	 * @param $query query yang ingin di-log (string)
-	 * @param $category pengelompokan log file. Set MONTHLY (per bulan)(default), atau YEARLY (per tahun)
+	 * @param string $query query to be logged
+	 * @param int $category to group logs; set MONTHLY (default), or YEARLY
 	 */
 	function logQuery ($query, $category = MONTHLY)
 	{
@@ -57,7 +57,6 @@ if (!function_exists('logFailedQuery'))
 }
 
 
-/*
-	RN @ 2015-2016
+/**
+	Ray Naldo @ 2015-2016
 */
-?>

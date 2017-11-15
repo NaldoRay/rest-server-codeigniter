@@ -4,9 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once('viewer/FileViewer.php');
 
 /**
- * Author: Ray N
- * Date: 10/12/2017
- * Time: 13:07
+ * @author Ray Naldo
  */
 class File_viewer
 {

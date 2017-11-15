@@ -18,6 +18,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @license         MIT
  * @link            https://github.com/chriskacerguis/codeigniter-restserver
  * @version         3.0.0
+ *
+ * Modified by Ray N: Add methods to handle uncaught exception and uncaught error
  */
 abstract class REST_Controller extends \CI_Controller {
 

@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Author: RN
- * Date: 8/8/2017
- * Time: 10:25
+ * @author Ray Naldo
  */
 class FieldValidator
 {

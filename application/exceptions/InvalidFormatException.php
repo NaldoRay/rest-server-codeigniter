@@ -2,9 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * User: RN
- * Date: 6/6/2017
- * Time: 12:10
+ * @author Ray Naldo
  */
-class InvalidFormatException extends Exception
+class InvalidFormatException extends ApiException
 {}

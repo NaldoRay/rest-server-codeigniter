@@ -2,9 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * User: RN
- * Date: 6/12/2017
- * Time: 16:08
+ * @author Ray Naldo
  */
-class InvalidLengthException extends Exception
+class InvalidLengthException extends ApiException
 {}

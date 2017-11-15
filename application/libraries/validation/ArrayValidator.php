@@ -4,9 +4,7 @@ require_once('FieldValidator.php');
 require_once('ValueValidator.php');
 
 /**
- * Author: RN
- * Date: 8/8/2017
- * Time: 10:25
+ * @author Ray Naldo
  */
 class ArrayValidator extends FieldValidator
 {

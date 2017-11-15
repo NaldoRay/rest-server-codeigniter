@@ -3,11 +3,9 @@
 require_once('Validation.php');
 
 /**
- * Author: RN
- * Date: 10/12/2017
- * Time: 09:06
- *
  * $_FILES['userfile'] structure: http://php.net/manual/en/features.file-upload.post-method.php
+ *
+ * @author Ray Naldo
  */
 class FileValidator implements Validation
 {

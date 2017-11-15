@@ -9,50 +9,118 @@ require_once(APPPATH . 'libraries/REST_Controller.php');
 use Restserver\Libraries\REST_Controller;
 
 /**
+ * @author Ray Naldo
  * @property Rest_validation $validation
  */
 class MY_REST_Controller extends REST_Controller
 {
-    protected $modelToResponseFields = [
-        'db_field' => 'inputField',
-        'another_db_field' => 'anotherInputField'
-    ];
+    // this property is for debugging-only
+    /** @var  ContextErrorException */
+    private $contextError;
+
 
     public function __construct ()
     {
         parent::__construct();
 
         $this->load->helper(['file', 'log']);
-        $this->load->library('rest_validation', null, 'validation');
+        $this->load->library(Rest_validation::class, null, 'validation');
+
+        set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext)
+        {
+            // error was suppressed with the @-operator
+            if (error_reporting() === 0)
+                return false;
+
+            // skip first backtrace i.e. this file
+            $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
+            throw new ContextErrorException($errstr, 0, $errno, $errfile, $errline, $errcontext, $backtrace);
+        });
+    }
+
+    protected function asdij ()
+    {
+        throw new TransactionException();
     }
 
     /**
      * Handle uncaught exception from REST method call.
-     * @param Exception $e
      */
     protected function handleUncaughtException (Exception $e)
     {
-        if ($e instanceof MissingArgumentException || $e instanceof InvalidArgumentException || $e instanceof InvalidFormatException
-            || $e instanceof SecurityException)
+        if ($e instanceof ApiException)
+        {
+            if ($e instanceof MissingArgumentException || $e instanceof InvalidFormatException
+                || $e instanceof SecurityException)
+            {
+                $this->respondBadRequest($e->getMessage(), $e->getDomain());
+            }
+            else if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
+            {
+                $this->respondNotFound($e->getMessage(), $e->getDomain());
+            }
+            else if ($e instanceof BadBatchArrayException)
+            {
+                $this->respondError(
+                    self::HTTP_BAD_REQUEST,
+                    'Validation error',
+                    $e->getDomain(),
+                    null,
+                    $e->getBatchErrors()
+                );
+            }
+            else if ($e instanceof BadArrayException)
+            {
+                $this->respondError(
+                    self::HTTP_BAD_REQUEST,
+                    'Validation error',
+                    $e->getDomain(),
+                    $e->getAllErrors()
+                );
+            }
+            else if ($e instanceof BadValueException)
+            {
+                $this->respondBadRequest($e->getMessage(), $e->getDomain());
+            }
+            else
+            {
+                $this->respondInternalError($e->getMessage(), $e->getDomain());
+            }
+        }
+        else if ($e instanceof InvalidArgumentException)
         {
             $this->respondBadRequest($e->getMessage());
         }
-        else if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
+        else if ($e instanceof ContextErrorException)
         {
-            $this->respondNotFound($e->getMessage());
-        }
-        else if ($e instanceof BadArrayException)
-        {
-            $this->respondError(
-                self::HTTP_BAD_REQUEST,
-                'Validation error',
-                $e->getDomain(),
-                $e->getAllErrors()
-            );
-        }
-        else if ($e instanceof BadValueException)
-        {
-            $this->respondBadRequest($e->getMessage(), $e->getDomain());
+            $this->contextError = $e;
+            $context = $e->getContext();
+            if (is_array($context) && isset($context['sql']))
+            {
+                $message = $e->getMessage();
+                if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
+                    $errorMessage = 'ID has already been used';
+                else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
+                {
+                    if ($matches[1] == 'parent key not found')
+                        $errorMessage = 'Reference ID not found';
+                    else if ($matches[1] == 'child record found')
+                        $errorMessage = 'ID is still being referenced';
+                    else
+                        $errorMessage = 'Integrity constraint';
+                }
+                else if (preg_match('/value too large/', $message))
+                    $errorMessage = 'Value too large';
+                else
+                    $errorMessage = 'Database error';
+
+                $this->respondBadRequest($errorMessage, null);
+            }
+            else
+            {
+                $errorMessage = 'Internal Error';
+                $this->respondInternalError($errorMessage, null);
+            }
         }
         else if ($e instanceof CIPHPUnitTestExitException)
         {
@@ -61,7 +129,7 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
-            $this->respondInternalError(ENVIRONMENT == 'production' ? '' : $e->getMessage());
+            $this->respondInternalError(ENVIRONMENT === 'production' ? 'Internal Error' : $e->getMessage());
         }
     }
 
@@ -140,7 +208,7 @@ class MY_REST_Controller extends REST_Controller
      */
     protected function respondBadRequest ($message = '', $domain = null)
     {
-        $this->respondError(self::HTTP_BAD_REQUEST, $message, $domain);
+        $this->respondError(self::HTTP_BAD_REQUEST, $message, $domain, null);
     }
 
     /**
@@ -186,11 +254,12 @@ class MY_REST_Controller extends REST_Controller
     /**
      * Send custom error response.
      * @param $statusCode
-     * @param $domain
-     * @param $message
+     * @param string $message
+     * @param string $domain
      * @param array|null $fields
+     * @param array|null $batchFields
      */
-    protected final function respondError ($statusCode, $message = '', $domain = 'Global', array $fields = null)
+    protected final function respondError ($statusCode, $message = '', $domain = 'Global', array $fields = null, array $batchFields = null)
     {
 		if (is_null($domain))
             $domain = 'Global';
@@ -204,6 +273,22 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($fields))
         {
             $response['error']['fields'] = $fields;
+        }
+        if (!empty($batchFields))
+        {
+            $response['error']['batchFields'] = $batchFields;
+        }
+        if (ENVIRONMENT !== 'production')
+        {
+            if (!is_null($this->contextError))
+            {
+                $response['error']['debug'] = [
+                    'message' => $this->contextError->getMessage(),
+                    'location' => $this->contextError->getFile() .' at line '. $this->contextError->getLine(),
+                    'context' => $this->contextError->getContext(),
+                    'backtrace' => $this->contextError->getBacktrace()
+                ];
+            }
         }
 
         $this->response($response, $statusCode);
@@ -246,13 +331,12 @@ class MY_REST_Controller extends REST_Controller
      */
     public final function response ($data = null, $http_code = null, $continue = false)
     {
-        // transform fields for response
         if (!is_null($data))
         {
             $isDefaultErrorResponse = (is_array($data) && isset($data['status']) && $data['status'] === false);
             if ($isDefaultErrorResponse)
             {
-                // reformat default error response dari REST_Controller
+                // reformat default error response from REST_Controller
                 $this->respondError(
                     $http_code,
                     $data[$this->config->item('rest_message_field_name')],
@@ -260,100 +344,9 @@ class MY_REST_Controller extends REST_Controller
                 );
                 return;
             }
-            else
-            {
-                $data = $this->transformToResponseData($data);
-            }
         }
 
         parent::response($data, $http_code, $continue);
-    }
-
-    private function transformToResponseData ($data)
-    {
-        if (is_array($data) || is_object($data))
-        {
-            $responseData = array();
-            foreach ($data as $key => $value)
-            {
-                if (isset($this->modelToResponseFields[ $key ]))
-                    $field = $this->modelToResponseFields[ $key ];
-                else
-                    $field = $key;
-
-                $responseData[ $field ] = $this->transformToResponseData($value);
-                if (isset($this->booleanModelToResponseFields[$key]))
-                    $responseData[ $field ] = (bool) $responseData[ $field ];
-            }
-
-            return $responseData;
-        }
-        else
-        {
-            return $data;
-        }
-    }
-
-    /**
-     * Filter request data which will only return allowed fields.
-     * @param $requestData
-     * @param array|null $filterMap
-     * @return array request data that has been filtered and mapped to model's field
-     */
-    protected function getModelData ($requestData, array $filterMap)
-    {
-        if (is_array($requestData) || is_object($requestData))
-        {
-            $requestToModelFields = $filterMap;
-
-            $modelData = array();
-            foreach ($requestData as $key => $value)
-            {
-                if (isset($requestToModelFields[ $key ]))
-                {
-                    $field = $requestToModelFields[ $key ];
-                    $modelData[ $field ] = $this->getModelData($value, $filterMap);
-                }
-            }
-            return $modelData;
-        }
-        else
-        {
-            return $requestData;
-        }
-    }
-
-    protected function getModelOrder ($requestOrder, array $filterMap)
-    {
-        if (is_null($requestOrder))
-            return null;
-
-        $orderFields = explode(',', $requestOrder);
-        $orders = array();
-        foreach ($orderFields as $orderField)
-        {
-            if (!empty($orderField))
-            {
-                if ($orderField[0] == '-')
-                {
-                    $field = substr($orderField, 1);
-                    $dir = 'desc';
-                }
-                else
-                {
-                    $field = $orderField;
-                    $dir = 'asc';
-                }
-
-                if (isset($filterMap[ $field ]))
-                {
-                    $field = $filterMap[ $field ];
-                    $orders[] = sprintf('%s %s', $field, $dir);
-                }
-            }
-        }
-
-        return implode(',', $orders);
     }
 
     /**
@@ -394,15 +387,114 @@ class MY_REST_Controller extends REST_Controller
         }
     }
 
-    protected function checkCrudAuth ()
+    protected function getQueryFields ()
     {
-        $allowedIps = [
-            '127.0.0.1', '0.0.0.0', '10.210.1.122',
-            '10.1.11.87' // TODO remove ip buat debug
-        ];
-        if (!in_array($this->input->ip_address(), $allowedIps))
+        $fieldsParam = $this->input->get('fields');
+        if (is_null($fieldsParam))
+            $fields = array();
+        else
+            $fields = explode(',', $fieldsParam);
+
+        return $fields;
+    }
+
+    protected function getQuerySorts ()
+    {
+        $sortsParam = $this->input->get('sorts');
+        if (is_null($sortsParam))
+            $sorts = array();
+        else
+            $sorts = explode(',', $sortsParam);
+
+        return $sorts;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getQueryFilters ()
+    {
+        $filtersParam = $this->input->get('filters');
+        if (!is_array($filtersParam))
+            $filtersParam = array();
+
+        return $filtersParam;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isGroupQuery ()
+    {
+        $useGroupBy = $this->input->get('group');
+        return ($useGroupBy === 'true');
+    }
+
+    public function post ($key = NULL, $xss_clean = NULL)
+    {
+        $data = parent::post($key, $xss_clean);
+        if (is_null($key))
+            $data = $this->processData($data);
+
+        return $data;
+    }
+
+    public function put ($key = NULL, $xss_clean = NULL)
+    {
+        $data = parent::put($key, $xss_clean);
+        if (is_null($key))
+            $data = $this->processData($data);
+
+        return $data;
+    }
+
+    public function patch ($key = NULL, $xss_clean = NULL)
+    {
+        $data = parent::patch($key, $xss_clean);
+        if (is_null($key))
+            $data = $this->processData($data);
+
+        return $data;
+    }
+
+    /**
+     * Process data from request body.
+     * Auto-decode json metadata on multipart request.
+     * @param array $data
+     * @return array
+     */
+    protected function processData (array $data)
+    {
+        if (!empty($data))
         {
-            $this->respondNotFound('Not found');
+            // auto-decode json metadata on multipart request
+            $contentType = $this->input->get_request_header('Content-Type');
+            if (strpos($contentType, 'multipart/form-data') === 0)
+            {
+                // metadata must be string of json object
+                if (isset($data['data']) && is_string($data['data']))
+                {
+                    $data = json_decode($data['data'], true);
+                    if (json_last_error() != JSON_ERROR_NONE || !is_array($data))
+                        $data = array();
+                }
+                else
+                {
+                    $data = array();
+                }
+            }
         }
+
+        return $data;
+    }
+
+    protected function getAll (MY_Model $model)
+    {
+        $fields = $this->getQueryFields();
+        $filters = $this->getQueryFilters();
+        $sorts = $this->getQuerySorts();
+        $groupResult = $this->isGroupQuery();
+
+        return $model->getAll($fields, $filters, $sorts, $groupResult);
     }
 }

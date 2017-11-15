@@ -6,7 +6,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | MIME TYPES
 | -------------------------------------------------------------------
 | Copied from Codeigniter's application/config/mimes.php
-| RN @ 2017
+| Added by Ray Naldo
 */
 
 return array(

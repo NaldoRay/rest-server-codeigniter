@@ -3,20 +3,31 @@
 require_once('Validation.php');
 
 /**
- * Author: RN
- * Date: 8/8/2017
- * Time: 10:20
+ * @author Ray Naldo
  */
 class ValueValidator implements Validation
 {
     private static $IDX_REQUIRED = 0;
-    private static $IDX_ONLY_NUMERIC = 1;
-    private static $IDX_VALID_EMAIL = 2;
-    private static $IDX_LENGTH_MIN = 3;
-    private static $IDX_LENGTH_MAX = 4;
-    private static $IDX_LENGTH_BETWEEN = 5;
+    private static $IDX_OPTIONAL = 0;
 
-    private static $IDX_OTHER = 10;
+    // comparing content type, same validation index
+    private static $IDX_VALID_EMAIL = 1;
+    private static $IDX_VALID_DATETIME = 1;
+    private static $IDX_ONLY_BOOLEAN = 1;
+    private static $IDX_ONLY_INTEGER = 1;
+    private static $IDX_ONLY_FLOAT = 1;
+    private static $IDX_ONLY_STRING = 1;
+
+    // can be string/integer/float
+    private static $IDX_ONLY_NUMERIC = 2;
+
+    // comparing content attributes
+    private static $IDX_LENGTH_MIN = 6;
+    private static $IDX_LENGTH_MAX = 7;
+    private static $IDX_LENGTH_BETWEEN = 8;
+
+    // other
+    private static $IDX_OTHER = 11;
 
     /** @var mixed */
     private $value;
@@ -29,6 +40,8 @@ class ValueValidator implements Validation
     private $errorMessages;
     /** @var string */
     private $error;
+
+    private $optional = false;
 
 
     public function __construct ($value, $label = null)
@@ -45,12 +58,14 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validasi gagal jika value sama dengan null, '', atau hanya berisi whitespace.
+     * Validation failed if value equals to null, '', or only whitespaces.
      * @param string $errorMessage custom error message
      * @return $this
      */
     public function required ($errorMessage = null)
     {
+        $this->optional = false;
+
         if (is_null($errorMessage))
             $errorMessage = sprintf('%s is required', $this->label);
 
@@ -58,8 +73,10 @@ class ValueValidator implements Validation
         {
             if (isset($value))
             {
-                if (is_scalar($value))
+                if (is_scalar($value) && !is_bool($value))
                     return (trim($value) !== '');
+                else if (is_array($value))
+                    return (count($value) > 0);
                 else
                     return true;
             }
@@ -70,19 +87,17 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validasi gagal jika value sama dengan null.
-     * @param string $errorMessage custom error message
+     * Mark this validation as optional.
      * @return $this
      */
-    public function notNull ($errorMessage = null)
+    public function optional ()
     {
-        if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must not be null', $this->label);
+        $this->optional = true;
 
-        $this->setValidation(self::$IDX_REQUIRED, function ($value)
+        $this->setValidation(self::$IDX_OPTIONAL, function ($value)
         {
-            return !is_null($value);
-        }, $errorMessage);
+            return true;
+        }, null);
 
         return $this;
     }
@@ -161,17 +176,304 @@ class ValueValidator implements Validation
     }
 
     /**
+     * Validate if value is a valid ISO-8601 date & time in the format '[YYYY]-[MM]-[DD]'.
+     * Reference: https://www.w3.org/TR/NOTE-datetime
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function validDate ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be a valid date in the format: YYYY-MM-DD', $this->label);
+
+        $this->setValidation(self::$IDX_VALID_DATETIME, function ($value)
+        {
+            /*
+             * 2017-13-01 invalid
+             * 2017-02-29 invalid
+             * 2020-02-29 valid
+            */
+            $date = DateTime::createFromFormat('Y-m-d', $value);
+            if ($date === false)
+                return false;
+            else
+                return ($date->format('Y-m-d') === $value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validate if value is a valid ISO-8601 UTC date & time in the format '[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]'.
+     * Reference: https://www.w3.org/TR/NOTE-datetime
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function validDateTime ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be a valid date in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]', $this->label);
+
+        $this->setValidation(self::$IDX_VALID_DATETIME, function ($value)
+        {
+            /*
+             * 2017-12-01T15:00:31+0000 invalid
+             * 2017-12-01T15:00:31+01 invalid
+             * 2017-12-01T15:00:31+00:00 valid
+             * 2017-12-01T15:00:31-02:00 valid
+             * 2017-12-01T15:00:31Z valid
+             */
+            $dateTime = DateTime::createFromFormat('Y-m-d\TH:i:sP', $value);
+            if ($dateTime === false)
+                return false;
+            else
+            {
+                $lastIdx = strlen($value)-1;
+                if ($value[$lastIdx] == 'Z')
+                    $value = substr($value, 0, $lastIdx).'+00:00';
+
+                return ($dateTime->format('Y-m-d\TH:i:sP') == $value);
+            }
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyBoolean ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be true/false', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_BOOLEAN, function ($value)
+        {
+            return is_bool($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is truly an integer (not string)
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyInteger ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be integer number', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_INTEGER, function ($value)
+        {
+            return is_int($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is truly an integer (not string) and >= 0
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyPositiveInteger ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be positive integer number', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_INTEGER, function ($value)
+        {
+            return is_int($value) && ($value >= 0);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is truly a float (not string)
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyFloat ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be float number', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_FLOAT, function ($value)
+        {
+            return is_int($value) || is_float($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is truly a float (not string) and >= 0
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyPositiveFloat ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be positive float number', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_FLOAT, function ($value)
+        {
+            return (is_int($value) || is_float($value)) && ($value >= 0);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is truly an integer (not string)
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyString ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be text/string', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_STRING, function ($value)
+        {
+            return is_string($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
      * @param string $errorMessage
      * @return $this
      */
     public function onlyNumeric ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be numeric', $this->label);
+            $errorMessage = sprintf('%s must be number or numeric string', $this->label);
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
             return is_numeric($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyNumericInteger ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be integer number or integer string', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
+        {
+            if (is_numeric($value))
+            {
+                // workaround to make "01" returns false
+                // compare casted value string with original value string
+                // false integer string will return false i.e. "01" != "1"
+                $value = (string) $value;
+                $number = $value+0; // convert numeric string to int or float
+                $strValue = (string) $number;
+
+                return ($strValue === $value) && is_int($number);
+            }
+
+            return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyPositiveNumericInteger ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be positive integer number or positive integer string', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
+        {
+            if (is_numeric($value))
+            {
+                // workaround to make "01" returns false
+                // compare casted value string with original value string
+                // false integer string will return false i.e. "01" != "1"
+                $value = (string) $value;
+                $number = $value+0; // convert numeric string to int or float
+                $strValue = (string) $number;
+
+                return ($strValue === $value) && is_int($number) && ($number >= 0);
+            }
+
+            return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyNumericFloat ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be float number or float string', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
+        {
+            if (is_numeric($value))
+            {
+                // workaround to make "01.2" returns false
+                // compare casted value string with original value string
+                // false float string will return false i.e. "01.2" != "1.2"
+                $value = (string) $value;
+                $number = $value+0; // convert numeric string to int or float
+                $strValue = (string) $number;
+
+                return ($strValue === $value) && (is_int($number) || is_float($number));
+            }
+
+            return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyPositiveNumericFloat ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = sprintf('%s must be positive float number or positive float string', $this->label);
+
+        $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
+        {
+            if (is_numeric($value))
+            {
+                // workaround to make "01.2" returns false
+                // compare casted value string with original value string
+                // false float string will return false i.e. "01.2" != "1.2"
+                $value = (string) $value;
+                $number = $value+0; // convert numeric string to int or float
+                $strValue = (string) $number;
+
+                return ($strValue === $value) && (is_int($number) || is_float($number)) && ($number >= 0);
+            }
+
+            return false;
         }, $errorMessage);
 
         return $this;
@@ -207,7 +509,15 @@ class ValueValidator implements Validation
 
     private function setValidation ($idx, Closure $validation, $errorMessage)
     {
-        $this->validations[$idx] = $validation;
+        $valueValidation = function ($value) use ($validation)
+        {
+            if (is_null($value) && $this->optional)
+                return true;
+
+            return $validation($value);
+        };
+
+        $this->validations[$idx] = $valueValidation;
         $this->errorMessages[$idx] = $errorMessage;
     }
 

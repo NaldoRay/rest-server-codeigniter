@@ -1,81 +1,39 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once('validation/ValueValidator.php');
-include_once('validation/ArrayValidator.php');
-include_once('validation/FilesValidator.php');
+include_once('validation/InputValidation.php');
 
 /**
- * Author: RN
- * Date: 8/8/2017
- * Time: 16:16
+ * @author Ray Naldo
  */
-class Rest_validation
+class Rest_validation extends InputValidation
 {
-    /** @var FieldValidator|ValueValidator */
-    private $validator;
-
-
     /**
-     * @param mixed $value
-     * @param string $label
-     * @return ValueValidator
+     * @param string $value
+     * @param string $errorMessage
+     * @return int the integer value
+     * @throws ResourceNotFoundException if value is not an integer
      */
-    public function forValue ($value, $label)
+    public function tryParseIntegerOrNotFound ($value, $errorMessage)
     {
-        $this->validator = new ValueValidator($value, $label);
-        return $this->validator;
+        $valid = $this->forValue($value)->onlyNumericInteger()->validate();
+        if ($valid)
+            return (int) $value;
+        else
+            throw new ResourceNotFoundException($errorMessage, $this->getDomain());
     }
 
-    public function forArray (array $arr)
+    public function validatePositiveInteger ($value, Exception $exception)
     {
-        $this->validator = new ArrayValidator($arr);
+        $valid = $this->forValue($value)->onlyPositiveInteger()->validate();
+        if (!$valid)
+            throw $exception;
     }
 
-    /**
-     * @param string $name
-     * @param string|null $label
-     * @return ValueValidator
-     */
-    public function field ($name, $label = null)
+    public function validatePositiveFloat ($value, Exception $exception)
     {
-        /** @var ArrayValidator $validator */
-        $validator = $this->validator;
-
-        return $validator->field($name, $label);
-    }
-
-    public function forFiles ()
-    {
-        $this->validator = new FilesValidator();
-    }
-
-    /**
-     * @param $name
-     * @param string|null $label
-     * @return FileValidator
-     */
-    public function file ($name, $label = null)
-    {
-        /** @var FilesValidator $validator */
-        $validator = $this->validator;
-
-        return $validator->field($name, $label);
-    }
-
-    /**
-     * Run validation.
-     * @throws BadArrayException
-     * @throws BadValueException
-     */
-    public function validate ()
-    {
-        if (!$this->validator->validate())
-        {
-            if ($this->validator instanceof FieldValidator)
-                throw new BadArrayException($this->validator->getAllErrors());
-            else
-                throw new BadValueException($this->validator->getError());
-        }
+        $valid = $this->forValue($value)->onlyPositiveFloat()->validate();
+        if (!$valid)
+            throw $exception;
     }
 }

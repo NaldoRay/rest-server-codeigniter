@@ -1,13 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+/**
+ * Overrides CI Database Loader so we could load our (custom) db driver extension.
+ * https://github.com/bcit-ci/CodeIgniter/wiki/Extending-Database-Drivers
+ * http://forum.codeigniter.com/thread-35992.html
+ *
+ * @author Modified by Ray Naldo
+ */
 class MY_Loader extends CI_Loader
 {
- 	/**
-     * Overrides CI Database Loader sehingga kita bisa load db driver hasil extends/custom.
-	 * https://github.com/bcit-ci/CodeIgniter/wiki/Extending-Database-Drivers
-	 * http://forum.codeigniter.com/thread-35992.html
-     */
     public function database($params = '', $return = FALSE, $query_builder = NULL)
     {
 		// Grab the super object

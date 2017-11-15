@@ -9,13 +9,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Example_endpoint extends MY_REST_Controller
 {
-    protected $modelToResponseFields = [
-        'N_ID' => 'id',
-        'V_NAME' => 'name',
-        'V_DESC' => 'desc',
-        'N_AGE' => 'age'
-    ];
-
     public function examples_get ()
     {
         $data = [
@@ -57,16 +50,7 @@ class Example_endpoint extends MY_REST_Controller
 
     public function examples_post ()
     {
-        $filterMap = [
-            'name' => 'V_NAME',
-            'desc' => 'V_DESC'
-        ];
-        $modelData = $this->getModelData($this->post(), $filterMap);
-
         // insert...
-        $data = $modelData;
-        $data['N_ID'] = 3;
-
-        $this->respondCreated($data);
+        $this->respondCreated(['id' => 3]);
     }
 }

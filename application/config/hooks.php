@@ -15,16 +15,21 @@ $hook['pre_system'] = function ()
 {
     spl_autoload_register(function ($class)
     {
+        $filePath = null;
         if (strpos($class, 'MY_') === 0)
         {
-            $filepath = sprintf('%score/%s.php', APPPATH, $class);
-            include_once $filepath;
+            $filePath = sprintf('%score/%s.php', APPPATH, $class);
+        }
+        else if (strpos($class, 'APP_') === 0)
+        {
+            $filePath = sprintf('%score/app/%s.php', APPPATH, $class);
         }
         else if (strpos($class, 'Exception') !== false)
         {
-            $filepath = APPPATH.'exceptions/' . $class . '.php';
-            if (file_exists($filepath))
-                include_once($filepath);
+            $filePath = APPPATH.'exceptions/' . $class . '.php';
         }
+
+        if (file_exists($filePath))
+            include_once($filePath);
     });
 };
