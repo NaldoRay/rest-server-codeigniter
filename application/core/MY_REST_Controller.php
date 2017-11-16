@@ -14,6 +14,9 @@ use Restserver\Libraries\REST_Controller;
  */
 class MY_REST_Controller extends REST_Controller
 {
+    protected static $LANG_ENGLISH = 'english';
+    protected static $LANG_INDONESIAN = 'indonesian';
+
     // this property is for debugging-only
     /** @var  ContextErrorException */
     private $contextError;
@@ -25,6 +28,8 @@ class MY_REST_Controller extends REST_Controller
 
         $this->load->helper(['file', 'log']);
         $this->load->library(Rest_validation::class, null, 'validation');
+
+        $this->initLanguage();
 
         set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext)
         {
@@ -38,9 +43,18 @@ class MY_REST_Controller extends REST_Controller
         });
     }
 
-    protected function asdij ()
+    private function initLanguage ()
     {
-        throw new TransactionException();
+        $language = $this->input->get_request_header('Accept-Language');
+        if ($language == 'id')
+            $this->setLanguage(self::$LANG_INDONESIAN);
+        else // default
+            $this->setLanguage(self::$LANG_ENGLISH);
+    }
+
+    protected function setLanguage ($language)
+    {
+        $this->lang->load('messages', $language);
     }
 
     /**
@@ -63,7 +77,7 @@ class MY_REST_Controller extends REST_Controller
             {
                 $this->respondError(
                     self::HTTP_BAD_REQUEST,
-                    'Validation error',
+                    $this->getString('msg_validation_error'),
                     $e->getDomain(),
                     null,
                     $e->getBatchErrors()
@@ -73,7 +87,7 @@ class MY_REST_Controller extends REST_Controller
             {
                 $this->respondError(
                     self::HTTP_BAD_REQUEST,
-                    'Validation error',
+                    $this->getString('msg_validation_error'),
                     $e->getDomain(),
                     $e->getAllErrors()
                 );
@@ -94,33 +108,36 @@ class MY_REST_Controller extends REST_Controller
         else if ($e instanceof ContextErrorException)
         {
             $this->contextError = $e;
+
             $context = $e->getContext();
             if (is_array($context) && isset($context['sql']))
             {
+                // hanya berlaku untuk Oracle SQL
                 $message = $e->getMessage();
                 if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
-                    $errorMessage = 'ID has already been used';
+                    $errorMessage = $this->getString('msg_unique_constraint');
                 else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
                 {
                     if ($matches[1] == 'parent key not found')
-                        $errorMessage = 'Reference ID not found';
+                        $errorMessage = $this->getString('msg_parent_not_found');
                     else if ($matches[1] == 'child record found')
-                        $errorMessage = 'ID is still being referenced';
+                        $errorMessage = $this->getString('msg_child_found');
                     else
-                        $errorMessage = 'Integrity constraint';
+                        $errorMessage = $this->getString('msg_integrity_constraint');
                 }
                 else if (preg_match('/value too large/', $message))
-                    $errorMessage = 'Value too large';
+                    $errorMessage = $this->getString('msg_value_too_large');
                 else
-                    $errorMessage = 'Database error';
+                    $errorMessage = $this->getString('msg_database_error');
 
                 $this->respondBadRequest($errorMessage, null);
             }
             else
             {
-                $errorMessage = 'Internal Error';
-                $this->respondInternalError($errorMessage, null);
+                $this->respondInternalError('Internal Error', null);
             }
+
+            $this->respondInternalError($errorMessage, null);
         }
         else if ($e instanceof CIPHPUnitTestExitException)
         {
@@ -496,5 +513,14 @@ class MY_REST_Controller extends REST_Controller
         $groupResult = $this->isGroupQuery();
 
         return $model->getAll($fields, $filters, $sorts, $groupResult);
+    }
+
+    protected function getString ($key)
+    {
+        $line = $this->lang->line($key);
+        if ($line === false)
+            return null;
+        else
+            return $line;
     }
 }

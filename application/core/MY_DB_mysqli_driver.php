@@ -9,6 +9,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class MY_DB_mysqli_driver extends CI_DB_mysqli_driver
 {
+    /*
+     * http://us2.php.net/manual/en/mysqli-result.fetch-field.php
+     * https://stackoverflow.com/questions/5824722/mysqli-how-to-get-the-type-of-a-column-in-a-table
+     */
     private static $TYPE_TINYINT = 1;
     private static $TYPE_SMALLINT = 2;
     private static $TYPE_MEDIUMINT = 9;
