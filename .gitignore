@@ -44,6 +44,8 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+
 ### CodeIgniter template
 */config/development
 */logs/log-*.php
@@ -52,9 +54,37 @@ fabric.properties
 !*/cache/index.html
 !*/cache/.htaccess
 
+application/logs/*
+!application/logs/index.html
+!application/logs/.htaccess
+
+composer.lock
 /vendor/
-/application/tests/_ci_phpunit_test/tmp/
+
+# IDE Files
+#-------------------------
+/nbproject/
+.idea/*
+
+## Sublime Text cache files
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+## Dreamweaver ##
+*.LCK
+**/_notes
+
+### Gradle template
+.gradle
+/build/
+
+## Project-specific ##
+/upload/
+/logs/
 /release/
-/.gradle/
+/application/tests/_ci_phpunit_test/tmp/
 /application/core/app/APP_Model.php
 /application/core/app/APP_REST_Controller.php

@@ -8,6 +8,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 
 /*
- * Full path with trailing slash
+ * Base path must include a trailing slash or null if you want to use absolute/full path.
  */
-$config['file_upload_path'] = FCPATH.'upload/';
+$config['file_base_path'] = FCPATH.'files/';
