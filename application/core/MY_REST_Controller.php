@@ -441,10 +441,10 @@ class MY_REST_Controller extends REST_Controller
     /**
      * @return bool
      */
-    protected function isGroupQuery ()
+    protected function isUniqueQuery ()
     {
-        $useGroupBy = $this->input->get('group');
-        return ($useGroupBy === 'true');
+        $unique = $this->input->get('unique');
+        return ($unique === 'true');
     }
 
     public function post ($key = NULL, $xss_clean = NULL)
@@ -510,12 +510,12 @@ class MY_REST_Controller extends REST_Controller
         $fields = $this->getQueryFields();
         $filters = $this->getQueryFilters();
         $sorts = $this->getQuerySorts();
-        $groupResult = $this->isGroupQuery();
+        $unique = $this->isUniqueQuery();
 
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $model->getAll($fields, $filters, $sorts, $groupResult);
+        return $model->getAll($fields, $filters, $sorts, $unique);
     }
 
     protected function getString ($key)

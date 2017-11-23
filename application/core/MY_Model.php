@@ -66,10 +66,10 @@ abstract class MY_Model extends CI_Model
      * @param array $fields ['field1', 'field2']
      * @param array $filters ['field1' => 'abc']
      * @param array $sorts ['field1', '-field2']
-     * @param bool $groupResult
+     * @param bool $unique
      * @return object[]
      */
-    public abstract function getAll (array $fields = array(), array $filters = array(), array $sorts = array(), $groupResult = false);
+    public abstract function getAll (array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false);
 
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
@@ -77,10 +77,10 @@ abstract class MY_Model extends CI_Model
      * @param array|null $fields
      * @param array $filters
      * @param array $sorts
-     * @param bool $groupResult
+     * @param bool $unique
      * @return object[]
      */
-    protected function getAllRows ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $groupResult = false)
+    protected function getAllRows ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false)
     {
         $fields = $this->toTableFields($fields);
         $filters = $this->filterToTableData($filters); // allow all fields in $fieldMap
@@ -88,7 +88,7 @@ abstract class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        return $this->getAllEntities($db, $table, $fields, $filters, $sorts, $groupResult);
+        return $this->getAllEntities($db, $table, $fields, $filters, $sorts, $unique);
     }
 
     /**
@@ -97,10 +97,10 @@ abstract class MY_Model extends CI_Model
      * @param array|null $fields
      * @param array $filters
      * @param array $sorts
-     * @param bool $groupResult
+     * @param bool $unique
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $groupResult = false)
+    protected function getAllEntities ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false)
     {
         foreach ($filters as $field => $filter)
         {
@@ -121,8 +121,8 @@ abstract class MY_Model extends CI_Model
             $db->order_by(implode(',', $sorts));
         }
 
-        if ($groupResult)
-            $db->group_by(implode(',', $fields));
+        if ($unique)
+            $db->distinct();
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
