@@ -505,12 +505,15 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    protected function getAll (MY_Model $model)
+    protected function getAll (MY_Model $model, array $extraFilters = array())
     {
         $fields = $this->getQueryFields();
         $filters = $this->getQueryFilters();
         $sorts = $this->getQuerySorts();
         $groupResult = $this->isGroupQuery();
+
+        if (!empty($extraFilters))
+            $filters = array_merge($filters, $extraFilters);
 
         return $model->getAll($fields, $filters, $sorts, $groupResult);
     }

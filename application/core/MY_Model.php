@@ -31,16 +31,16 @@ abstract class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
-     * @param array $whereArr not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
+     * @param array $filters not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
      * @param array $fields
      * @return object
      */
-    protected function getRow ($db, $table, array $whereArr = array(), array $fields = array())
+    protected function getRow ($db, $table, array $filters = array(), array $fields = array())
     {
-        $whereArr = $this->filterToTableData($whereArr);
+        $filters = $this->filterToTableData($filters);
         $fields = $this->toTableFields($fields);
 
-        return $this->getEntity($db, $table, $whereArr, $fields);
+        return $this->getEntity($db, $table, $filters, $fields);
     }
 
     /**
