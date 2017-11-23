@@ -29,7 +29,7 @@ abstract class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_oci8_driver $db
+     * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
      * @param array $whereArr not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
      * @param array $fields
@@ -44,7 +44,7 @@ abstract class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_oci8_driver $db
+     * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
      * @param array $whereArr table's [field => value]
      * @param array $fields
@@ -72,7 +72,7 @@ abstract class MY_Model extends CI_Model
     public abstract function getAll (array $fields = array(), array $filters = array(), array $sorts = array(), $groupResult = false);
 
     /**
-     * @param CI_DB_query_builder|CI_DB_oci8_driver $db $db
+     * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
      * @param array|null $fields
      * @param array $filters
@@ -92,7 +92,7 @@ abstract class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_oci8_driver $db $db
+     * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
      * @param array|null $fields
      * @param array $filters
@@ -151,7 +151,7 @@ abstract class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_oci8_driver $db
+     * @param CI_DB_query_builder|CI_DB $db
      * @param $table
      * @param $whereArr
      * @return bool
@@ -173,6 +173,9 @@ abstract class MY_Model extends CI_Model
      */
     protected function filterToTableData (array $data, array $allowedFields = array())
     {
+        if (empty($data))
+            return array();
+
         $tableData = array();
 
         // default is to allow all fields
@@ -206,6 +209,9 @@ abstract class MY_Model extends CI_Model
      */
     protected function toTableSortData (array $sorts)
     {
+        if (empty($sorts))
+            return array();
+
         $sortData = array();
         foreach ($sorts as $sort)
         {
@@ -225,7 +231,6 @@ abstract class MY_Model extends CI_Model
                 $sortData[] = sprintf('%s %s', $this->fieldMap[$field], $order);
             }
         }
-
         return $sortData;
     }
 
@@ -236,6 +241,9 @@ abstract class MY_Model extends CI_Model
      */
     protected function toTableFields (array $fields = array())
     {
+        if (empty($fields))
+            return array();
+
         $tableFields = array();
         $fieldMap = $this->getFullFieldMap();
         foreach ($fields as $field)
@@ -254,6 +262,9 @@ abstract class MY_Model extends CI_Model
      */
     protected function toEntities (array $rows)
     {
+        if (empty($rows))
+            return array();
+
         return array_map(function($row){
             return $this->toEntity($row);
         }, $rows);
