@@ -29,16 +29,38 @@ abstract class MY_Model extends CI_Model
     }
 
     /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param $table
+     * @param array $data
+     * @param array $whereArr
+     * @return bool
+     */
+    protected function insertOrUpdate ($db, $table, array $data, array $whereArr)
+    {
+        if ($this->rowExists($db, $table, $whereArr))
+        {
+            return $db->where($whereArr)
+                ->update($table, $data);
+        }
+        else
+        {
+            return $db->insert($table, $data);
+        }
+    }
+
+    /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
      * @param array $filters not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
      * @param array $fields
      * @return object
      */
-    protected function getRow ($db, $table, array $filters = array(), array $fields = array())
+    protected function getRow ($db, $table, array $filters = null, array $fields = null)
     {
-        $filters = $this->filterToTableData($filters);
-        $fields = $this->toTableFields($fields);
+        if (!empty($filters))
+            $filters = $this->filterToTableData($filters);
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
 
         return $this->getEntity($db, $table, $filters, $fields);
     }
@@ -50,7 +72,7 @@ abstract class MY_Model extends CI_Model
      * @param array $fields
      * @return object
      */
-    protected function getEntity ($db, $table, array $whereArr = array(), array $fields = array())
+    protected function getEntity ($db, $table, array $whereArr, array $fields = null)
     {
         if (!empty($whereArr))
             $db->where($whereArr);
@@ -59,7 +81,11 @@ abstract class MY_Model extends CI_Model
         $result = $db->select($select)
             ->get($table);
 
-        return $this->toEntity($result->row_array());
+        $row = $result->row_array();
+        if (is_null($row))
+            return null;
+        else
+            return $this->toEntity($row);
     }
 
     /**
@@ -69,7 +95,7 @@ abstract class MY_Model extends CI_Model
      * @param bool $unique
      * @return object[]
      */
-    public abstract function getAll (array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false);
+    public abstract function getAll (array $fields = null, array $filters = null, array $sorts = null, $unique = false);
 
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
@@ -80,10 +106,12 @@ abstract class MY_Model extends CI_Model
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllRows ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false)
+    protected function getAllRows ($db, $table, array $fields = null, array $filters = null, array $sorts = null, $unique = false)
     {
-        $fields = $this->toTableFields($fields);
-        $filters = $this->filterToTableData($filters); // allow all fields in $fieldMap
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
+        if (!empty($filters))
+            $filters = $this->filterToTableData($filters); // allow all fields in $fieldMap
         if (empty($sorts))
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
@@ -94,18 +122,21 @@ abstract class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
-     * @param array|null $fields
+     * @param array $fields
      * @param array $filters
      * @param array $sorts
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $fields = array(), array $filters = array(), array $sorts = array(), $unique = false)
+    protected function getAllEntities ($db, $table, array $fields = null, array $filters = null, array $sorts = null, $unique = false)
     {
-        foreach ($filters as $field => $filter)
+        if (!empty($filters))
         {
-            $filter = $db->escape($filter);
-            $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $filter), null, false);
+            foreach ($filters as $field => $filter)
+            {
+                $filter = $db->escape($filter);
+                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $filter), null, false);
+            }
         }
 
         if (!empty($sorts))
@@ -131,7 +162,7 @@ abstract class MY_Model extends CI_Model
         return $this->toEntities($result->result_array());
     }
 
-    protected function getSelectField (array $tableFields)
+    protected function getSelectField (array $tableFields = null)
     {
         if (empty($tableFields))
         {
@@ -171,7 +202,7 @@ abstract class MY_Model extends CI_Model
      * @param array $allowedFields
      * @return array
      */
-    protected function filterToTableData (array $data, array $allowedFields = array())
+    protected function filterToTableData (array $data, array $allowedFields = null)
     {
         if (empty($data))
             return array();
@@ -239,7 +270,7 @@ abstract class MY_Model extends CI_Model
      * @param array $fields
      * @return array
      */
-    protected function toTableFields (array $fields = array())
+    protected function toTableFields (array $fields)
     {
         if (empty($fields))
             return array();
@@ -249,9 +280,7 @@ abstract class MY_Model extends CI_Model
         foreach ($fields as $field)
         {
             if (isset($fieldMap[$field]))
-                $field = $fieldMap[$field];
-
-            $tableFields[] = $field;
+                $tableFields[] = $fieldMap[$field];
         }
         return $tableFields;
     }
@@ -266,7 +295,10 @@ abstract class MY_Model extends CI_Model
             return array();
 
         return array_map(function($row){
-            return $this->toEntity($row);
+            if (is_null($row))
+                return null;
+            else
+                return $this->toEntity($row);
         }, $rows);
     }
 
@@ -274,23 +306,14 @@ abstract class MY_Model extends CI_Model
      * @param array $row table row
      * @return object
      */
-    protected function toEntity (array $row = null)
+    protected function toEntity (array $row)
     {
-        if (is_null($row))
-            return null;
-
         $entity = new stdClass();
         $fieldMap = array_flip($this->fieldMap);
         foreach ($row as $field => $value)
         {
-            foreach ($this->booleanPrefixes as $booleanPrefix)
-            {
-                if (strpos($field, $booleanPrefix) === 0)
-                {
-                    $value = (bool)$value;
-                    break;
-                }
-            }
+            if ($this->isBooleanField($field))
+                $value = (bool)$value;
 
             if (isset($fieldMap[$field]))
                 $field = $fieldMap[$field];
@@ -298,6 +321,16 @@ abstract class MY_Model extends CI_Model
             $entity->{$field} = $value;
         }
         return $entity;
+    }
+
+    private function isBooleanField ($field)
+    {
+        foreach ($this->booleanPrefixes as $booleanPrefix)
+        {
+            if (strpos($field, $booleanPrefix) === 0)
+                return true;
+        }
+        return false;
     }
 
     private function getFullFieldMap ()

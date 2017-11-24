@@ -505,12 +505,27 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    protected function getAll (MY_Model $model, array $extraFilters = array())
+    protected function getAll (MY_Model $model, array $extraFilters = null, array $allowedFields = null)
     {
         $fields = $this->getQueryFields();
         $filters = $this->getQueryFilters();
         $sorts = $this->getQuerySorts();
         $unique = $this->isUniqueQuery();
+
+        if (!empty($allowedFields))
+        {
+            if (empty($fields))
+            {
+                $fields = $allowedFields;
+            }
+            else
+            {
+                $fields = array_filter($fields, function ($value) use ($allowedFields)
+                {
+                    return in_array($value, $allowedFields);
+                });
+            }
+        }
 
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
