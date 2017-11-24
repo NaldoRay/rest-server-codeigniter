@@ -4,7 +4,7 @@
  * @author Ray Naldo
  * @property Rest_validation $validation
  */
-abstract class MY_Model extends CI_Model
+class MY_Model extends CI_Model
 {
     /** for insert/update it's recommended to use $this->getFieldMap() e.g. ['field1' => 'table_field1', 'field2' => 'table_field2'] */
     protected $fieldMap = [];
@@ -55,7 +55,7 @@ abstract class MY_Model extends CI_Model
      * @param array $fields
      * @return object
      */
-    protected function getRow ($db, $table, array $filters = null, array $fields = null)
+    protected function getRow ($db, $table, array $filters, array $fields = null)
     {
         if (!empty($filters))
             $filters = $this->filterToTableData($filters);
@@ -68,14 +68,14 @@ abstract class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
-     * @param array $whereArr table's [field => value]
+     * @param array $filters table's [field => value]
      * @param array $fields
      * @return object
      */
-    protected function getEntity ($db, $table, array $whereArr, array $fields = null)
+    protected function getEntity ($db, $table, array $filters, array $fields = null)
     {
-        if (!empty($whereArr))
-            $db->where($whereArr);
+        if (!empty($filters))
+            $db->where($filters);
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
@@ -91,11 +91,25 @@ abstract class MY_Model extends CI_Model
     /**
      * @param array $fields ['field1', 'field2']
      * @param array $filters ['field1' => 'abc']
+     * @return object
+     * @throws ResourceNotFoundException
+     */
+    public function getSingle (array $filters, array $fields = null)
+    {
+        throw new NotSupportedException(sprintf('Get not supported: %s', $this->domain));
+    }
+
+    /**
+     * @param array $fields ['field1', 'field2']
+     * @param array $filters ['field1' => 'abc']
      * @param array $sorts ['field1', '-field2']
      * @param bool $unique
      * @return object[]
      */
-    public abstract function getAll (array $fields = null, array $filters = null, array $sorts = null, $unique = false);
+    public function getAll (array $fields = null, array $filters = null, array $sorts = null, $unique = false)
+    {
+        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
+    }
 
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
