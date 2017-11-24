@@ -15,7 +15,7 @@ use Restserver\Libraries\REST_Controller;
 class MY_REST_Controller extends REST_Controller
 {
     protected static $LANG_ENGLISH = 'english';
-    protected static $LANG_INDONESIAN = 'indonesian';
+    protected static $LANG_INDONESIA = 'indonesia';
 
     // this property is for debugging-only
     /** @var  ContextErrorException */
@@ -47,7 +47,7 @@ class MY_REST_Controller extends REST_Controller
     {
         $language = $this->input->get_request_header('Accept-Language');
         if ($language == 'id')
-            $this->setLanguage(self::$LANG_INDONESIAN);
+            $this->setLanguage(self::$LANG_INDONESIA);
         else // default
             $this->setLanguage(self::$LANG_ENGLISH);
     }
@@ -280,7 +280,7 @@ class MY_REST_Controller extends REST_Controller
     {
 		if (is_null($domain))
             $domain = 'Global';
-		
+
         $response = array(
             'error' => [
                 'domain' => $domain,
