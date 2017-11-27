@@ -49,6 +49,17 @@ class MY_Model extends CI_Model
     }
 
     /**
+     * @param array $fields ['field1', 'field2']
+     * @param array $filters ['field1' => 'abc']
+     * @return object
+     * @throws ResourceNotFoundException
+     */
+    public function getSingle (array $filters, array $fields = null)
+    {
+        throw new NotSupportedException(sprintf('Get not supported: %s', $this->domain));
+    }
+
+    /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param string $table
      * @param array $filters not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
@@ -58,7 +69,7 @@ class MY_Model extends CI_Model
     protected function getRow ($db, $table, array $filters, array $fields = null)
     {
         if (!empty($filters))
-            $filters = $this->filterToTableData($filters);
+            $filters = $this->toTableFilters($filters);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
 
@@ -89,24 +100,14 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param array $fields ['field1', 'field2']
      * @param array $filters ['field1' => 'abc']
-     * @return object
-     * @throws ResourceNotFoundException
-     */
-    public function getSingle (array $filters, array $fields = null)
-    {
-        throw new NotSupportedException(sprintf('Get not supported: %s', $this->domain));
-    }
-
-    /**
+     * @param array $searches
      * @param array $fields ['field1', 'field2']
-     * @param array $filters ['field1' => 'abc']
      * @param array $sorts ['field1', '-field2']
      * @param bool $unique
      * @return object[]
      */
-    public function getAll (array $fields = null, array $filters = null, array $sorts = null, $unique = false)
+    public function getAll (array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
         throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
@@ -114,42 +115,49 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
-     * @param array|null $fields
      * @param array $filters
+     * @param array|null $searches
+     * @param array $fields
      * @param array $sorts
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllRows ($db, $table, array $fields = null, array $filters = null, array $sorts = null, $unique = false)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
+        if (!empty($filters))
+            $filters = $this->toTableFilters($filters);
+        if (!empty($searches))
+            $searches = $this->toTableFilters($searches);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
-        if (!empty($filters))
-            $filters = $this->filterToTableData($filters); // allow all fields in $fieldMap
         if (empty($sorts))
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        return $this->getAllEntities($db, $table, $fields, $filters, $sorts, $unique);
+        return $this->getAllEntities($db, $table, $filters, $searches, $fields, $sorts, $unique);
     }
 
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
-     * @param array $fields
      * @param array $filters
+     * @param array $searches
+     * @param array $fields
      * @param array $sorts
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $fields = null, array $filters = null, array $sorts = null, $unique = false)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
         if (!empty($filters))
+            $db->where($filters);
+
+        if (!empty($searches))
         {
-            foreach ($filters as $field => $filter)
+            foreach ($searches as $field => $search)
             {
-                $filter = $db->escape($filter);
-                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $filter), null, false);
+                $search = $db->escape($search);
+                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search), null, false);
             }
         }
 
@@ -234,17 +242,46 @@ class MY_Model extends CI_Model
         {
             if (in_array($field, $allowedFields))
             {
-                if (is_bool($value))
-                    $value = ($value ? '1' : '0');
-
                 if (isset($fieldMap[$field]))
                     $field = $fieldMap[$field];
+
+                if ($this->isBooleanField($field))
+                    $value = ($value ? '1' : '0');
 
                 $tableData[$field] = $value;
             }
         }
 
         return $tableData;
+    }
+
+    protected function toTableFilters (array $filters)
+    {
+        if (empty($filters))
+            return array();
+
+        $filterData = array();
+        foreach ($filters as $field => $value)
+        {
+            if (isset($this->fieldMap[$field]))
+            {
+                $field = $this->fieldMap[$field];
+                if ($this->isBooleanField($field))
+                {
+                    // set field only if it has valid value
+                    if ($value === 'true' || $value === 'false')
+                        $value = ($value === 'true');
+
+                    if (is_bool($value))
+                        $filterData[$field] = ($value ? '1' : '0');
+                }
+                else
+                {
+                    $filterData[$field] = $value;
+                }
+            }
+        }
+        return $filterData;
     }
 
     /**

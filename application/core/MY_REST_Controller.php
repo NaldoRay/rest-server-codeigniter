@@ -439,6 +439,18 @@ class MY_REST_Controller extends REST_Controller
     }
 
     /**
+     * @return array
+     */
+    protected function getQuerySearches ()
+    {
+        $searchesParam = $this->input->get('searches');
+        if (!is_array($searchesParam))
+            $searchesParam = array();
+
+        return $searchesParam;
+    }
+
+    /**
      * @return bool
      */
     protected function isUniqueQuery ()
@@ -535,8 +547,9 @@ class MY_REST_Controller extends REST_Controller
 
     protected function getAll (MY_Model $model, array $extraFilters = null, array $allowedFields = null)
     {
-        $fields = $this->getQueryFields();
         $filters = $this->getQueryFilters();
+        $searches = $this->getQuerySearches();
+        $fields = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $unique = $this->isUniqueQuery();
 
@@ -558,7 +571,7 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $model->getAll($fields, $filters, $sorts, $unique);
+        return $model->getAll($filters, $searches, $fields, $sorts, $unique);
     }
 
     protected function getString ($key)
