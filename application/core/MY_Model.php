@@ -90,6 +90,7 @@ class MY_Model extends CI_Model
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
+            ->limit(1)
             ->get($table);
 
         $row = $result->row_array();
