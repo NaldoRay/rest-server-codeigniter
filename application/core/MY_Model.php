@@ -34,58 +34,141 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $whereArr
+     * @param array $filters
      * @param array $data
+     * @param array $allowedFields
      * @return bool
      */
-    protected function insertOrUpdate ($db, $table, array $whereArr, array $data)
+    protected function insertOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
-        if ($this->entityExists($db, $table, $whereArr))
+        if ($this->rowExists($db, $table, $filters))
         {
-            return $db->where($whereArr)
-                ->update($table, $data);
+            return $this->updateEntity($db, $table, $filters, $data, $allowedFields);
         }
         else
         {
-            return $db->insert($table, $data);
+            $entity = $this->insertEntity($db, $table, $data, $allowedFields);
+            return !is_null($entity);
         }
     }
 
     /**
-     * @param array $fields ['field1', 'field2']
-     * @param array $filters ['field1' => 'abc']
-     * @return object
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $dataArr array of entity data
+     * @param array|null $allowedFields
+     * @return array
      */
-    public function getSingle (array $filters, array $fields = null)
+    protected function insertEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
-        throw new NotSupportedException(sprintf('Get not supported: %s', $this->domain));
+        foreach ($dataArr as $idx => $data)
+            $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
+
+        $count = $db->insert_batch($table, $dataArr);
+        if ($count === count($dataArr))
+            return $this->toEntities($dataArr);
+        else
+            return array();
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters not table's [field => value] but this model (unmapped) [field => value], e.g. [isActive => true]
+     * @param array $data
+     * @param array|null $allowedFields
+     * @return object|null
+     */
+    protected function insertEntity ($db, $table, array $data, array $allowedFields = null)
+    {
+        $data = $this->filterToTableData($data, $allowedFields);
+        $success = $this->insertRow($db, $table, $data);
+        if ($success)
+            return $this->toEntity($data);
+        else
+            return null;
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $data
+     * @return bool
+     */
+    protected function insertRow ($db, $table, array $data)
+    {
+        if (empty($data))
+            return false;
+        else
+            return $db->insert($table, $data);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $filters
+     * @param array $data
+     * @param array|null $allowedFields
+     * @return bool
+     */
+    protected function updateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
+    {
+        $filters = $this->toTableFilters($filters);
+        $data = $this->filterToTableData($data, $allowedFields);
+
+        return $this->updateRow($db, $table, $filters, $data);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $filters
+     * @param array $data
+     * @return bool
+     */
+    protected function updateRow ($db, $table, array $filters, array $data)
+    {
+        if (empty($data))
+        {
+            return false;
+        }
+        else
+        {
+            if (!empty($filters))
+                $db->where($filters);
+
+            return $db->update($table, $data);
+        }
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $filters [entity field => value], e.g. [id => 1]
      * @param array $fields
      * @return object
      */
-    protected function getRow ($db, $table, array $filters, array $fields = null)
+    protected function getEntity ($db, $table, array $filters, array $fields = null)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
 
-        return $this->getEntity($db, $table, $filters, $fields);
+        $row = $this->getRow($db, $table, $filters, $fields);
+        if (is_null($row))
+            return null;
+        else
+            return $this->toEntity($row);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters table's [field => value]
+     * @param array $filters [table field => value]
      * @param array $fields
-     * @return object
+     * @return array|null
      */
-    protected function getEntity ($db, $table, array $filters, array $fields = null)
+    protected function getRow ($db, $table, array $filters, array $fields = null)
     {
         if (!empty($filters))
             $db->where($filters);
@@ -95,11 +178,7 @@ class MY_Model extends CI_Model
             ->limit(1)
             ->get($table);
 
-        $row = $result->row_array();
-        if (is_null($row))
-            return null;
-        else
-            return $this->toEntity($row);
+        return $result->row_array();
     }
 
     /**
@@ -109,12 +188,11 @@ class MY_Model extends CI_Model
      * @param array $fields
      * @return object
      */
-    protected function getRowWithCondition ($db, $table, array $conditions, array $fields = null)
+    protected function getEntityWithCondition ($db, $table, array $conditions, array $fields = null)
     {
         $tableConditions = $this->toTableConditions($conditions);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
-
 
         foreach ($tableConditions as $condition)
             $db->where($this->getWhereString($db, $condition));
@@ -154,7 +232,7 @@ class MY_Model extends CI_Model
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -166,7 +244,8 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        return $this->getAllEntities($db, $table, $filters, $searches, $fields, $sorts, $unique);
+        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $sorts, $unique);
+        return $this->toEntities($rows);
     }
 
     /**
@@ -179,18 +258,21 @@ class MY_Model extends CI_Model
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
         if (!empty($filters))
             $db->where($filters);
 
         if (!empty($searches))
         {
+            $searchWhereArr = array();
             foreach ($searches as $field => $search)
             {
                 $search = $db->escape($search);
-                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search), null, false);
+                $searchWhereArr[] = sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search);
             }
+            if (!empty($searchWhereArr))
+                $db->where(sprintf('(%s)', implode(' OR ', $searchWhereArr)), null, false);
         }
 
         if (!empty($sorts))
@@ -213,7 +295,7 @@ class MY_Model extends CI_Model
         $result = $db->select($select)
             ->get($table);
 
-        return $this->toEntities($result->result_array());
+        return $result->result_array();
     }
 
     /**
@@ -225,7 +307,7 @@ class MY_Model extends CI_Model
      * @param bool $unique
      * @return object[]
      */
-    protected function getAllRowsWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false)
     {
         $tableConditions = $this->toTableConditions($conditions);
         if (!empty($fields))
@@ -313,44 +395,42 @@ class MY_Model extends CI_Model
      * @param array $filters
      * @param array $searches
      * @return bool
-     * @internal param $whereArr
      */
-    protected function rowExists ($db, $table, array $filters = null, array $searches = null)
+    protected function entityExists ($db, $table, array $filters = null, array $searches = null)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
         if (!empty($searches))
             $searches = $this->toTableFilters($searches);
 
-
-        if (!empty($filters))
-            $db->where($filters);
-
-        if (!empty($searches))
-        {
-            foreach ($searches as $field => $search)
-            {
-                $search = $db->escape($search);
-                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search), null, false);
-            }
-        }
-        $query = $db->select('1')
-            ->limit(1)
-            ->get($table);
-
-        return ($query->num_rows() > 0);
+        return $this->rowExists($db, $table, $filters, $searches);
     }
 
     /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param $table
-     * @param $whereArr
+     * @param array $filters
+     * @param array $searches
      * @return bool
      */
-    protected function entityExists ($db, $table, $whereArr)
+    protected function rowExists ($db, $table, array $filters = null, array $searches = null)
     {
+        if (!empty($filters))
+            $db->where($filters);
+
+        if (!empty($searches))
+        {
+            $searchWhereArr = array();
+            foreach ($searches as $field => $search)
+            {
+                $search = $db->escape($search);
+                $searchWhereArr[] = sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search);
+            }
+            if (!empty($searchWhereArr))
+                $db->where(sprintf('(%s)', implode(' OR ', $searchWhereArr)), null, false);
+        }
+
         $query = $db->select('1')
-            ->where($whereArr)
             ->limit(1)
             ->get($table);
 

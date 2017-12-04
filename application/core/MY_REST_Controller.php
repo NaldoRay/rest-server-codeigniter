@@ -519,34 +519,6 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    /**
-     * @param MY_Model $model
-     * @param array $filters
-     * @param array|null $allowedFields
-     * @return object
-     * @throws ResourceNotFoundException
-     */
-    protected function getSingle (MY_Model $model, array $filters, array $allowedFields = null)
-    {
-        $fields = $this->getQueryFields();
-        if (!empty($allowedFields))
-        {
-            if (empty($fields))
-            {
-                $fields = $allowedFields;
-            }
-            else
-            {
-                $fields = array_filter($fields, function ($value) use ($allowedFields)
-                {
-                    return in_array($value, $allowedFields);
-                });
-            }
-        }
-
-        return $model->getSingle($filters, $fields);
-    }
-
     protected function getAll (MY_Model $model, array $extraFilters = null, array $allowedFields = null)
     {
         $filters = $this->getQueryFilters();
