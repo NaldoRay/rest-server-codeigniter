@@ -1,4 +1,7 @@
 <?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+include_once('QueryCondition.php');
 
 /**
  * @author Ray Naldo
@@ -10,10 +13,10 @@ class MY_Model extends CI_Model
     protected $fieldMap = [];
 
     /** fields that will be hidden on entity */
-    protected $upsertOnlyFields = [];
+    protected $upsertOnlyFieldMap = [];
 
     /** prefix from column name with boolean type (for auto-convert) */
-    protected $booleanPrefixes = ['is_', 'has_'];
+    protected $booleanPrefixes = [];
 
     /** used as default when no sorts param given when calling get method e.g. ['field1', 'field2'] */
     protected $defaultSorts = [];
@@ -37,7 +40,7 @@ class MY_Model extends CI_Model
      */
     protected function insertOrUpdate ($db, $table, array $data, array $whereArr)
     {
-        if ($this->rowExists($db, $table, $whereArr))
+        if ($this->entityExists($db, $table, $whereArr))
         {
             return $db->where($whereArr)
                 ->update($table, $data);
@@ -52,7 +55,6 @@ class MY_Model extends CI_Model
      * @param array $fields ['field1', 'field2']
      * @param array $filters ['field1' => 'abc']
      * @return object
-     * @throws ResourceNotFoundException
      */
     public function getSingle (array $filters, array $fields = null)
     {
@@ -87,6 +89,35 @@ class MY_Model extends CI_Model
     {
         if (!empty($filters))
             $db->where($filters);
+
+        $select = $this->getSelectField($fields);
+        $result = $db->select($select)
+            ->limit(1)
+            ->get($table);
+
+        $row = $result->row_array();
+        if (is_null($row))
+            return null;
+        else
+            return $this->toEntity($row);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param string $table
+     * @param array $conditions array of QueryCondition
+     * @param array $fields
+     * @return object
+     */
+    protected function getRowWithCondition ($db, $table, array $conditions, array $fields = null)
+    {
+        $tableConditions = $this->toTableConditions($conditions);
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
+
+
+        foreach ($tableConditions as $condition)
+            $db->where($this->getWhereString($db, $condition));
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
@@ -185,6 +216,78 @@ class MY_Model extends CI_Model
         return $this->toEntities($result->result_array());
     }
 
+    /**
+     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param string $table
+     * @param array $conditions array of QueryCondition
+     * @param array $fields
+     * @param array $sorts
+     * @param bool $unique
+     * @return object[]
+     */
+    protected function getAllRowsWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false)
+    {
+        $tableConditions = $this->toTableConditions($conditions);
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
+        if (empty($sorts))
+            $sorts = $this->defaultSorts;
+        $sorts = $this->toTableSortData($sorts);
+
+
+        foreach ($tableConditions as $condition)
+            $db->where($this->getWhereString($db, $condition));
+
+        if (!empty($sorts))
+        {
+            if (!empty($fields))
+            {
+                $sorts = array_filter($sorts, function ($sort) use ($fields)
+                {
+                    $sortField = explode(' ', $sort)[0];
+                    return in_array($sortField, $fields);
+                });
+            }
+            $db->order_by(implode(',', $sorts));
+        }
+
+        if ($unique)
+            $db->distinct();
+
+        $select = $this->getSelectField($fields);
+        $result = $db->select($select)
+            ->get($table);
+
+        return $this->toEntities($result->result_array());
+    }
+
+    private function toTableConditions (array $conditions)
+    {
+        $tableConditions = array();
+
+        /** @var QueryCondition $condition */
+        foreach ($conditions as $condition)
+        {
+            $field = $condition->field;
+            if (isset($this->fieldMap[$field]))
+            {
+                $condition->field = $this->fieldMap[$field];
+                $tableConditions[] = $condition;
+            }
+        }
+        return $tableConditions;
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param QueryCondition $condition
+     * @return string
+     */
+    private function getWhereString ($db, QueryCondition $condition)
+    {
+        return sprintf('%s %s %s', $condition->field, $condition->operator, $db->escape($condition->value));
+    }
+
     protected function getSelectField (array $tableFields = null)
     {
         if (empty($tableFields))
@@ -207,13 +310,48 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db
      * @param $table
+     * @param array $filters
+     * @param array $searches
+     * @return bool
+     * @internal param $whereArr
+     */
+    protected function rowExists ($db, $table, array $filters = null, array $searches = null)
+    {
+        if (!empty($filters))
+            $filters = $this->toTableFilters($filters);
+        if (!empty($searches))
+            $searches = $this->toTableFilters($searches);
+
+
+        if (!empty($filters))
+            $db->where($filters);
+
+        if (!empty($searches))
+        {
+            foreach ($searches as $field => $search)
+            {
+                $search = $db->escape($search);
+                $db->where(sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search), null, false);
+            }
+        }
+        $query = $db->select('1')
+            ->limit(1)
+            ->get($table);
+
+        return ($query->num_rows() > 0);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB $db
+     * @param $table
      * @param $whereArr
      * @return bool
      */
-    protected function rowExists ($db, $table, $whereArr)
+    protected function entityExists ($db, $table, $whereArr)
     {
         $query = $db->select('1')
             ->where($whereArr)
+            ->limit(1)
             ->get($table);
 
         return ($query->num_rows() > 0);
@@ -236,7 +374,7 @@ class MY_Model extends CI_Model
         if (empty($allowedFields))
             $allowedFields = array_keys($this->getFullFieldMap());
         else
-            $allowedFields = array_merge($allowedFields, array_keys($this->upsertOnlyFields));
+            $allowedFields = array_merge($allowedFields, array_keys($this->upsertOnlyFieldMap));
 
         $fieldMap = $this->getFullFieldMap();
         foreach ($data as $field => $value)
@@ -270,8 +408,8 @@ class MY_Model extends CI_Model
                 if ($this->isBooleanField($field))
                 {
                     // set field only if it has valid value
-                    if ($value === 'true' || $value === 'false')
-                        $value = ($value === 'true');
+                    if ($value === 'true' || $value === 'false' || $value === '0' || $value === '1')
+                        $value = ($value === 'true' || $value === '1');
 
                     if (is_bool($value))
                         $filterData[$field] = ($value ? '1' : '0');
@@ -360,6 +498,12 @@ class MY_Model extends CI_Model
      */
     protected function toEntity (array $row)
     {
+        // using `limit 1` on oracle db / oci8 will add RNUM field
+        // need to be removed  manually
+        unset(
+            $row['RNUM']
+        );
+
         $entity = new stdClass();
         $fieldMap = array_flip($this->fieldMap);
         foreach ($row as $field => $value)
@@ -387,6 +531,6 @@ class MY_Model extends CI_Model
 
     private function getFullFieldMap ()
     {
-        return array_merge($this->fieldMap, $this->upsertOnlyFields);
+        return array_merge($this->fieldMap, $this->upsertOnlyFieldMap);
     }
 }

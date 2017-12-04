@@ -44,17 +44,26 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
             // convert fields' value according to their type
             $fields = $result->field_data();
             $rows = $result->result();
-            foreach ($fields as $field)
+            if (!empty($fields) && !empty($rows))
             {
-                switch ($field->type)
+                // check is row really has one of the fields
+                $firstRow = reset($rows);
+                $firstField = reset($fields);
+                if (isset($firstRow->{$firstField->name}))
                 {
-                    case 'NUMBER':
+                    foreach ($fields as $field)
                     {
-                        // convert NUMBER field's value to number
-                        $fieldName = $field->name;
-                        foreach ($rows as $row)
-                            $row->{$fieldName} = $row->{$fieldName} + 0;
-                        break;
+                        switch ($field->type)
+                        {
+                            case 'NUMBER':
+                            {
+                                // convert NUMBER field's value to number
+                                $fieldName = $field->name;
+                                foreach ($rows as $row)
+                                    $row->{$fieldName} = $row->{$fieldName} + 0;
+                                break;
+                            }
+                        }
                     }
                 }
             }

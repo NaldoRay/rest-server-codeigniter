@@ -136,8 +136,6 @@ class MY_REST_Controller extends REST_Controller
             {
                 $this->respondInternalError('Internal Error', null);
             }
-
-            $this->respondInternalError($errorMessage, null);
         }
         else if ($e instanceof CIPHPUnitTestExitException)
         {

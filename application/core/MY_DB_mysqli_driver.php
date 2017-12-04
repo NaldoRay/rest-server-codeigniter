@@ -61,27 +61,36 @@ class MY_DB_mysqli_driver extends CI_DB_mysqli_driver
             // convert fields' value according to their type
             $fields = $result->field_data();
             $rows = $result->result();
-            foreach ($fields as $field)
+            if (!empty($fields) && !empty($rows))
             {
-                switch ($field->type)
+                // check is row really has one of the fields
+                $firstRow = reset($rows);
+                $firstField = reset($fields);
+                if (isset($firstRow->{$firstField->name}))
                 {
-                    case self::$TYPE_TINYINT:
-                    case self::$TYPE_SMALLINT:
-                    case self::$TYPE_MEDIUMINT:
-                    case self::$TYPE_INTEGER:
-                    case self::$TYPE_BIGINT:
-                    case self::$TYPE_SERIAL:
-                    case self::$TYPE_FLOAT:
-                    case self::$TYPE_DOUBLE:
-                    case self::$TYPE_DECIMAL:
-                    case self::$TYPE_NUMERIC:
-                    case self::$TYPE_FIXED:
+                    foreach ($fields as $field)
                     {
-                        // convert to number
-                        $fieldName = $field->name;
-                        foreach ($rows as $row)
-                            $row->{$fieldName} = $row->{$fieldName} + 0;
-                        break;
+                        switch ($field->type)
+                        {
+                            case self::$TYPE_TINYINT:
+                            case self::$TYPE_SMALLINT:
+                            case self::$TYPE_MEDIUMINT:
+                            case self::$TYPE_INTEGER:
+                            case self::$TYPE_BIGINT:
+                            case self::$TYPE_SERIAL:
+                            case self::$TYPE_FLOAT:
+                            case self::$TYPE_DOUBLE:
+                            case self::$TYPE_DECIMAL:
+                            case self::$TYPE_NUMERIC:
+                            case self::$TYPE_FIXED:
+                            {
+                                // convert to number
+                                $fieldName = $field->name;
+                                foreach ($rows as $row)
+                                    $row->{$fieldName} = $row->{$fieldName} + 0;
+                                break;
+                            }
+                        }
                     }
                 }
             }
