@@ -34,11 +34,11 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $data
      * @param array $whereArr
+     * @param array $data
      * @return bool
      */
-    protected function insertOrUpdate ($db, $table, array $data, array $whereArr)
+    protected function insertOrUpdate ($db, $table, array $whereArr, array $data)
     {
         if ($this->entityExists($db, $table, $whereArr))
         {

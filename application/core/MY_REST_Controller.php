@@ -39,7 +39,9 @@ class MY_REST_Controller extends REST_Controller
 
             // skip first backtrace i.e. this file
             $backtrace = array_slice(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS), 1);
-            throw new ContextErrorException($errstr, 0, $errno, $errfile, $errline, $errcontext, $backtrace);
+            $exception = new ContextErrorException($errstr, 0, $errno, $errfile, $errline, $errcontext, $backtrace);
+
+            $this->handleContextError($exception);
         });
     }
 
@@ -55,6 +57,40 @@ class MY_REST_Controller extends REST_Controller
     protected function setLanguage ($language)
     {
         $this->lang->load('messages', $language);
+    }
+
+    private function handleContextError (ContextErrorException $exception)
+    {
+        $this->contextError = $exception;
+        $context = $exception->getContext();
+        if (is_array($context) && isset($context['sql']))
+        {
+            // hanya berlaku untuk Oracle SQL
+            $message = $exception->getMessage();
+            if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
+                $errorMessage = $this->getString('msg_unique_constraint');
+            else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
+            {
+                if ($matches[1] == 'parent key not found')
+                    $errorMessage = $this->getString('msg_parent_not_found');
+                else if ($matches[1] == 'child record found')
+                    $errorMessage = $this->getString('msg_child_found');
+                else
+                    $errorMessage = $this->getString('msg_integrity_constraint');
+            }
+            else if (preg_match('/value too large/', $message))
+                $errorMessage = $this->getString('msg_value_too_large');
+            else
+                $errorMessage = $this->getString('msg_database_error');
+
+            $this->respondBadRequest($errorMessage, null);
+        }
+        else
+        {
+            $this->respondInternalError('Internal Error', null);
+        }
+
+        exit;
     }
 
     /**
@@ -104,38 +140,6 @@ class MY_REST_Controller extends REST_Controller
         else if ($e instanceof InvalidArgumentException)
         {
             $this->respondBadRequest($e->getMessage());
-        }
-        else if ($e instanceof ContextErrorException)
-        {
-            $this->contextError = $e;
-
-            $context = $e->getContext();
-            if (is_array($context) && isset($context['sql']))
-            {
-                // hanya berlaku untuk Oracle SQL
-                $message = $e->getMessage();
-                if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
-                    $errorMessage = $this->getString('msg_unique_constraint');
-                else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
-                {
-                    if ($matches[1] == 'parent key not found')
-                        $errorMessage = $this->getString('msg_parent_not_found');
-                    else if ($matches[1] == 'child record found')
-                        $errorMessage = $this->getString('msg_child_found');
-                    else
-                        $errorMessage = $this->getString('msg_integrity_constraint');
-                }
-                else if (preg_match('/value too large/', $message))
-                    $errorMessage = $this->getString('msg_value_too_large');
-                else
-                    $errorMessage = $this->getString('msg_database_error');
-
-                $this->respondBadRequest($errorMessage, null);
-            }
-            else
-            {
-                $this->respondInternalError('Internal Error', null);
-            }
         }
         else if ($e instanceof CIPHPUnitTestExitException)
         {
