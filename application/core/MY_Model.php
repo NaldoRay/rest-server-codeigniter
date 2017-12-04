@@ -142,6 +142,19 @@ class MY_Model extends CI_Model
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param $table
+     * @param array $filters
+     * @return mixed
+     */
+    protected function deleteEntity ($db, $table, array $filters)
+    {
+        $filters = $this->toTableFilters($filters);
+        $result = $db->delete($table, $filters);
+        return ($result !== false);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters [entity field => value], e.g. [id => 1]
      * @param array $fields
