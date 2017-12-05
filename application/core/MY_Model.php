@@ -108,14 +108,18 @@ class MY_Model extends CI_Model
      * @param array $filters
      * @param array $data
      * @param array|null $allowedFields
-     * @return bool
+     * @return object|null
      */
     protected function updateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
         $filters = $this->toTableFilters($filters);
         $data = $this->filterToTableData($data, $allowedFields);
 
-        return $this->updateRow($db, $table, $filters, $data);
+        $success = $this->updateRow($db, $table, $filters, $data);
+        if ($success)
+            return $this->toEntity($data);
+        else
+            return null;
     }
 
     /**
