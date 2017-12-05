@@ -36,7 +36,7 @@ class MY_Model extends CI_Model
      * @param $table
      * @param array $filters
      * @param array $data
-     * @param array $allowedFields
+     * @param array|null $allowedFields
      * @return bool
      */
     protected function insertOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
@@ -144,7 +144,7 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters
-     * @return mixed
+     * @return bool
      */
     protected function deleteEntity ($db, $table, array $filters)
     {
@@ -158,7 +158,7 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $filters [entity field => value], e.g. [id => 1]
      * @param array $fields
-     * @return object
+     * @return object|null
      */
     protected function getEntity ($db, $table, array $filters, array $fields = null)
     {
@@ -262,14 +262,14 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param string $table
      * @param array $filters
      * @param array $searches
      * @param array $fields
      * @param array $sorts
      * @param bool $unique
-     * @return object[]
+     * @return array
      */
     protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
     {
@@ -374,7 +374,7 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param QueryCondition $condition
      * @return string
      */
@@ -403,7 +403,7 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters
      * @param array $searches
@@ -420,7 +420,7 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters
      * @param array $searches
@@ -487,6 +487,11 @@ class MY_Model extends CI_Model
         return $tableData;
     }
 
+    /**
+     * Maps all filters to table format.
+     * @param array $filters
+     * @return array
+     */
     protected function toTableFilters (array $filters)
     {
         if (empty($filters))
@@ -569,7 +574,7 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param object[] $rows table rows
+     * @param array $rows table rows
      * @return object[]
      */
     protected function toEntities (array $rows)
