@@ -39,15 +39,16 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields
      * @return bool
      */
-    protected function insertOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
+    protected function createOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
         if ($this->rowExists($db, $table, $filters))
         {
-            return $this->updateEntity($db, $table, $filters, $data, $allowedFields);
+            $entity = $this->updateEntity($db, $table, $filters, $data, $allowedFields);
+            return !is_null($entity);
         }
         else
         {
-            $entity = $this->insertEntity($db, $table, $data, $allowedFields);
+            $entity = $this->createEntity($db, $table, $data, $allowedFields);
             return !is_null($entity);
         }
     }
@@ -59,7 +60,7 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields
      * @return array
      */
-    protected function insertEntities ($db, $table, array $dataArr, array $allowedFields = null)
+    protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
@@ -78,7 +79,7 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields
      * @return object|null
      */
-    protected function insertEntity ($db, $table, array $data, array $allowedFields = null)
+    protected function createEntity ($db, $table, array $data, array $allowedFields = null)
     {
         $data = $this->filterToTableData($data, $allowedFields);
         $success = $this->insertRow($db, $table, $data);
