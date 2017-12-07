@@ -58,7 +58,7 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $dataArr array of entity data
      * @param array|null $allowedFields
-     * @return array
+     * @return int number of entities created
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
@@ -66,10 +66,10 @@ class MY_Model extends CI_Model
             $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
 
         $count = $db->insert_batch($table, $dataArr);
-        if ($count === count($dataArr))
-            return $this->toEntities($dataArr);
+        if ($count === false)
+            return 0;
         else
-            return array();
+            return $count;
     }
 
     /**
@@ -77,7 +77,8 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $data
      * @param array|null $allowedFields
-     * @return object|null
+     * @return object
+     * @throws TransactionException
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
     {
@@ -86,7 +87,7 @@ class MY_Model extends CI_Model
         if ($success)
             return $this->toEntity($data);
         else
-            return null;
+            throw new TransactionException(sprintf('Failed to create %s', $this->domain), $this->domain);
     }
 
     /**
@@ -106,10 +107,37 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
+     * @param array $dataArr
+     * @param string $indexField
+     * @param array|null $allowedFields
+     * @return int number of entities updated
+     */
+    protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
+    {
+        foreach ($dataArr as $idx => $data)
+            $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
+
+        if (isset($this->fieldMap[$indexField]))
+        {
+            $indexField = $this->fieldMap[$indexField];
+
+            $count = $db->update_batch($table, $dataArr, $indexField);
+            if ($count !== false)
+                return $count;
+        }
+
+        return 0;
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
      * @param array $filters
      * @param array $data
      * @param array|null $allowedFields
-     * @return object|null
+     * @return object entity with updated fields on success
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
      */
     protected function updateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
@@ -118,9 +146,16 @@ class MY_Model extends CI_Model
 
         $success = $this->updateRow($db, $table, $filters, $data);
         if ($success)
-            return $this->toEntity($data);
+        {
+            if ($db->affected_rows() > 0)
+                return $this->toEntity($data);
+            else
+                throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
+        }
         else
-            return null;
+        {
+            throw new TransactionException(sprintf('Failed to update %s', $this->domain), $this->domain);
+        }
     }
 
     /**
@@ -147,15 +182,25 @@ class MY_Model extends CI_Model
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param $table
+     * @param string $table
      * @param array $filters
-     * @return bool
+     * @throws ResourceNotFoundException
+     * @throws TransactionException if delete failed because of database error
      */
     protected function deleteEntity ($db, $table, array $filters)
     {
         $filters = $this->toTableFilters($filters);
+
         $result = $db->delete($table, $filters);
-        return ($result !== false);
+        if ($result === false)
+        {
+            throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
+        }
+        else
+        {
+            if ($db->affected_rows() == 0)
+                throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
+        }
     }
 
     /**

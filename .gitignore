@@ -86,5 +86,4 @@ composer.lock
 /logs/
 /release/
 /application/tests/_ci_phpunit_test/tmp/
-/application/core/app/APP_Model.php
-/application/core/app/APP_REST_Controller.php
+/application/core/app/*

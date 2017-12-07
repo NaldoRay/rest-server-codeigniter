@@ -8,6 +8,7 @@ include_once('validation/InputValidation.php');
  */
 class Rest_validation extends InputValidation
 {
+
     /**
      * @param string $value
      * @param string $errorMessage
@@ -16,11 +17,29 @@ class Rest_validation extends InputValidation
      */
     public function tryParseIntegerOrNotFound ($value, $errorMessage)
     {
+        try
+        {
+            return $this->tryParseInteger($value, $errorMessage);
+        }
+        catch (BadValueException $e)
+        {
+            throw new ResourceNotFoundException($errorMessage, $this->getDomain());
+        }
+    }
+
+    /**
+     * @param string $value
+     * @param string $errorMessage
+     * @return int the integer value
+     * @throws BadValueException
+     */
+    public function tryParseInteger ($value, $errorMessage)
+    {
         $valid = $this->forValue($value)->onlyNumericInteger()->validate();
         if ($valid)
             return (int) $value;
         else
-            throw new ResourceNotFoundException($errorMessage, $this->getDomain());
+            throw new BadValueException($errorMessage, $this->getDomain());
     }
 
     public function validatePositiveInteger ($value, Exception $exception)
