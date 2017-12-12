@@ -12,8 +12,8 @@ class MY_Model extends CI_Model
     /** for insert/update it's recommended to use $this->getFieldMap() e.g. ['field1' => 'table_field1', 'field2' => 'table_field2'] */
     protected $fieldMap = [];
 
-    /** fields that will be hidden on entity */
-    protected $upsertOnlyFieldMap = [];
+    /** for view/read-only fields */
+    protected $readOnlyFieldMap = [];
 
     /** prefix from column name with boolean type (for auto-convert) */
     protected $booleanPrefixes = [];
@@ -38,6 +38,8 @@ class MY_Model extends CI_Model
      * @param array $data
      * @param array|null $allowedFields
      * @return bool
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
      */
     protected function createOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
@@ -63,7 +65,7 @@ class MY_Model extends CI_Model
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
         foreach ($dataArr as $idx => $data)
-            $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
+            $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
         $count = $db->insert_batch($table, $dataArr);
         if ($count === false)
@@ -82,7 +84,7 @@ class MY_Model extends CI_Model
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
     {
-        $data = $this->filterToTableData($data, $allowedFields);
+        $data = $this->toWriteTableData($data, $allowedFields);
         $success = $this->insertRow($db, $table, $data);
         if ($success)
             return $this->toEntity($data);
@@ -115,11 +117,12 @@ class MY_Model extends CI_Model
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
     {
         foreach ($dataArr as $idx => $data)
-            $dataArr[ $idx ] = $this->filterToTableData($data, $allowedFields);
+            $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
-        if (isset($this->fieldMap[$indexField]))
+        $fieldMap = $this->getWriteFieldMap();
+        if (isset($fieldMap[$indexField]))
         {
-            $indexField = $this->fieldMap[$indexField];
+            $indexField = $fieldMap[$indexField];
 
             $count = $db->update_batch($table, $dataArr, $indexField);
             if ($count !== false)
@@ -142,7 +145,7 @@ class MY_Model extends CI_Model
     protected function updateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
     {
         $filters = $this->toTableFilters($filters);
-        $data = $this->filterToTableData($data, $allowedFields);
+        $data = $this->toWriteTableData($data, $allowedFields);
 
         $success = $this->updateRow($db, $table, $filters, $data);
         if ($success)
@@ -410,16 +413,18 @@ class MY_Model extends CI_Model
     {
         $tableConditions = array();
 
+        $fieldMap = $this->getFullFieldMap();
         /** @var QueryCondition $condition */
         foreach ($conditions as $condition)
         {
             $field = $condition->field;
-            if (isset($this->fieldMap[$field]))
+            if (isset($fieldMap[$field]))
             {
-                $condition->field = $this->fieldMap[$field];
+                $condition->field = $fieldMap[$field];
                 $tableConditions[] = $condition;
             }
         }
+
         return $tableConditions;
     }
 
@@ -435,18 +440,19 @@ class MY_Model extends CI_Model
 
     protected function getSelectField (array $tableFields = null)
     {
+        $fieldMap = $this->getFullFieldMap();
         if (empty($tableFields))
         {
-            if (empty($this->fieldMap))
+            if (empty($fieldMap))
                 return '*';
             else
-                return array_values($this->fieldMap);
+                return array_values($fieldMap);
         }
         else
         {
-            $tableFields = array_filter($tableFields, function ($value)
+            $tableFields = array_filter($tableFields, function ($value) use ($fieldMap)
             {
-                return in_array($value, $this->fieldMap);
+                return in_array($value, $fieldMap);
             });
             return implode(',', $tableFields);
         }
@@ -506,20 +512,17 @@ class MY_Model extends CI_Model
      * @param array $allowedFields
      * @return array
      */
-    protected function filterToTableData (array $data, array $allowedFields = null)
+    protected function toWriteTableData (array $data, array $allowedFields = null)
     {
         if (empty($data))
             return array();
 
-        $tableData = array();
-
+        $fieldMap = $this->getWriteFieldMap();
         // default is to allow all fields
         if (empty($allowedFields))
-            $allowedFields = array_keys($this->getFullFieldMap());
-        else
-            $allowedFields = array_merge($allowedFields, array_keys($this->upsertOnlyFieldMap));
+            $allowedFields = array_keys($fieldMap);
 
-        $fieldMap = $this->getFullFieldMap();
+        $tableData = array();
         foreach ($data as $field => $value)
         {
             if (in_array($field, $allowedFields))
@@ -533,7 +536,6 @@ class MY_Model extends CI_Model
                 $tableData[$field] = $value;
             }
         }
-
         return $tableData;
     }
 
@@ -548,11 +550,13 @@ class MY_Model extends CI_Model
             return array();
 
         $filterData = array();
+
+        $fieldMap = $this->getFullFieldMap();
         foreach ($filters as $field => $value)
         {
-            if (isset($this->fieldMap[$field]))
+            if (isset($fieldMap[$field]))
             {
-                $field = $this->fieldMap[$field];
+                $field = $fieldMap[$field];
                 if ($this->isBooleanField($field))
                 {
                     // set field only if it has valid value
@@ -568,6 +572,7 @@ class MY_Model extends CI_Model
                 }
             }
         }
+
         return $filterData;
     }
 
@@ -582,6 +587,7 @@ class MY_Model extends CI_Model
             return array();
 
         $sortData = array();
+        $fieldMap = $this->getFullFieldMap();
         foreach ($sorts as $sort)
         {
             if ($sort[0] === '-')
@@ -595,9 +601,9 @@ class MY_Model extends CI_Model
                 $order = 'ASC';
             }
 
-            if (isset($this->fieldMap[$field]))
+            if (isset($fieldMap[$field]))
             {
-                $sortData[] = sprintf('%s %s', $this->fieldMap[$field], $order);
+                $sortData[] = sprintf('%s %s', $fieldMap[$field], $order);
             }
         }
         return $sortData;
@@ -653,7 +659,7 @@ class MY_Model extends CI_Model
         );
 
         $entity = new stdClass();
-        $fieldMap = array_flip($this->fieldMap);
+        $fieldMap = array_flip($this->getFullFieldMap());
         foreach ($row as $field => $value)
         {
             if ($this->isBooleanField($field))
@@ -677,8 +683,19 @@ class MY_Model extends CI_Model
         return false;
     }
 
+    /**
+     * @return array default to $this->fieldMap
+     */
+    protected function getWriteFieldMap ()
+    {
+        return $this->fieldMap;
+    }
+
     private function getFullFieldMap ()
     {
-        return array_merge($this->fieldMap, $this->upsertOnlyFieldMap);
+        if (empty($this->readOnlyFieldMap))
+            return $this->fieldMap;
+        else
+            return array_merge($this->fieldMap, $this->readOnlyFieldMap);
     }
 }
