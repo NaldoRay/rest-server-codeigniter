@@ -34,18 +34,18 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $filters
      * @param array $data
+     * @param array $filters
      * @param array|null $allowedFields
      * @return bool
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function createOrUpdateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
+    protected function createOrUpdateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
     {
         if ($this->entityExists($db, $table, $filters))
         {
-            $entity = $this->updateEntity($db, $table, $filters, $data, $allowedFields);
+            $entity = $this->updateEntity($db, $table, $data, $filters, $allowedFields);
             return !is_null($entity);
         }
         else
@@ -135,19 +135,19 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters
      * @param array $data
+     * @param array $filters
      * @param array|null $allowedFields
      * @return object entity with updated fields on success
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntity ($db, $table, array $filters, array $data, array $allowedFields = null)
+    protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
     {
         $filters = $this->toTableFilters($filters);
         $data = $this->toWriteTableData($data, $allowedFields);
 
-        $success = $this->updateRow($db, $table, $filters, $data);
+        $success = $this->updateRow($db, $table, $data, $filters);
         if ($success)
         {
             if ($db->affected_rows() > 0)
@@ -164,11 +164,11 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters
      * @param array $data
+     * @param array $filters
      * @return bool
      */
-    protected function updateRow ($db, $table, array $filters, array $data)
+    protected function updateRow ($db, $table, array $data, array $filters)
     {
         if (empty($data))
         {
