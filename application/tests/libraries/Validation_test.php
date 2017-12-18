@@ -34,6 +34,7 @@ class Validation_test extends TestCase
             'email' => 'wrong-email@format',
             'age' => 42,
             'address' => 'Bandung',
+            'birthdate' => '2017/2/04'
         ];
         $this->validation->forArray($data);
     }
@@ -277,6 +278,7 @@ class Validation_test extends TestCase
         $this->validation->field('address')->required()->lengthMin(10);
         $this->validation->field('password')->required();
         $this->validation->field('age')->onlyNumeric();
+        $this->validation->field('birthdate', 'Date of Birth')->validDate();
 
         try
         {
@@ -292,8 +294,11 @@ class Validation_test extends TestCase
 
             $this->assertTrue(!empty($errors['email']));
             $this->assertTrue(!empty($errors['address']));
-            $this->assertTrue(!empty($errors['address']));
             $this->assertTrue(!empty($errors['password']));
+            $this->assertTrue(!empty($errors['birthdate']));
+
+            $this->assertContains('10', $errors['address']);
+            $this->assertContains('Date of Birth', $errors['birthdate']);
         }
     }
 }

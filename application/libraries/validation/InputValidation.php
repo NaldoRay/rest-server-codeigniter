@@ -36,7 +36,7 @@ class InputValidation
      * @param string $label
      * @return ValueValidator
      */
-    public function forValue ($value, $label = null)
+    public function forValue ($value, $label = 'Value')
     {
         $this->validator = new ValueValidator($value, $label);
         return $this->validator;
@@ -52,7 +52,7 @@ class InputValidation
      * @param string|null $label
      * @return ValueValidator
      */
-    public function field ($name, $label = null)
+    public function field ($name, $label = 'Value')
     {
         /** @var ArrayValidator $validator */
         $validator = $this->validator;

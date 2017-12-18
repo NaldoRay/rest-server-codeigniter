@@ -44,11 +44,8 @@ class ValueValidator implements Validation
     private $optional = false;
 
 
-    public function __construct ($value, $label = null)
+    public function __construct ($value, $label = 'Value')
     {
-        if (is_null($label))
-            $label = 'Value';
-
         $this->value = $value;
         $this->label = $label;
 
@@ -67,7 +64,7 @@ class ValueValidator implements Validation
         $this->optional = false;
 
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s is required', $this->label);
+            $errorMessage = '{label} is required';
 
         $this->setValidation(self::$IDX_REQUIRED, function ($value)
         {
@@ -103,56 +100,69 @@ class ValueValidator implements Validation
     }
 
     /**
-     * @param int $length
+     * @param int $min
      * @param string $errorMessage
      * @return $this
      */
-    public function lengthMin ($length, $errorMessage = null)
+    public function lengthMin ($min, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be at least %s characters', $this->label, $length);
+            $errorMessage = '{label} must be at least {min} characters';
 
-        $this->setValidation(self::$IDX_LENGTH_MIN, function ($value) use ($length)
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{min}' => $min
+        ]);
+
+        $this->setValidation(self::$IDX_LENGTH_MIN, function ($value) use ($min)
         {
-            return (strlen($value) >= $length);
+            return (strlen($value) >= $min);
         }, $errorMessage);
 
         return $this;
     }
 
     /**
-     * @param int $length
+     * @param int $max
      * @param string $errorMessage
      * @return $this
      */
-    public function lengthMax ($length, $errorMessage = null)
+    public function lengthMax ($max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must not be more than %s characters', $this->label, $length);
+            $errorMessage = '{label} must not be more than {max} characters';
 
-        $this->setValidation(self::$IDX_LENGTH_MAX, function ($value) use ($length)
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{max}' => $max
+        ]);
+
+        $this->setValidation(self::$IDX_LENGTH_MAX, function ($value) use ($max)
         {
-            return (strlen($value) <= $length);
+            return (strlen($value) <= $max);
         }, $errorMessage);
 
         return $this;
     }
 
     /**
-     * @param int $minLength
-     * @param int $maxLength
+     * @param int $min
+     * @param int $max
      * @param string $errorMessage
      * @return $this
      */
-    public function lengthBetween ($minLength, $maxLength, $errorMessage = null)
+    public function lengthBetween ($min, $max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be between %s to %s characters ', $this->label, $minLength, $maxLength);
+            $errorMessage = '{label} must be between {min} to {max} characters';
 
-        $this->setValidation(self::$IDX_LENGTH_BETWEEN, function ($value) use ($minLength, $maxLength)
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{min}' => $min,
+            '{max}' => $max
+        ]);
+
+        $this->setValidation(self::$IDX_LENGTH_BETWEEN, function ($value) use ($min, $max)
         {
             $length = strlen($value);
-            return ($length >= $minLength) && ($length <= $maxLength);
+            return ($length >= $min) && ($length <= $max);
         }, $errorMessage);
 
         return $this;
@@ -165,7 +175,7 @@ class ValueValidator implements Validation
     public function validEmail ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be a valid email', $this->label);
+            $errorMessage = '{label} must be a valid email';
 
         $this->setValidation(self::$IDX_VALID_EMAIL, function ($value)
         {
@@ -184,7 +194,7 @@ class ValueValidator implements Validation
     public function validDate ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be a valid date in the format: YYYY-MM-DD', $this->label);
+            $errorMessage = '{label} must be a valid date in the format: YYYY-MM-DD';
 
         $this->setValidation(self::$IDX_VALID_DATETIME, function ($value)
         {
@@ -212,7 +222,7 @@ class ValueValidator implements Validation
     public function validDateTime ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be a valid date in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]', $this->label);
+            $errorMessage = '{label} must be a valid date in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';
 
         $this->setValidation(self::$IDX_VALID_DATETIME, function ($value)
         {
@@ -246,7 +256,7 @@ class ValueValidator implements Validation
     public function onlyBoolean ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be true/false', $this->label);
+            $errorMessage = '{label} must be true/false';
 
         $this->setValidation(self::$IDX_ONLY_BOOLEAN, function ($value)
         {
@@ -264,7 +274,7 @@ class ValueValidator implements Validation
     public function onlyInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be integer number', $this->label);
+            $errorMessage = '{label} must be integer number';
 
         $this->setValidation(self::$IDX_ONLY_INTEGER, function ($value)
         {
@@ -282,7 +292,7 @@ class ValueValidator implements Validation
     public function onlyPositiveInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be positive integer number', $this->label);
+            $errorMessage = '{label} must be positive integer number';
 
         $this->setValidation(self::$IDX_ONLY_INTEGER, function ($value)
         {
@@ -300,7 +310,7 @@ class ValueValidator implements Validation
     public function onlyFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be float number', $this->label);
+            $errorMessage = '{label} must be float number';
 
         $this->setValidation(self::$IDX_ONLY_FLOAT, function ($value)
         {
@@ -318,7 +328,7 @@ class ValueValidator implements Validation
     public function onlyPositiveFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be positive float number', $this->label);
+            $errorMessage = '{label} must be positive float number';
 
         $this->setValidation(self::$IDX_ONLY_FLOAT, function ($value)
         {
@@ -336,7 +346,7 @@ class ValueValidator implements Validation
     public function onlyString ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be text/string', $this->label);
+            $errorMessage = '{label} must be text/string';
 
         $this->setValidation(self::$IDX_ONLY_STRING, function ($value)
         {
@@ -353,7 +363,7 @@ class ValueValidator implements Validation
     public function onlyNumeric ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be number or numeric string', $this->label);
+            $errorMessage = '{label} must be number or numeric string';
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
@@ -370,7 +380,7 @@ class ValueValidator implements Validation
     public function onlyNumericInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be integer number or integer string', $this->label);
+            $errorMessage = '{label} must be integer number or integer string';
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
@@ -399,7 +409,7 @@ class ValueValidator implements Validation
     public function onlyPositiveNumericInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be positive integer number or positive integer string', $this->label);
+            $errorMessage = '{label} must be positive integer number or positive integer string';
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
@@ -428,7 +438,7 @@ class ValueValidator implements Validation
     public function onlyNumericFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be float number or float string', $this->label);
+            $errorMessage = '{label} must be float number or float string';
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
@@ -457,7 +467,7 @@ class ValueValidator implements Validation
     public function onlyPositiveNumericFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s must be positive float number or positive float string', $this->label);
+            $errorMessage = '{label} must be positive float number or positive float string';
 
         $this->setValidation(self::$IDX_ONLY_NUMERIC, function ($value)
         {
@@ -521,6 +531,14 @@ class ValueValidator implements Validation
         $this->errorMessages[$idx] = $errorMessage;
     }
 
+    private function formatMessage ($message, array $replacements)
+    {
+        if (empty($message))
+            return '';
+        else
+            return str_replace(array_keys($replacements), array_values($replacements), $message);
+    }
+
     public function validate ()
     {
         $this->error = null;
@@ -534,6 +552,11 @@ class ValueValidator implements Validation
                 $errorMessage = $this->errorMessages[$idx];
                 if ($errorMessage instanceof Closure)
                     $errorMessage = $errorMessage();
+
+                $errorMessage = $this->formatMessage($errorMessage, [
+                    '{label}' => $this->label,
+                    '{value}' => $this->value
+                ]);
 
                 $this->error = $errorMessage;
                 return false;

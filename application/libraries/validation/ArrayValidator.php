@@ -21,7 +21,7 @@ class ArrayValidator extends FieldValidator
      * @param string $label (optional)
      * @return ValueValidator
      */
-    public function field ($name, $label = null)
+    public function field ($name, $label = 'Value')
     {
         if (isset($this->arr[$name]))
             $value = $this->arr[$name];
