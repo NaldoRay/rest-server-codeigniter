@@ -207,12 +207,20 @@ class Validation_test extends TestCase
                 'size' => 1024000,
                 'tmp_name' => FCPATH.'index.php',
                 'error' => ''
+            ],
+            'userfile3' => [
+                'name' => 'original.php',
+                'type' => 'text/php',
+                'size' => 4096000,
+                'tmp_name' => FCPATH.'index.php',
+                'error' => ''
             ]
         ];
         $this->validation->forFiles();
         $this->validation->file('notfound')->required();
         $this->validation->file('userfile1')->required()->maxSize(512);
-        $this->validation->file('userfile2')->required()->allowTypes(['json']);
+        $this->validation->file('userfile2')->required()->allowTypes(['json', 'txt']);
+        $this->validation->file('userfile3')->required()->maxSize(2390);
         try
         {
             $this->validation->validate();
@@ -221,11 +229,12 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('required', $errors['notfound']);
-            $this->assertContains('max file size', $errors['userfile1']);
-            $this->assertContains('512', $errors['userfile1']);
-            $this->assertContains('file type', $errors['userfile2']);
-            $this->assertContains('json', $errors['userfile2']);
+            $this->assertContains('required', strtolower($errors['notfound']));
+            $this->assertContains('max', strtolower($errors['userfile1']));
+            $this->assertContains('512 KB', $errors['userfile1']);
+            $this->assertContains('file type', strtolower($errors['userfile2']));
+            $this->assertContains('json, txt', $errors['userfile2']);
+            $this->assertContains('2.33 MB', $errors['userfile3']);
         }
     }
 

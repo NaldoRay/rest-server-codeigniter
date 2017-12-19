@@ -531,14 +531,6 @@ class ValueValidator implements Validation
         $this->errorMessages[$idx] = $errorMessage;
     }
 
-    private function formatMessage ($message, array $replacements)
-    {
-        if (empty($message))
-            return '';
-        else
-            return str_replace(array_keys($replacements), array_values($replacements), $message);
-    }
-
     public function validate ()
     {
         $this->error = null;
@@ -564,6 +556,14 @@ class ValueValidator implements Validation
         }
 
         return true;
+    }
+
+    private function formatMessage ($message, array $replacements)
+    {
+        if (empty($message))
+            return '';
+        else
+            return str_replace(array_keys($replacements), array_values($replacements), $message);
     }
 
     public function getError ()

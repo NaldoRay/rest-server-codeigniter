@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="CodeIgniter Application Test Suite" tests="22" assertions="35" failures="0" errors="0" time="0.236223">
-    <testsuite name="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" tests="4" assertions="9" failures="0" errors="0" time="0.075215">
-      <testcase name="testExample" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="5" assertions="3" time="0.036840"/>
-      <testcase name="testExistingExampleShouldNotEmpty" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="25" assertions="2" time="0.009970"/>
-      <testcase name="testExampleNotFound" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="32" assertions="1" time="0.009595"/>
-      <testcase name="testPostExampleShouldSuccess" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="38" assertions="3" time="0.018810"/>
+  <testsuite name="CodeIgniter Application Test Suite" tests="22" assertions="36" failures="0" errors="0" time="0.154181">
+    <testsuite name="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" tests="4" assertions="9" failures="0" errors="0" time="0.063029">
+      <testcase name="testExample" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="5" assertions="3" time="0.034821"/>
+      <testcase name="testExistingExampleShouldNotEmpty" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="25" assertions="2" time="0.008792"/>
+      <testcase name="testExampleNotFound" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="32" assertions="1" time="0.009278"/>
+      <testcase name="testPostExampleShouldSuccess" class="Example_test" file="D:\Library\rest-server-client\rest-server\application\tests\controllers\Example_test.php" line="38" assertions="3" time="0.010138"/>
     </testsuite>
-    <testsuite name="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" tests="18" assertions="26" failures="0" errors="0" time="0.161008">
-      <testcase name="testValueValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="42" assertions="1" time="0.022844"/>
-      <testcase name="testRequiredShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="53" assertions="0" time="0.006243"/>
-      <testcase name="testRequiredShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="60" assertions="1" time="0.013067"/>
-      <testcase name="testEmailShouldValid" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="73" assertions="0" time="0.014595"/>
-      <testcase name="testEmailShouldInvalid" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="79" assertions="1" time="0.007031"/>
-      <testcase name="testMinLengthShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="87" assertions="0" time="0.013953"/>
-      <testcase name="testMinLengthShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="95" assertions="1" time="0.012513"/>
-      <testcase name="testMaxLengthShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="109" assertions="0" time="0.006511"/>
-      <testcase name="testMaxLengthShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="118" assertions="1" time="0.006810"/>
-      <testcase name="testLengthBetweenShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="130" assertions="0" time="0.004448"/>
-      <testcase name="testLengthBetweenShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="138" assertions="1" time="0.004256"/>
-      <testcase name="testNumericOnlyShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="147" assertions="0" time="0.005636"/>
-      <testcase name="testNumericOnlyShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="159" assertions="1" time="0.005766"/>
-      <testcase name="testRepeatedValidationShouldOverride" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="171" assertions="0" time="0.006251"/>
-      <testcase name="testValidationOrderShouldCorrect" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="177" assertions="2" time="0.006096"/>
-      <testcase name="testFileValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="194" assertions="5" time="0.013262"/>
-      <testcase name="testCustomValidationShouldBeExecuted" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="232" assertions="3" time="0.004594"/>
-      <testcase name="testFailedValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="273" assertions="9" time="0.007132"/>
+    <testsuite name="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" tests="18" assertions="27" failures="0" errors="0" time="0.091152">
+      <testcase name="testValueValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="42" assertions="1" time="0.013573"/>
+      <testcase name="testRequiredShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="53" assertions="0" time="0.003894"/>
+      <testcase name="testRequiredShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="60" assertions="1" time="0.007652"/>
+      <testcase name="testEmailShouldValid" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="73" assertions="0" time="0.004303"/>
+      <testcase name="testEmailShouldInvalid" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="79" assertions="1" time="0.004017"/>
+      <testcase name="testMinLengthShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="87" assertions="0" time="0.003675"/>
+      <testcase name="testMinLengthShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="95" assertions="1" time="0.004422"/>
+      <testcase name="testMaxLengthShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="109" assertions="0" time="0.003918"/>
+      <testcase name="testMaxLengthShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="118" assertions="1" time="0.004049"/>
+      <testcase name="testLengthBetweenShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="130" assertions="0" time="0.003798"/>
+      <testcase name="testLengthBetweenShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="138" assertions="1" time="0.004021"/>
+      <testcase name="testNumericOnlyShouldSuccess" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="147" assertions="0" time="0.003767"/>
+      <testcase name="testNumericOnlyShouldFailed" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="159" assertions="1" time="0.004004"/>
+      <testcase name="testRepeatedValidationShouldOverride" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="171" assertions="0" time="0.003826"/>
+      <testcase name="testValidationOrderShouldCorrect" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="177" assertions="2" time="0.004119"/>
+      <testcase name="testFileValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="194" assertions="6" time="0.008854"/>
+      <testcase name="testCustomValidationShouldBeExecuted" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="241" assertions="3" time="0.004150"/>
+      <testcase name="testFailedValidation" class="Validation_test" file="D:\Library\rest-server-client\rest-server\application\tests\libraries\Validation_test.php" line="282" assertions="9" time="0.005110"/>
     </testsuite>
   </testsuite>
 </testsuites>

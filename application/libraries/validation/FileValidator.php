@@ -42,12 +42,13 @@ class FileValidator implements Validation
     }
 
     /**
+     * @param string $errorMessage
      * @return $this
      */
     public function required ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf('%s is required', $this->label);
+            $errorMessage = '{label} is required';
 
         $this->setValidation(self::$IDX_REQUIRED, function ($value)
         {
@@ -57,10 +58,19 @@ class FileValidator implements Validation
         return $this;
     }
 
+    /**
+     * @param array $types
+     * @param string $errorMessage
+     * @return $this
+     */
     public function allowTypes (array $types, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf("%s's file type must be one of: %s", $this->label, implode(', ', $types));
+            $errorMessage = 'File type must be one of: {types}';
+
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{types}' => implode(', ', $types)
+        ]);
 
         $this->setValidation(self::$IDX_ALLOW_TYPES, function ($file) use ($types)
         {
@@ -92,7 +102,16 @@ class FileValidator implements Validation
     public function maxSize ($sizeKB, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = sprintf("%s's max file size is %d KB", $this->label, $sizeKB);
+            $errorMessage = 'Max file size is {size}';
+
+        if ($sizeKB >= 1024)
+            $size = sprintf('%s MB', floor($sizeKB * 100.0 / 1024) / 100.0);
+        else
+            $size = sprintf('%s KB', $sizeKB);
+
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{size}' => $size
+        ]);
 
         $this->setValidation(self::$IDX_SIZE_MAX, function ($file) use ($sizeKB)
         {
@@ -155,12 +174,24 @@ class FileValidator implements Validation
                 if ($errorMessage instanceof Closure)
                     $errorMessage = $errorMessage();
 
+                $errorMessage = $this->formatMessage($errorMessage, [
+                    '{label}' => $this->label
+                ]);
+
                 $this->error = $errorMessage;
                 return false;
             }
         }
 
         return true;
+    }
+
+    private function formatMessage ($message, array $replacements)
+    {
+        if (empty($message))
+            return '';
+        else
+            return str_replace(array_keys($replacements), array_values($replacements), $message);
     }
 
     /**
