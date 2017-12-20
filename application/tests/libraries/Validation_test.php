@@ -186,8 +186,8 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('valid email', $errors['address']);
-            $this->assertContains('required', $errors['password']);
+            $this->assertContains('e-mail yang valid', $errors['address']);
+            $this->assertContains('harus diisi', $errors['password']);
         }
     }
 
@@ -229,10 +229,10 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('required', strtolower($errors['notfound']));
-            $this->assertContains('max', strtolower($errors['userfile1']));
+            $this->assertContains('harus diisi', strtolower($errors['notfound']));
+            $this->assertContains('maksimal', strtolower($errors['userfile1']));
             $this->assertContains('512 KB', $errors['userfile1']);
-            $this->assertContains('file type', strtolower($errors['userfile2']));
+            $this->assertContains('tipe file', strtolower($errors['userfile2']));
             $this->assertContains('json, txt', $errors['userfile2']);
             $this->assertContains('2.33 MB', $errors['userfile3']);
         }
@@ -274,7 +274,7 @@ class Validation_test extends TestCase
         {
             $errors = $e->getAllErrors();
             $this->assertContains('Custom validation', $errors['username']);
-            $this->assertContains('at least', $errors['address']);
+            $this->assertContains('minimal', $errors['address']);
             $this->assertContains('Lazy error', $errors['name']);
         }
     }

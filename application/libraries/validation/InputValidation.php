@@ -1,18 +1,25 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-include_once('ValueValidator.php');
-include_once('ArrayValidator.php');
-include_once('FilesValidator.php');
 
 /**
  * @author Ray Naldo
  */
 class InputValidation
 {
+    /** @var  ValidatorFactory */
+    private $validatorFactory;
     /** @var FieldValidator|ValueValidator */
     private $validator;
+
     private $domain = 'Validation';
+
+
+    public function __construct (ValidatorFactory $validatorFactory = null)
+    {
+        if (is_null($validatorFactory))
+            $validatorFactory = new ValidatorFactory();
+
+        $this->validatorFactory = $validatorFactory;
+    }
 
     /**
      * @param mixed $domain
@@ -38,13 +45,13 @@ class InputValidation
      */
     public function forValue ($value, $label = 'Value')
     {
-        $this->validator = new ValueValidator($value, $label);
+        $this->validator = $this->validatorFactory->createValueValidator($value, $label);
         return $this->validator;
     }
 
     public function forArray (array $arr)
     {
-        $this->validator = new ArrayValidator($arr);
+        $this->validator = $this->validatorFactory->createArrayValidator($arr);
     }
 
     /**
@@ -62,7 +69,7 @@ class InputValidation
 
     public function forFiles ()
     {
-        $this->validator = new FilesValidator();
+        $this->validator = $this->validatorFactory->createFilesValidator();
     }
 
     /**

@@ -2,12 +2,17 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 include_once('validation/InputValidation.php');
+include_once('validation_ci/ValidatorFactoryCI.php');
 
 /**
  * @author Ray Naldo
  */
 class Rest_validation extends InputValidation
 {
+    public function __construct ()
+    {
+        parent::__construct(new ValidatorFactoryCI());
+    }
 
     /**
      * @param string $value

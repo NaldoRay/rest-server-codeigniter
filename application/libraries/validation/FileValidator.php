@@ -15,7 +15,7 @@ class FileValidator implements Validation
 
     private static $IDX_OTHER = 10;
 
-    /** @var mixed */
+    /** @var array */
     private $file;
     /** @var string */
     private $label;
@@ -28,11 +28,13 @@ class FileValidator implements Validation
     private $error;
 
 
-    public function __construct ($file, $label = null)
+    /**
+     * FileValidator constructor.
+     * @param array $file array from $_FILES['userfile']
+     * @param string $label
+     */
+    public function __construct (array $file, $label = 'File')
     {
-        if (is_null($label))
-            $label = 'Value';
-
         $this->file = $file;
         $this->label = $label;
 
@@ -50,9 +52,9 @@ class FileValidator implements Validation
         if (is_null($errorMessage))
             $errorMessage = '{label} is required';
 
-        $this->setValidation(self::$IDX_REQUIRED, function ($value)
+        $this->setValidation(self::$IDX_REQUIRED, function ($file)
         {
-            return isset($value);
+            return isset($file['tmp_name']) && (trim('tmp_name') !== '');
         }, $errorMessage);
 
         return $this;
@@ -74,18 +76,21 @@ class FileValidator implements Validation
 
         $this->setValidation(self::$IDX_ALLOW_TYPES, function ($file) use ($types)
         {
-            $mime = mime_content_type($file['tmp_name']);
-            $mimes = self::getMimes();
-            foreach ($types as $type)
+            if (isset($file['tmp_name']))
             {
-                if (is_array($mimes[$type]))
+                $mime = mime_content_type($file['tmp_name']);
+                $mimes = self::getMimes();
+                foreach ($types as $type)
                 {
-                    if (in_array($mime, $mimes[$type], true))
+                    if (is_array($mimes[ $type ]))
+                    {
+                        if (in_array($mime, $mimes[ $type ], true))
+                            return true;
+                    }
+                    else if ($mime === $mimes[ $type ])
+                    {
                         return true;
-                }
-                else if ($mime === $mimes[$type])
-                {
-                    return true;
+                    }
                 }
             }
             return false;
@@ -115,8 +120,12 @@ class FileValidator implements Validation
 
         $this->setValidation(self::$IDX_SIZE_MAX, function ($file) use ($sizeKB)
         {
-            $sizeByte = $sizeKB * 1024;
-            return ($file['size'] <= $sizeByte);
+            if (isset($file['size']))
+            {
+                $sizeByte = $sizeKB * 1024;
+                return ($file['size'] <= $sizeByte);
+            }
+            return false;
         }, $errorMessage);
 
         return $this;

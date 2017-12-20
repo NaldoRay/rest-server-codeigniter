@@ -222,7 +222,7 @@ class ValueValidator implements Validation
     public function validDateTime ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} must be a valid date in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';
+            $errorMessage = '{label} must be a valid date/time in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';
 
         $this->setValidation(self::$IDX_VALID_DATETIME, function ($value)
         {

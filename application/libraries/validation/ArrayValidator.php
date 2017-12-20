@@ -8,11 +8,17 @@ require_once('ValueValidator.php');
  */
 class ArrayValidator extends FieldValidator
 {
+    /** @var ValidatorFactory  */
+    private $validatorFactory;
+    /** @var array  */
     private $arr;
 
-    public function __construct (array $arr)
+
+    public function __construct (ValidatorFactory $validatorFactory, array $arr)
     {
         parent::__construct();
+
+        $this->validatorFactory = $validatorFactory;
         $this->arr = $arr;
     }
 
@@ -28,7 +34,7 @@ class ArrayValidator extends FieldValidator
         else
             $value = null;
 
-        $validator = new ValueValidator($value, $label);
+        $validator = $this->validatorFactory->createValueValidator($value, $label);
         $this->addValidator($name, $validator);
 
         return $validator;
