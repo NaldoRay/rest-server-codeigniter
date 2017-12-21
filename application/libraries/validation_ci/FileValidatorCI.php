@@ -10,10 +10,18 @@ require_once(APPPATH.'libraries/validation/FileValidator.php');
  */
 class FileValidatorCI extends FileValidator
 {
+    private $CI;
+
+    public function __construct (array $file, $label = 'File')
+    {
+        parent::__construct($file, $label);
+        $this->CI = get_instance();
+    }
+
     public function required ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus diisi';
+            $errorMessage = $this->getString('validation_file_required');
 
         return parent::required($errorMessage);
     }
@@ -21,7 +29,7 @@ class FileValidatorCI extends FileValidator
     public function allowTypes (array $types, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = 'Tipe file yang diizinkan: {types}';
+            $errorMessage = $this->getString('validation_file_types');
 
         return parent::allowTypes($types, $errorMessage);
     }
@@ -29,8 +37,17 @@ class FileValidatorCI extends FileValidator
     public function maxSize ($sizeKB, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = 'Ukuran file maksimal {size}';
+            $errorMessage = $this->getString('validation_file_size_max');
 
         return parent::maxSize($sizeKB, $errorMessage);
+    }
+
+    private function getString ($key)
+    {
+        $line = $this->CI->lang->line($key);
+        if ($line === false)
+            return null;
+        else
+            return $line;
     }
 }

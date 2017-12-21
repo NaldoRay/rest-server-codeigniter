@@ -1,6 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+/**
+    Author: Ray Naldo
+ */
 defined('MONTHLY') OR define ('MONTHLY', 1);
 defined('YEARLY') OR define ('YEARLY', 2);
 defined('LOG_PATH') OR define ('LOG_PATH', FCPATH.'logs/');
@@ -56,7 +59,3 @@ if (!function_exists('logFailedQuery'))
 	}
 }
 
-
-/**
-	Ray Naldo @ 2015-2016
-*/

@@ -27,6 +27,8 @@ class Validation_test extends TestCase
     protected function setUp ()
     {
         $this->validation = $this->newLibrary('rest_validation');
+        $CI = get_instance();
+        $CI->lang->load('validation', 'english');
 
         $data = [
             'name' => 'Ray',
@@ -176,7 +178,7 @@ class Validation_test extends TestCase
 
     public function testValidationOrderShouldCorrect ()
     {
-        $this->validation->field('address')->lengthMax(6)->validEmail()->required();
+        $this->validation->field('address', 'Address')->lengthMax(6)->validEmail()->required();
         $this->validation->field('password')->onlyNumeric()->lengthMin(6)->required();
         try
         {
@@ -186,8 +188,8 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('e-mail yang valid', $errors['address']);
-            $this->assertContains('harus diisi', $errors['password']);
+            $this->assertContains('Address must be a valid e-mail', $errors['address']);
+            $this->assertContains('required', $errors['password']);
         }
     }
 
@@ -217,7 +219,7 @@ class Validation_test extends TestCase
             ]
         ];
         $this->validation->forFiles();
-        $this->validation->file('notfound')->required();
+        $this->validation->file('notfound', 'Label')->required();
         $this->validation->file('userfile1')->required()->maxSize(512);
         $this->validation->file('userfile2')->required()->allowTypes(['json', 'txt']);
         $this->validation->file('userfile3')->required()->maxSize(2390);
@@ -229,10 +231,9 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('harus diisi', strtolower($errors['notfound']));
-            $this->assertContains('maksimal', strtolower($errors['userfile1']));
-            $this->assertContains('512 KB', $errors['userfile1']);
-            $this->assertContains('tipe file', strtolower($errors['userfile2']));
+            $this->assertContains('Label is required', $errors['notfound']);
+            $this->assertContains('Max file size is 512 KB', $errors['userfile1']);
+            $this->assertContains('File type must be', $errors['userfile2']);
             $this->assertContains('json, txt', $errors['userfile2']);
             $this->assertContains('2.33 MB', $errors['userfile3']);
         }
@@ -274,7 +275,7 @@ class Validation_test extends TestCase
         {
             $errors = $e->getAllErrors();
             $this->assertContains('Custom validation', $errors['username']);
-            $this->assertContains('minimal', $errors['address']);
+            $this->assertContains('at least', $errors['address']);
             $this->assertContains('Lazy error', $errors['name']);
         }
     }

@@ -8,10 +8,18 @@ require_once(APPPATH.'libraries/validation/ValueValidator.php');
  */
 class ValueValidatorCI extends ValueValidator
 {
+    private $CI;
+
+    public function __construct ($value, $label = 'Value')
+    {
+        parent::__construct($value, $label);
+        $this->CI = get_instance();
+    }
+
     public function required ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus diisi';
+            $errorMessage = $this->getString('validation_required');
 
         return parent::required($errorMessage);
     }
@@ -19,7 +27,7 @@ class ValueValidatorCI extends ValueValidator
     public function lengthMin ($min, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} minimal {min} karakter';
+            $errorMessage = $this->getString('validation_length_min');
 
         return parent::lengthMin($min, $errorMessage);
     }
@@ -27,7 +35,7 @@ class ValueValidatorCI extends ValueValidator
     public function lengthMax ($max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} maksimal {max} karakter';
+            $errorMessage = $this->getString('validation_length_max');
 
         return parent::lengthMax($max, $errorMessage);
     }
@@ -35,15 +43,23 @@ class ValueValidatorCI extends ValueValidator
     public function lengthBetween ($min, $max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus antara {min} hingga {max} karakter';
+            $errorMessage = $this->getString('validation_length_between');
 
         return parent::lengthBetween($min, $max, $errorMessage);
+    }
+
+    public function lengthEquals ($length, $errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_length_equals');
+
+        return parent::lengthEquals($length, $errorMessage);
     }
 
     public function validEmail ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa e-mail yang valid';
+            $errorMessage = $this->getString('validation_email');
 
         return parent::validEmail($errorMessage);
     }
@@ -51,7 +67,7 @@ class ValueValidatorCI extends ValueValidator
     public function validDate ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus valid dengan format [YYYY]-[MM]-[DD]';
+            $errorMessage = $this->getString('validation_date');
 
         return parent::validDate($errorMessage);
     }
@@ -59,7 +75,7 @@ class ValueValidatorCI extends ValueValidator
     public function validDateTime ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus valid dengan format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';
+            $errorMessage = $this->getString('validation_datetime');
 
         return parent::validDateTime($errorMessage);
     }
@@ -67,7 +83,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyBoolean ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus bernilai true/false';
+            $errorMessage = $this->getString('validation_boolean');
 
         return parent::onlyBoolean($errorMessage);
     }
@@ -75,7 +91,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka bulat';
+            $errorMessage = $this->getString('validation_integer');
 
         return parent::onlyInteger($errorMessage);
     }
@@ -83,7 +99,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyPositiveInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka bulat positif';
+            $errorMessage = $this->getString('validation_integer_positive');
 
         return parent::onlyPositiveInteger($errorMessage);
     }
@@ -91,7 +107,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka desimal';
+            $errorMessage = $this->getString('validation_float');
 
         return parent::onlyFloat($errorMessage);
     }
@@ -99,7 +115,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyPositiveFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka desimal positif';
+            $errorMessage = $this->getString('validation_float_positive');
 
         return parent::onlyPositiveFloat($errorMessage);
     }
@@ -107,7 +123,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyString ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa teks';
+            $errorMessage = $this->getString('validation_string');
 
         return parent::onlyString($errorMessage);
     }
@@ -115,7 +131,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyNumeric ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka';
+            $errorMessage = $this->getString('validation_numeric');
 
         return parent::onlyNumeric($errorMessage);
     }
@@ -123,7 +139,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyNumericInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka bulat';
+            $errorMessage = $this->getString('validation_numeric_integer');
 
         return parent::onlyNumericInteger($errorMessage);
     }
@@ -131,7 +147,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyPositiveNumericInteger ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa angka bulat positif';
+            $errorMessage = $this->getString('validation_numeric_integer_positive');
 
         return parent::onlyPositiveNumericInteger($errorMessage);
     }
@@ -139,7 +155,7 @@ class ValueValidatorCI extends ValueValidator
     public function onlyNumericFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa (teks) angka desimal';
+            $errorMessage = $this->getString('validation_numeric_float');
 
         return parent::onlyNumericFloat($errorMessage);
     }
@@ -147,9 +163,17 @@ class ValueValidatorCI extends ValueValidator
     public function onlyPositiveNumericFloat ($errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} harus berupa (teks) angka desimal positif';
+            $errorMessage = $this->getString('validation_numeric_float_positive');
 
         return parent::onlyPositiveNumericFloat($errorMessage);
     }
 
+    private function getString ($key)
+    {
+        $line = $this->CI->lang->line($key);
+        if ($line === false)
+            return null;
+        else
+            return $line;
+    }
 }

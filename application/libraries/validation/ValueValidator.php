@@ -25,6 +25,7 @@ class ValueValidator implements Validation
     private static $IDX_LENGTH_MIN = 6;
     private static $IDX_LENGTH_MAX = 7;
     private static $IDX_LENGTH_BETWEEN = 8;
+    private static $IDX_LENGTH_EQUALS = 8;
 
     // other
     private static $IDX_OTHER = 11;
@@ -101,7 +102,7 @@ class ValueValidator implements Validation
 
     /**
      * @param int $min
-     * @param string $errorMessage
+     * @param string $errorMessage extra placeholders: {min}
      * @return $this
      */
     public function lengthMin ($min, $errorMessage = null)
@@ -123,7 +124,7 @@ class ValueValidator implements Validation
 
     /**
      * @param int $max
-     * @param string $errorMessage
+     * @param string $errorMessage extra placeholders: {max}
      * @return $this
      */
     public function lengthMax ($max, $errorMessage = null)
@@ -146,7 +147,7 @@ class ValueValidator implements Validation
     /**
      * @param int $min
      * @param int $max
-     * @param string $errorMessage
+     * @param string $errorMessage extra placeholders: {min}, {max}
      * @return $this
      */
     public function lengthBetween ($min, $max, $errorMessage = null)
@@ -163,6 +164,28 @@ class ValueValidator implements Validation
         {
             $length = strlen($value);
             return ($length >= $min) && ($length <= $max);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param int $length
+     * @param string $errorMessage extra placeholders: {length}
+     * @return $this
+     */
+    public function lengthEquals ($length, $errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be exactly {length} characters';
+
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{length}' => $length
+        ]);
+
+        $this->setValidation(self::$IDX_LENGTH_EQUALS, function ($value) use ($length)
+        {
+            return (strlen($value) === $length);
         }, $errorMessage);
 
         return $this;

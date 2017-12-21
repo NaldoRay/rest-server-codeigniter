@@ -62,7 +62,7 @@ class FileValidator implements Validation
 
     /**
      * @param array $types
-     * @param string $errorMessage
+     * @param string $errorMessage extra placeholders: {types} = comma-separated allowed types
      * @return $this
      */
     public function allowTypes (array $types, $errorMessage = null)
@@ -101,7 +101,7 @@ class FileValidator implements Validation
 
     /**
      * @param int $sizeKB
-     * @param null $errorMessage
+     * @param null $errorMessage extra placeholders: {size} = size with KB/MB unit
      * @return $this
      */
     public function maxSize ($sizeKB, $errorMessage = null)
