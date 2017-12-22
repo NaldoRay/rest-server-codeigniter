@@ -57,6 +57,7 @@ class MY_REST_Controller extends REST_Controller
     protected function setLanguage ($language)
     {
         $this->lang->load('messages', $language);
+        $this->lang->load('validation', $language);
     }
 
     private function handleContextError (ContextErrorException $exception)

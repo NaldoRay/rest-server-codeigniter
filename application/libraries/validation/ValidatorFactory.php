@@ -1,7 +1,9 @@
 <?php
 
-include_once('ValueValidator.php');
 include_once('ArrayValidator.php');
+include_once('ValueValidator.php');
+include_once('FilesValidator.php');
+include_once('FileValidator.php');
 
 /**
  * @author Ray Naldo
