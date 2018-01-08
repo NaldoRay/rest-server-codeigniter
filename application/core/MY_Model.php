@@ -560,11 +560,13 @@ class MY_Model extends CI_Model
                 if ($this->isBooleanField($field))
                 {
                     // set field only if it has valid value
-                    if ($value === 'true' || $value === 'false' || $value === '0' || $value === '1')
-                        $value = ($value === 'true' || $value === '1');
-
-                    if (is_bool($value))
+                    try
+                    {
+                        $value = $this->tryParseBoolean($value);
                         $filterData[$field] = ($value ? '1' : '0');
+                    }
+                    catch (InvalidFormatException $e)
+                    {}
                 }
                 else
                 {
@@ -681,6 +683,22 @@ class MY_Model extends CI_Model
                 return true;
         }
         return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return bool
+     * @throws InvalidFormatException if value type is not a boolean or not one of boolean strings: 'true', 'false', '0', '1')
+     */
+    protected function tryParseBoolean ($value)
+    {
+        if ($value === 'true' || $value === 'false' || $value === '0' || $value === '1')
+            $value = ($value === 'true' || $value === '1');
+
+        if (is_bool($value))
+            return $value;
+        else
+            throw new InvalidFormatException(sprintf('%s is not boolean', $value), $this->domain);
     }
 
     /**
