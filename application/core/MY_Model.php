@@ -675,6 +675,37 @@ class MY_Model extends CI_Model
         return $entity;
     }
 
+    protected function getUniqueEntities (array $entities, array $fields)
+    {
+        $uniqueEntities = array();
+        foreach ($entities as $entity)
+        {
+            $arr =& $uniqueEntities;
+            $fieldCount = count($fields);
+            for ($count = 1; $count <= $fieldCount; $count++)
+            {
+                $field = $fields[$count-1];
+                $fieldValue = $entity->$field;
+                if ($count == $fieldCount)
+                {
+                    $arr[$fieldValue] = $entity;
+                }
+                else
+                {
+                    $arr[$fieldValue] = array();
+                    $arr =& $arr[$fieldValue];
+                }
+            }
+        }
+
+        $result = array();
+        array_walk_recursive($uniqueEntities, function ($entity) use (&$result)
+        {
+            $result[] = $entity;
+        });
+        return $result;
+    }
+
     private function isBooleanField ($field)
     {
         foreach ($this->booleanPrefixes as $booleanPrefix)
