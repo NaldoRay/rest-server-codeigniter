@@ -34,9 +34,9 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $data
-     * @param array $filters
-     * @param array|null $allowedFields
+     * @param array $data entity's field => value
+     * @param array $filters entity's filter field => filter value
+     * @param array|null $allowedFields entity's fields
      * @return bool
      * @throws ResourceNotFoundException
      * @throws TransactionException
@@ -58,7 +58,7 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $dataArr array of entity data
+     * @param array $dataArr array of entity data entity's field => value
      * @param array|null $allowedFields
      * @return int number of entities created
      */
@@ -77,8 +77,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $data
-     * @param array|null $allowedFields
+     * @param array $data entity's field => value
+     * @param array|null $allowedFields entity's fields
      * @return object
      * @throws TransactionException
      */
@@ -95,7 +95,7 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $data
+     * @param array $data table's field => value
      * @return bool
      */
     protected function insertRow ($db, $table, array $data)
@@ -109,9 +109,9 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $dataArr
+     * @param array $dataArr array of entity data entity's field => value
      * @param string $indexField
-     * @param array|null $allowedFields
+     * @param array|null $allowedFields entity's fields
      * @return int number of entities updated
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
@@ -135,9 +135,9 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $data
-     * @param array $filters
-     * @param array|null $allowedFields
+     * @param array $data entity's field => value
+     * @param array $filters entity's filter field => filter value
+     * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
      * @throws ResourceNotFoundException
      * @throws TransactionException
@@ -164,8 +164,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $data
-     * @param array $filters
+     * @param array $data table's field => value
+     * @param array $filters table's filter field => filter value
      * @return bool
      */
     protected function updateRow ($db, $table, array $data, array $filters)
@@ -186,7 +186,7 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters
+     * @param array $filters entity's filter field => filter value
      * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
      */
@@ -209,8 +209,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters [entity field => value], e.g. [id => 1]
-     * @param array $fields
+     * @param array $filters entity's filter field => filter value, e.g. ['id' => 1]
+     * @param array $fields entity's fields
      * @return object|null
      */
     protected function getEntity ($db, $table, array $filters, array $fields = null)
@@ -230,8 +230,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters [table field => value]
-     * @param array $fields
+     * @param array $filters table's filter field => filter value
+     * @param array $fields table's fields
      * @return array|null
      */
     protected function getRow ($db, $table, array $filters, array $fields = null)
@@ -251,7 +251,7 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
      * @param array $conditions array of QueryCondition
-     * @param array $fields
+     * @param array $fields entity's fields
      * @return object
      */
     protected function getEntityWithCondition ($db, $table, array $conditions, array $fields = null)
@@ -276,10 +276,10 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param array $filters ['field1' => 'abc']
-     * @param array $searches
-     * @param array $fields ['field1', 'field2']
-     * @param array $sorts ['field1', '-field2']
+     * @param array $filters entity's filter field => filter value, eg. ['field1' => 'abc']
+     * @param array $searches entity's search field => search value
+     * @param array $fields entity's fields, eg. ['field1', 'field2']
+     * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
      * @param bool $unique
      * @return object[]
      */
@@ -291,10 +291,10 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
-     * @param array $filters
-     * @param array|null $searches
-     * @param array $fields
-     * @param array $sorts
+     * @param array $filters entity's filter field => filter value
+     * @param array|null $searches entity's search field => search value
+     * @param array $fields entity's fields
+     * @param array $sorts entity's sort fields
      * @param bool $unique
      * @return object[]
      */
@@ -317,10 +317,10 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param string $table
-     * @param array $filters
-     * @param array $searches
-     * @param array $fields
-     * @param array $sorts
+     * @param array $filters table's filter field => filter value
+     * @param array $searches table's search field => search value
+     * @param array $fields table's fields
+     * @param array $sorts table's sort fields
      * @param bool $unique
      * @return array
      */
@@ -368,8 +368,8 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB $db $db
      * @param string $table
      * @param array $conditions array of QueryCondition
-     * @param array $fields
-     * @param array $sorts
+     * @param array $fields entity's fields
+     * @param array $sorts entity's sort fields
      * @param bool $unique
      * @return object[]
      */
@@ -461,8 +461,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $filters
-     * @param array $searches
+     * @param array $filters entity's filter field => filter value
+     * @param array $searches entity's search field => search value
      * @return bool
      */
     protected function entityExists ($db, $table, array $filters = null, array $searches = null)
@@ -478,8 +478,8 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
-     * @param array $filters
-     * @param array $searches
+     * @param array $filters table's filter field => filter value
+     * @param array $searches table's search field => search value
      * @return bool
      */
     protected function rowExists ($db, $table, array $filters = null, array $searches = null)
@@ -508,8 +508,8 @@ class MY_Model extends CI_Model
 
     /**
      * Filters and maps all fields & values to table format.
-     * @param array $data
-     * @param array $allowedFields
+     * @param array $data entity's field => value
+     * @param array $allowedFields entity's fields
      * @return array
      */
     protected function toWriteTableData (array $data, array $allowedFields = null)
@@ -541,7 +541,7 @@ class MY_Model extends CI_Model
 
     /**
      * Maps all filters to table format.
-     * @param array $filters
+     * @param array $filters entity's filter field => filter value
      * @return array
      */
     protected function toTableFilters (array $filters)
@@ -580,7 +580,7 @@ class MY_Model extends CI_Model
 
     /**
      * Maps all sort fields to table sort fields
-     * @param array $sorts
+     * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
      * @return array
      */
     protected function toTableSortData (array $sorts)
@@ -613,7 +613,7 @@ class MY_Model extends CI_Model
 
     /**
      * Maps all fields to table fields.
-     * @param array $fields
+     * @param array $fields entity's fields, eg. ['field1', 'field2']
      * @return array
      */
     protected function toTableFields (array $fields)
