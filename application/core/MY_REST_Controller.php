@@ -407,61 +407,6 @@ class MY_REST_Controller extends REST_Controller
         }
     }
 
-    protected function getQueryFields ()
-    {
-        $fieldsParam = $this->input->get('fields');
-        if (is_null($fieldsParam))
-            $fields = array();
-        else
-            $fields = explode(',', $fieldsParam);
-
-        return $fields;
-    }
-
-    protected function getQuerySorts ()
-    {
-        $sortsParam = $this->input->get('sorts');
-        if (is_null($sortsParam))
-            $sorts = array();
-        else
-            $sorts = explode(',', $sortsParam);
-
-        return $sorts;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getQueryFilters ()
-    {
-        $filtersParam = $this->input->get('filters');
-        if (!is_array($filtersParam))
-            $filtersParam = array();
-
-        return $filtersParam;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getQuerySearches ()
-    {
-        $searchesParam = $this->input->get('searches');
-        if (!is_array($searchesParam))
-            $searchesParam = array();
-
-        return $searchesParam;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function isUniqueQuery ()
-    {
-        $unique = $this->input->get('unique');
-        return ($unique === 'true');
-    }
-
     public function post ($key = NULL, $xss_clean = NULL)
     {
         $data = parent::post($key, $xss_clean);
@@ -527,6 +472,8 @@ class MY_REST_Controller extends REST_Controller
         $fields = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $unique = $this->isUniqueQuery();
+        $limit = $this->getQueryLimit();
+        $offset = $this->getQueryOffset();
 
         if (!empty($allowedFields))
         {
@@ -546,7 +493,94 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $model->getAll($filters, $searches, $fields, $sorts, $unique);
+        return $model->getAll($filters, $searches, $fields, $sorts, $unique, $limit, $offset);
+    }
+
+    protected function getQueryFields ()
+    {
+        $fieldsParam = $this->input->get('fields');
+        if (is_null($fieldsParam))
+            $fields = array();
+        else
+            $fields = explode(',', $fieldsParam);
+
+        return $fields;
+    }
+
+    protected function getQuerySorts ()
+    {
+        $sortsParam = $this->input->get('sorts');
+        if (is_null($sortsParam))
+            $sorts = array();
+        else
+            $sorts = explode(',', $sortsParam);
+
+        return $sorts;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getQueryFilters ()
+    {
+        $filtersParam = $this->input->get('filters');
+        if (!is_array($filtersParam))
+            $filtersParam = array();
+
+        return $filtersParam;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getQuerySearches ()
+    {
+        $searchesParam = $this->input->get('searches');
+        if (!is_array($searchesParam))
+            $searchesParam = array();
+
+        return $searchesParam;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isUniqueQuery ()
+    {
+        $unique = $this->input->get('unique');
+        return ($unique === 'true');
+    }
+
+    /**
+     * @return int
+     */
+    protected function getQueryLimit ()
+    {
+        $limit = $this->input->get('limit');
+        try
+        {
+            return $this->validation->tryParseInteger($limit, null);
+        }
+        catch (BadValueException $e)
+        {
+            return -1;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    protected function getQueryOffset ()
+    {
+        $offset = $this->input->get('offset');
+        try
+        {
+            return $this->validation->tryParseInteger($offset, null);
+        }
+        catch (BadValueException $e)
+        {
+            return 0;
+        }
     }
 
     protected function getString ($key)

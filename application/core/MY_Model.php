@@ -281,9 +281,11 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields, eg. ['field1', 'field2']
      * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
      * @param bool $unique
+     * @param int $limit
+     * @param int $offset
      * @return object[]
      */
-    public function getAll (array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
+    public function getAll (array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
     {
         throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
@@ -296,9 +298,11 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields
      * @param array $sorts entity's sort fields
      * @param bool $unique
+     * @param int $limit
+     * @param int $offset
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -310,7 +314,7 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $sorts, $unique);
+        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $sorts, $unique, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -322,9 +326,11 @@ class MY_Model extends CI_Model
      * @param array $fields table's fields
      * @param array $sorts table's sort fields
      * @param bool $unique
+     * @param int $limit
+     * @param int $offset
      * @return array
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
     {
         if (!empty($filters))
             $db->where($filters);
@@ -357,6 +363,16 @@ class MY_Model extends CI_Model
         if ($unique)
             $db->distinct();
 
+        if ($limit >= 0 || $offset > 0)
+        {
+            if ($limit < 0)
+                $limit = PHP_INT_MAX;
+            if ($offset < 0)
+                $offset = 0;
+
+            $db->limit($limit, $offset);
+        }
+
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
             ->get($table);
@@ -371,9 +387,11 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields
      * @param array $sorts entity's sort fields
      * @param bool $unique
+     * @param int $limit
+     * @param int $offset
      * @return object[]
      */
-    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false)
+    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
     {
         $tableConditions = $this->toTableConditions($conditions);
         if (!empty($fields))
@@ -401,6 +419,16 @@ class MY_Model extends CI_Model
 
         if ($unique)
             $db->distinct();
+
+        if ($limit >= 0 || $offset > 0)
+        {
+            if ($limit < 0)
+                $limit = PHP_INT_MAX;
+            if ($offset < 0)
+                $offset = 0;
+
+            $db->limit($limit, $offset);
+        }
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
