@@ -7,7 +7,7 @@ Author: Ray Naldo
 defined('WEEKLY') OR define ('WEEKLY', 1);
 defined('MONTHLY') OR define ('MONTHLY', 2);
 defined('YEARLY') OR define ('YEARLY', 3);
-defined('LOG_PATH') OR define ('LOG_PATH', FCPATH.'logs/');
+defined('LOG_PATH') OR define ('LOG_PATH', APPPATH.'../logs/');
 
 if (!function_exists('logQuery'))
 {
