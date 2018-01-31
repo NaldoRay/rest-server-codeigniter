@@ -418,7 +418,12 @@ class MY_REST_Controller extends REST_Controller
 
     public function put ($key = NULL, $xss_clean = NULL)
     {
-        $data = parent::put($key, $xss_clean);
+        $contentType = $this->input->get_request_header('Content-Type');
+        if (strpos($contentType, 'multipart/form-data') === 0)
+            $data = $this->parseMultipartFormData();
+        else
+            $data = parent::put($key, $xss_clean);
+
         if (is_null($key))
             $data = $this->processData($data);
 
@@ -427,11 +432,99 @@ class MY_REST_Controller extends REST_Controller
 
     public function patch ($key = NULL, $xss_clean = NULL)
     {
-        $data = parent::patch($key, $xss_clean);
+        $contentType = $this->input->get_request_header('Content-Type');
+        if (strpos($contentType, 'multipart/form-data') === 0)
+            $data = $this->parseMultipartFormData();
+        else
+            $data = parent::patch($key, $xss_clean);
+
         if (is_null($key))
             $data = $this->processData($data);
 
         return $data;
+    }
+
+    /**
+     * Parser for PATCH/PUT request with multipart/form-data content-type.
+     * We need to parse manually because PHP only auto-parse multipart/form-data for POST method.
+     * https://stackoverflow.com/questions/9464935/php-multipart-form-data-put-request
+     * https://bugs.php.net/bug.php?id=55815&thanks=6
+     */
+    private function parseMultipartFormData ()
+    {
+        // Fetch content and determine boundary
+        $raw_data = file_get_contents('php://input');
+        if (empty($raw_data))
+        {
+            return array();
+        }
+        else
+        {
+            $boundary = substr($raw_data, 0, strpos($raw_data, "\r\n"));
+
+            // Fetch each part
+            $parts = array_slice(explode($boundary, $raw_data), 1);
+            $data = array();
+
+            foreach ($parts as $part)
+            {
+                // If this is the last part, break
+                if ($part == "--\r\n")
+                    break;
+
+                // Separate content from headers
+                $part = ltrim($part, "\r\n");
+                list($raw_headers, $body) = explode("\r\n\r\n", $part, 2);
+
+                // Parse the headers list
+                $raw_headers = explode("\r\n", $raw_headers);
+                $headers = array();
+                foreach ($raw_headers as $header)
+                {
+                    list($name, $value) = explode(':', $header);
+                    $headers[ strtolower($name) ] = ltrim($value, ' ');
+                }
+
+                // Parse the Content-Disposition to get the field name, etc.
+                if (isset($headers['content-disposition']))
+                {
+                    $filename = null;
+                    preg_match(
+                        '/^(.+); *name="([^"]+)"(; *filename="([^"]+)")?/',
+                        $headers['content-disposition'],
+                        $matches
+                    );
+                    list(, $type, $name) = $matches;
+
+                    // check if content is a file
+                    if (isset($matches[4]))
+                    {
+                        // parse file
+                        $filename = $matches[4];
+
+                        $filename_parts = pathinfo($filename);
+                        $tmp_name = tempnam(ini_get('upload_tmp_dir'), $filename_parts['filename']);
+                        $type = $headers['content-type'];
+
+                        $_FILES[ $matches[2] ] = array(
+                            'error' => 0,
+                            'name' => $filename,
+                            'tmp_name' => $tmp_name,
+                            'size' => strlen($body),
+                            'type' => $type
+                        );
+
+                        file_put_contents($tmp_name, $body);
+                    }
+                    else
+                    {
+                        $data[ $name ] = substr($body, 0, strlen($body) - 2);
+                    }
+                }
+            }
+
+            return $data;
+        }
     }
 
     /**
