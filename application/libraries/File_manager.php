@@ -24,7 +24,7 @@ class File_manager
     }
 
     /**
-     * Path must include a trailing slash or null if you want to use absolute/full path.
+     * Path must include a trailing slash if you want to use absolute/full path or null.
      * @param string|null $baseFilePath
      */
     public function setBaseFilePath ($baseFilePath)
@@ -93,6 +93,22 @@ class File_manager
         $shown = $this->fileViewer->downloadRemoteFile($fileUrl, $renamedFilename);
         if (!$shown)
             show_404();
+    }
+
+    public function uploadFile ($field, $filePath)
+    {
+        if (isset($_FILES[ $field ]) && !empty($filePath))
+        {
+            $sourcePath = $_FILES[ $field ]["tmp_name"];
+            $destPath = $this->getFullPath($filePath);
+
+            $destDir = dirname($destPath);
+            if (!is_dir($destDir))
+                mkdir($destDir, 0775, true);
+
+            return copy($sourcePath, $destPath);
+        }
+        return false;
     }
 
     private function getFullPath ($filePath)

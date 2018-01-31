@@ -27,6 +27,6 @@ $lang['validation_numeric_float'] = '{label} harus berupa (teks) angka desimal';
 $lang['validation_numeric_float_positive'] = '{label} harus berupa (teks) angka desimal positif';
 
 // file validation
-$lang['validation_file_required'] = '{label} harus diisi';
+$lang['validation_file_required'] = '{label} harus di-upload';
 $lang['validation_file_types'] = 'Tipe file yang diizinkan: {types}';
 $lang['validation_file_size_max'] = 'Ukuran file maksimal {size}';
