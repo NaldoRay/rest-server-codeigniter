@@ -97,7 +97,7 @@ class File_manager
 
     public function uploadFile ($field, $filePath)
     {
-        if (isset($_FILES[ $field ]) && !empty($filePath))
+        if ($this->uploadFileExists($field) && !empty($filePath))
         {
             $sourcePath = $_FILES[ $field ]["tmp_name"];
             $destPath = $this->getFullPath($filePath);
@@ -109,6 +109,11 @@ class File_manager
             return copy($sourcePath, $destPath);
         }
         return false;
+    }
+
+    public function uploadFileExists ($field)
+    {
+        return isset($_FILES[ $field ]);
     }
 
     private function getFullPath ($filePath)
