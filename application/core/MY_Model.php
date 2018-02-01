@@ -15,8 +15,10 @@ class MY_Model extends CI_Model
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
 
-    /** prefix from column name with boolean type (for auto-convert) */
+    /** prefix from column name with boolean type, for auto-convert */
     protected $booleanPrefixes = [];
+    /** prefix from column name with number type (integer, float), for auto-convert */
+    protected $numberPrefixes = [];
 
     /** used as default when no sorts param given when calling get method e.g. ['field1', 'field2'] */
     protected $defaultSorts = [];
@@ -559,7 +561,14 @@ class MY_Model extends CI_Model
                     $field = $fieldMap[$field];
 
                 if ($this->isBooleanField($field))
+                {
+                    $value = $this->tryParseBoolean($value);
                     $value = ($value ? '1' : '0');
+                }
+                else if ($this->isNumberField($field))
+                {
+                    $value = $this->tryParseNumber($value);
+                }
 
                 $tableData[$field] = $value;
             }
@@ -592,6 +601,16 @@ class MY_Model extends CI_Model
                     {
                         $value = $this->tryParseBoolean($value);
                         $filterData[$field] = ($value ? '1' : '0');
+                    }
+                    catch (InvalidFormatException $e)
+                    {}
+                }
+                else if ($this->isNumberField($field))
+                {
+                    try
+                    {
+                        $value = $this->tryParseNumber($value);
+                        $filterData[ $field ] = $value;
                     }
                     catch (InvalidFormatException $e)
                     {}
@@ -736,9 +755,9 @@ class MY_Model extends CI_Model
 
     private function isBooleanField ($field)
     {
-        foreach ($this->booleanPrefixes as $booleanPrefix)
+        foreach ($this->booleanPrefixes as $prefix)
         {
-            if (strpos($field, $booleanPrefix) === 0)
+            if (strpos($field, $prefix) === 0)
                 return true;
         }
         return false;
@@ -757,7 +776,30 @@ class MY_Model extends CI_Model
         if (is_bool($value))
             return $value;
         else
-            throw new InvalidFormatException(sprintf('%s is not boolean', $value), $this->domain);
+            throw new InvalidFormatException(sprintf('%s is not boolean or boolean string', $value), $this->domain);
+    }
+
+    private function isNumberField ($field)
+    {
+        foreach ($this->numberPrefixes as $prefix)
+        {
+            if (strpos($field, $prefix) === 0)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param mixed $value
+     * @return bool
+     * @throws InvalidFormatException if value type is not a number or numeric string
+     */
+    protected function tryParseNumber ($value)
+    {
+        if (is_numeric($value))
+            return $value + 0;
+        else
+            throw new InvalidFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
     }
 
     /**
