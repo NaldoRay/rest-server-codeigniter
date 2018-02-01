@@ -60,4 +60,16 @@ class Rest_validation extends InputValidation
         if (!$valid)
             throw $exception;
     }
+
+    public function validateOrNotFound ()
+    {
+        try
+        {
+            $this->validate();
+        }
+        catch (Exception $e)
+        {
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->getDomain()), $this->getDomain());
+        }
+    }
 }
