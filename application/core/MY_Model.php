@@ -40,6 +40,7 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return bool
+     * @throws InvalidFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
@@ -63,6 +64,7 @@ class MY_Model extends CI_Model
      * @param array $dataArr array of entity data entity's field => value
      * @param array|null $allowedFields
      * @return int number of entities created
+     * @throws InvalidFormatException
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
@@ -82,6 +84,7 @@ class MY_Model extends CI_Model
      * @param array $data entity's field => value
      * @param array|null $allowedFields entity's fields
      * @return object
+     * @throws InvalidFormatException
      * @throws TransactionException
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
@@ -115,6 +118,7 @@ class MY_Model extends CI_Model
      * @param string $indexField
      * @param array|null $allowedFields entity's fields
      * @return int number of entities updated
+     * @throws InvalidFormatException
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
     {
@@ -141,6 +145,7 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
+     * @throws InvalidFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
