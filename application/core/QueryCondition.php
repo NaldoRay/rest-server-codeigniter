@@ -17,7 +17,7 @@ class QueryCondition
      * @param string $operator one of {=, !=, >, >=, <, <=}
      * @param mixed $value
      */
-    public function __construct ($field, $operator, $value)
+    public function __construct ($field, $operator, $value = null)
     {
         $this->field = $field;
         $this->operator = $operator;

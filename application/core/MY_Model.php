@@ -216,6 +216,33 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
+     * @param array $conditions QueryCondition[]
+     * @throws ResourceNotFoundException
+     * @throws TransactionException if delete failed because of database error
+     * @internal param QueryCondition[] $filters
+     */
+    protected function deleteEntityWithConditions ($db, $table, array $conditions)
+    {
+        $conditions = $this->toTableConditions($conditions);
+
+        foreach ($conditions as $condition)
+            $db->where($this->getWhereString($db, $condition));
+
+        $result = $db->delete($table);
+        if ($result === false)
+        {
+            throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
+        }
+        else
+        {
+            if ($db->affected_rows() == 0)
+                throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
+        }
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
      * @param array $filters entity's filter field => filter value, e.g. ['id' => 1]
      * @param array $fields entity's fields
      * @return object|null
@@ -261,7 +288,7 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields
      * @return object
      */
-    protected function getEntityWithCondition ($db, $table, array $conditions, array $fields = null)
+    protected function getEntityWithConditions ($db, $table, array $conditions, array $fields = null)
     {
         $tableConditions = $this->toTableConditions($conditions);
         if (!empty($fields))
@@ -455,8 +482,26 @@ class MY_Model extends CI_Model
             $field = $condition->field;
             if (isset($fieldMap[$field]))
             {
-                $condition->field = $fieldMap[$field];
-                $tableConditions[] = $condition;
+                $field = $fieldMap[$field];
+                $condition->field = $field;
+
+                $value = $condition->value;
+                if (empty($value))
+                {
+                    $tableConditions[] = $condition;
+                }
+                else
+                {
+                    try
+                    {
+                        $value = $this->toTableValue($field, $value);
+
+                        $condition->value = $value;
+                        $tableConditions[] = $condition;
+                    }
+                    catch (InvalidFormatException $e)
+                    {}
+                }
             }
         }
 
@@ -470,7 +515,11 @@ class MY_Model extends CI_Model
      */
     private function getWhereString ($db, QueryCondition $condition)
     {
-        return sprintf('%s %s %s', $condition->field, $condition->operator, $db->escape($condition->value));
+        $whereStr = sprintf('%s %s', $condition->field, $condition->operator);
+        if (!empty($condition->value))
+            $whereStr .= ' ' . $db->escape($condition->value);
+
+        return $whereStr;
     }
 
     protected function getSelectField (array $tableFields = null)
@@ -546,6 +595,7 @@ class MY_Model extends CI_Model
      * @param array $data entity's field => value
      * @param array $allowedFields entity's fields
      * @return array
+     * @throws InvalidFormatException
      */
     protected function toWriteTableData (array $data, array $allowedFields = null)
     {
@@ -599,35 +649,41 @@ class MY_Model extends CI_Model
             if (isset($fieldMap[$field]))
             {
                 $field = $fieldMap[$field];
-                if ($this->isBooleanField($field))
+                try
                 {
-                    // set field only if it has valid value
-                    try
-                    {
-                        $value = $this->tryParseBoolean($value);
-                        $filterData[$field] = ($value ? '1' : '0');
-                    }
-                    catch (InvalidFormatException $e)
-                    {}
-                }
-                else if ($this->isNumberField($field))
-                {
-                    try
-                    {
-                        $value = $this->tryParseNumber($value);
-                        $filterData[ $field ] = $value;
-                    }
-                    catch (InvalidFormatException $e)
-                    {}
-                }
-                else
-                {
+                    $value = $this->toTableValue($field, $value);
                     $filterData[$field] = $value;
                 }
+                catch (InvalidFormatException $e)
+                {}
             }
         }
 
         return $filterData;
+    }
+
+    /**
+     * @param string $field table's field
+     * @param mixed $value
+     * @return bool|string
+     * @throws InvalidFormatException
+     */
+    private function toTableValue ($field, $value)
+    {
+        if ($this->isBooleanField($field))
+        {
+            // set field only if it has valid value
+            $value = $this->tryParseBoolean($value);
+            return ($value ? '1' : '0');
+        }
+        else if ($this->isNumberField($field))
+        {
+            return $this->tryParseNumber($value);
+        }
+        else
+        {
+            return $value;
+        }
     }
 
     /**
