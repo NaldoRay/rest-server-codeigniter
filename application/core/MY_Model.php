@@ -183,9 +183,7 @@ class MY_Model extends CI_Model
         }
         else
         {
-            if (!empty($filters))
-                $db->where($filters);
-
+            $this->setQueryFilters($db, $filters);
             return $db->update($table, $data);
         }
     }
@@ -270,8 +268,7 @@ class MY_Model extends CI_Model
      */
     protected function getRow ($db, $table, array $filters, array $fields = null)
     {
-        if (!empty($filters))
-            $db->where($filters);
+        $this->setQueryFilters($db, $filters);
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
@@ -307,6 +304,49 @@ class MY_Model extends CI_Model
             return null;
         else
             return $this->toEntity($row);
+    }
+
+
+    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    {
+        if (!empty($filters))
+            $filters = $this->toTableFilters($filters);
+        if (!empty($searches))
+            $searches = $this->toTableFilters($searches);
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
+        if (empty($sorts))
+            $sorts = $this->defaultSorts;
+        $sorts = $this->toTableSortData($sorts);
+
+        $row = $this->getFirstRow($db, $table, $filters, $searches, $fields, $sorts);
+        if (is_null($row))
+            return null;
+        else
+            return $this->toEntity($row);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param $table
+     * @param array $filters table's filter field => filter value
+     * @param array $searches table's search field => search value
+     * @param array $fields table's fields
+     * @param array $sorts table's sort fields
+     * @return array|null
+     */
+    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    {
+        $this->setQueryFilters($db, $filters);
+        $this->setQuerySearches($db, $searches);
+        $this->setQuerySorts($db, $fields, $sorts);
+
+        $select = $this->getSelectField($fields);
+        $query = $db->select($select)
+            ->limit(1)
+            ->get($table);
+
+        return $query->row_array();
     }
 
     /**
@@ -366,46 +406,11 @@ class MY_Model extends CI_Model
      */
     protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
     {
-        if (!empty($filters))
-            $db->where($filters);
-
-        if (!empty($searches))
-        {
-            $searchWhereArr = array();
-            foreach ($searches as $field => $search)
-            {
-                $search = $db->escape($search);
-                $searchWhereArr[] = sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search);
-            }
-            if (!empty($searchWhereArr))
-                $db->where(sprintf('(%s)', implode(' OR ', $searchWhereArr)), null, false);
-        }
-
-        if (!empty($sorts))
-        {
-            if (!empty($fields))
-            {
-                $sorts = array_filter($sorts, function ($sort) use ($fields)
-                {
-                    $sortField = explode(' ', $sort)[0];
-                    return in_array($sortField, $fields);
-                });
-            }
-            $db->order_by(implode(',', $sorts));
-        }
-
-        if ($unique)
-            $db->distinct();
-
-        if ($limit >= 0 || $offset > 0)
-        {
-            if ($limit < 0)
-                $limit = PHP_INT_MAX;
-            if ($offset < 0)
-                $offset = 0;
-
-            $db->limit($limit, $offset);
-        }
+        $this->setQueryFilters($db, $filters);
+        $this->setQuerySearches($db, $searches);
+        $this->setQuerySorts($db, $fields, $sorts);
+        $this->setQueryUnique($db, $unique);
+        $this->setQueryLimit($db, $limit, $offset);
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
@@ -434,41 +439,11 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-
         foreach ($tableConditions as $condition)
             $db->where($this->getWhereString($db, $condition));
 
-        if (!empty($sorts))
-        {
-            if (!empty($fields))
-            {
-                $sorts = array_filter($sorts, function ($sort) use ($fields)
-                {
-                    $sortField = explode(' ', $sort)[0];
-                    return in_array($sortField, $fields);
-                });
-            }
-            $db->order_by(implode(',', $sorts));
-        }
-
-        if ($unique)
-            $db->distinct();
-
-        if ($limit >= 0 || $offset > 0)
-        {
-            if ($limit < 0)
-                $limit = PHP_INT_MAX;
-            if ($offset < 0)
-                $offset = 0;
-
-            $db->limit($limit, $offset);
-        }
-
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->get($table);
-
-        return $this->toEntities($result->result_array());
+        $rows = $this->getAllRows($db, $table, null, null, $fields, $sorts, $unique, $limit, $offset);
+        return $this->toEntities($rows);
     }
 
     private function toTableConditions (array $conditions)
@@ -568,9 +543,32 @@ class MY_Model extends CI_Model
      */
     protected function rowExists ($db, $table, array $filters = null, array $searches = null)
     {
+        $this->setQueryFilters($db, $filters);
+        $this->setQuerySearches($db, $searches);
+
+        $query = $db->select('1')
+            ->limit(1)
+            ->get($table);
+
+        return ($query->num_rows() > 0);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param array $filters
+     */
+    private function setQueryFilters ($db, array $filters = null)
+    {
         if (!empty($filters))
             $db->where($filters);
+    }
 
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param array $searches
+     */
+    private function setQuerySearches ($db, array $searches = null)
+    {
         if (!empty($searches))
         {
             $searchWhereArr = array();
@@ -582,12 +580,55 @@ class MY_Model extends CI_Model
             if (!empty($searchWhereArr))
                 $db->where(sprintf('(%s)', implode(' OR ', $searchWhereArr)), null, false);
         }
+    }
 
-        $query = $db->select('1')
-            ->limit(1)
-            ->get($table);
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param array $fields
+     * @param array $sorts
+     */
+    private function setQuerySorts ($db, array $fields = null, array $sorts = null)
+    {
+        if (!empty($sorts))
+        {
+            if (!empty($fields))
+            {
+                $sorts = array_filter($sorts, function ($sort) use ($fields)
+                {
+                    $sortField = explode(' ', $sort)[0];
+                    return in_array($sortField, $fields);
+                });
+            }
+            $db->order_by(implode(',', $sorts));
+        }
+    }
 
-        return ($query->num_rows() > 0);
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param bool $unique
+     */
+    private function setQueryUnique ($db, $unique = false)
+    {
+        if ($unique)
+            $db->distinct();
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param int $limit
+     * @param int $offset
+     */
+    private function setQueryLimit ($db, $limit = -1, $offset = 0)
+    {
+        if ($limit >= 0 || $offset > 0)
+        {
+            if ($limit < 0)
+                $limit = PHP_INT_MAX;
+            if ($offset < 0)
+                $offset = 0;
+
+            $db->limit($limit, $offset);
+        }
     }
 
     /**
