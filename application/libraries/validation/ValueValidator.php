@@ -496,12 +496,28 @@ class ValueValidator implements Validation
         {
             if (is_numeric($value))
             {
-                // workaround to make "01.2" returns false
-                // compare casted value string with original value string
-                // false float string will return false i.e. "01.2" != "1.2"
+                /*
+                 * workaround to make "01.2" returns false
+                 * compare casted value string with original value string
+                 * false float string will return false i.e. "01.2" != "1.2"
+                 */
                 $value = (string) $value;
                 $number = $value+0; // convert numeric string to int or float
                 $strValue = (string) $number;
+
+                /*
+                 * workaround to make "100.0", "2.50" returns true
+                 */
+                // apply only if decimal point (".") exists
+                $decimalIdx = strpos($value, '.');
+                if ($decimalIdx !== false)
+                {
+                    // remove "0" at the end of the value (fractional-part)
+                    $value = rtrim($value, '0');
+                    // remove decimal point if no fractional-part left
+                    if (strlen($value) <= ($decimalIdx+1))
+                        $value = substr($value, 0, $decimalIdx);
+                }
 
                 return ($strValue === $value) && (is_int($number) || is_float($number)) && ($number >= 0);
             }
