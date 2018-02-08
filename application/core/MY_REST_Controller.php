@@ -211,11 +211,116 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
+            if ($this->input->method(true) == 'GET')
+                $data = $this->filterData($data);
+
             $response = array(
                 'data' => $data
             );
         }
         $this->response($response, $httpCode);
+    }
+
+    private function filterData ($data)
+    {
+        if (empty($data))
+            return $data;
+
+        $fields = $this->getQueryFields();
+        if (!empty($fields))
+        {
+            $data = $this->filterObjectFields($data, $fields);
+            if ($this->isUniqueQuery() && $this->isArrayOfObjects($data))
+                $data = $this->getUniqueObjects($data, $fields);
+        }
+
+        return $data;
+    }
+
+    private function filterObjectFields ($data, array $fields)
+    {
+        if (is_array($data))
+        {
+            $filteredData = array();
+            foreach ($data as $key => $value)
+            {
+                $filteredData[ $key ] = $this->filterObjectFields($value, $fields);
+            }
+            return $filteredData;
+        }
+        else if (is_object($data))
+        {
+            $filteredData = array();
+            foreach ($fields as $field)
+            {
+                if (isset($data->$field))
+                    $filteredData[$field] = $this->filterObjectFields($data->$field, $fields);
+            }
+            return (object) $filteredData;
+        }
+        else
+        {
+            return $data;
+        }
+    }
+
+    private function isArrayOfObjects (array $data)
+    {
+        foreach ($data as $row)
+        {
+            if (!is_object($row))
+                return false;
+        }
+        return true;
+    }
+
+    private function getUniqueObjects (array $data, array $fields)
+    {
+        if (empty($data))
+            return $data;
+
+        $uniqueEntities = array();
+        $fields = $this->getObjectFields($data[0], $fields);
+        foreach ($data as $entity)
+        {
+            $arr =& $uniqueEntities;
+
+            $fieldCount = count($fields);
+            for ($count = 1; $count <= $fieldCount; $count++)
+            {
+                $field = $fields[$count-1];
+                $fieldValue = $entity->$field;
+                if ($count == $fieldCount)
+                {
+                    $arr[$fieldValue] = $entity;
+                }
+                else
+                {
+                    if (!isset($arr[$fieldValue]))
+                        $arr[$fieldValue] = array();
+
+                    $arr =& $arr[$fieldValue];
+                }
+            }
+        }
+
+        $result = array();
+        array_walk_recursive($uniqueEntities, function ($entity) use (&$result)
+        {
+            $result[] = $entity;
+        });
+        return $result;
+    }
+
+    private function getObjectFields ($object, array $fields)
+    {
+        $objectFields = array();
+        foreach ($fields as $field)
+        {
+            if (isset($object->$field))
+                $objectFields[] = $field;
+        }
+        return $objectFields;
     }
 
     /*
@@ -558,35 +663,18 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    protected function getAll (MY_Model $model, array $extraFilters = null, array $allowedFields = null)
+    protected function getAll (MY_Model $model, array $extraFilters = null)
     {
         $filters = $this->getQueryFilters();
         $searches = $this->getQuerySearches();
-        $fields = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
-        $unique = $this->isUniqueQuery();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
-
-        if (!empty($allowedFields))
-        {
-            if (empty($fields))
-            {
-                $fields = $allowedFields;
-            }
-            else
-            {
-                $fields = array_filter($fields, function ($value) use ($allowedFields)
-                {
-                    return in_array($value, $allowedFields);
-                });
-            }
-        }
 
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $model->getAll($filters, $searches, $fields, $sorts, $unique, $limit, $offset);
+        return $model->getAll($filters, $searches, $sorts, $limit, $offset);
     }
 
     protected function getQueryFields ()

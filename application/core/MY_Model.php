@@ -307,7 +307,7 @@ class MY_Model extends CI_Model
     }
 
 
-    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -319,7 +319,7 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $row = $this->getFirstRow($db, $table, $filters, $searches, $fields, $sorts);
+        $row = $this->getFirstRow($db, $table, $filters, $searches, $sorts, $fields);
         if (is_null($row))
             return null;
         else
@@ -331,15 +331,15 @@ class MY_Model extends CI_Model
      * @param $table
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
-     * @param array $fields table's fields
      * @param array $sorts table's sort fields
+     * @param array $fields table's fields
      * @return array|null
      */
-    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
     {
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
-        $this->setQuerySorts($db, $fields, $sorts);
+        $this->setQuerySorts($db, $sorts, $fields);
 
         $select = $this->getSelectField($fields);
         $query = $db->select($select)
@@ -352,31 +352,29 @@ class MY_Model extends CI_Model
     /**
      * @param array $filters entity's filter field => filter value, eg. ['field1' => 'abc']
      * @param array $searches entity's search field => search value
-     * @param array $fields entity's fields, eg. ['field1', 'field2']
      * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
-     * @param bool $unique
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    public function getAll (array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
+    public function getAll (array $filters = null, array $searches = null, array $sorts = null, $limit = -1, $offset = 0)
     {
         throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param string $table
      * @param array $filters entity's filter field => filter value
      * @param array|null $searches entity's search field => search value
-     * @param array $fields entity's fields
      * @param array $sorts entity's sort fields
+     * @param array $fields entity's fields
      * @param bool $unique
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -388,7 +386,7 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $sorts, $unique, $limit, $offset);
+        $rows = $this->getAllRows($db, $table, $filters, $searches, $sorts, $fields, $unique, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -397,18 +395,18 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
-     * @param array $fields table's fields
      * @param array $sorts table's sort fields
+     * @param array $fields table's fields
      * @param bool $unique
      * @param int $limit
      * @param int $offset
      * @return array
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
     {
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
-        $this->setQuerySorts($db, $fields, $sorts);
+        $this->setQuerySorts($db, $sorts, $fields);
         $this->setQueryUnique($db, $unique);
         $this->setQueryLimit($db, $limit, $offset);
 
@@ -420,17 +418,17 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param string $table
      * @param array $conditions array of QueryCondition
-     * @param array $fields entity's fields
      * @param array $sorts entity's sort fields
+     * @param array $fields entity's fields
      * @param bool $unique
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, array $sorts = null, $unique = false, $limit = -1, $offset = 0)
+    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
     {
         $tableConditions = $this->toTableConditions($conditions);
         if (!empty($fields))
@@ -442,7 +440,7 @@ class MY_Model extends CI_Model
         foreach ($tableConditions as $condition)
             $db->where($this->getWhereString($db, $condition));
 
-        $rows = $this->getAllRows($db, $table, null, null, $fields, $sorts, $unique, $limit, $offset);
+        $rows = $this->getAllRows($db, $table, null, null, $sorts, $fields, $unique, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -584,10 +582,10 @@ class MY_Model extends CI_Model
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db $db
-     * @param array $fields
      * @param array $sorts
+     * @param array $fields
      */
-    private function setQuerySorts ($db, array $fields = null, array $sorts = null)
+    private function setQuerySorts ($db, array $sorts = null, array $fields = null)
     {
         if (!empty($sorts))
         {
@@ -918,5 +916,40 @@ class MY_Model extends CI_Model
             return $this->fieldMap;
         else
             return array_merge($this->fieldMap, $this->readOnlyFieldMap);
+    }
+
+    /**
+     * @param object $entity
+     * @param array|null $fields
+     */
+    protected function rightJoin ($entity, array $fields = null)
+    {
+        try
+        {
+            $joinEntity = $this->getJoinEntity($entity, $fields);
+            foreach ($joinEntity as $field => $value)
+            {
+                if (!isset($entity->$field))
+                    $entity->$field = $value;
+            }
+        }
+        catch (ResourceNotFoundException $e)
+        {
+            foreach ($fields as $field)
+            {
+                if (!isset($entity->$field))
+                    $entity->$field = null;
+            }
+        }
+    }
+
+    /**
+     * @param object $entity
+     * @param array|null $fields
+     * @return object join entity
+     */
+    protected function getJoinEntity ($entity, array $fields = null)
+    {
+        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
 }
