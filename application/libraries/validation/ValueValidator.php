@@ -17,9 +17,9 @@ class ValueValidator implements Validation
     private static $IDX_ONLY_INTEGER = 1;
     private static $IDX_ONLY_FLOAT = 1;
     private static $IDX_ONLY_STRING = 1;
-
     // can be string/integer/float
-    private static $IDX_ONLY_NUMERIC = 2;
+    private static $IDX_ONLY_NUMERIC = 1;
+    private static $IDX_ONLY_ARRAY = 1;
 
     // comparing content attributes
     private static $IDX_LENGTH_MIN = 6;
@@ -528,6 +528,70 @@ class ValueValidator implements Validation
         return $this;
     }
 
+
+    /**
+     * Validation failed if value equals to null, '', or only whitespaces.
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function onlyArrayOfAssociatives ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be array of associative arrays';
+
+        $this->setValidation(self::$IDX_ONLY_ARRAY, function ($data)
+        {
+            if (is_array($data))
+            {
+                foreach ($data as $row)
+                {
+                    if (is_array($row))
+                    {
+                        foreach ($row as $key => $value)
+                        {
+                            if (!is_string($key))
+                                return false;
+                        }
+                    }
+                    else
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation failed if value equals to null, '', or only whitespaces.
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function onlyArrayOfObjects ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be array of objects';
+
+        $this->setValidation(self::$IDX_ONLY_ARRAY, function ($data)
+        {
+            if (is_array($data))
+            {
+                foreach ($data as $row)
+                {
+                    if (!is_object($row))
+                        return false;
+                }
+                return true;
+            }
+            return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+
     /**
      * @param Closure $validation
      * @param string|Closure $errorMessage error message or function to return error message (called on validation failed)
@@ -584,12 +648,13 @@ class ValueValidator implements Validation
                 if ($errorMessage instanceof Closure)
                     $errorMessage = $errorMessage();
 
-                $errorMessage = $this->formatMessage($errorMessage, [
-                    '{label}' => $this->label,
-                    '{value}' => $this->value
-                ]);
+                $replacements = [
+                    '{label}' => $this->label
+                ];
+                if (is_scalar($this->value))
+                    $replacements['{value}'] = $this->value;
 
-                $this->error = $errorMessage;
+                $this->error = $this->formatMessage($errorMessage, $replacements);
                 return false;
             }
         }
