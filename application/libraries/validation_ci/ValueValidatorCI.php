@@ -168,6 +168,14 @@ class ValueValidatorCI extends ValueValidator
         return parent::onlyPositiveNumericFloat($errorMessage);
     }
 
+    public function onlyOneOf (array $values, $errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_one_of_values');
+
+        return parent::onlyOneOf($values, $errorMessage);
+    }
+
     private function getString ($key)
     {
         $line = $this->CI->lang->line($key);

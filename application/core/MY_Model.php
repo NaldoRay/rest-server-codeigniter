@@ -39,7 +39,7 @@ class MY_Model extends CI_Model
      * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
-     * @return bool
+     * @return object
      * @throws InvalidFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
@@ -48,13 +48,11 @@ class MY_Model extends CI_Model
     {
         if ($this->entityExists($db, $table, $filters))
         {
-            $entity = $this->updateEntity($db, $table, $data, $filters, $allowedFields);
-            return !is_null($entity);
+            return $this->updateEntity($db, $table, $data, $filters, $allowedFields);
         }
         else
         {
-            $entity = $this->createEntity($db, $table, $data, $allowedFields);
-            return !is_null($entity);
+            return $this->createEntity($db, $table, $data, $allowedFields);
         }
     }
 
@@ -65,9 +63,13 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields
      * @return int number of entities created
      * @throws InvalidFormatException
+     * @throws TransactionException
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
+        if (empty($dataArr))
+            throw new TransactionException(sprintf('Failed to create %s, empty data', $this->domain), $this->domain);
+
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
@@ -119,9 +121,13 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields entity's fields
      * @return int number of entities updated
      * @throws InvalidFormatException
+     * @throws TransactionException
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
     {
+        if (empty($dataArr))
+            throw new TransactionException(sprintf('Failed to update %s, empty data', $this->domain), $this->domain);
+
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 

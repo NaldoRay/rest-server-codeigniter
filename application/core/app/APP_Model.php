@@ -17,6 +17,27 @@ abstract class APP_Model extends MY_Model
     /**
      * @param CI_DB_driver|CI_DB_query_builder $db
      * @param string $table
+     * @param array $dataArr
+     * @param array|null $allowedFields
+     * @return int
+     * @throws InvalidFormatException
+     * @throws TransactionException
+     */
+    protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
+    {
+        try
+        {
+            return parent::createEntities($db, $table, $dataArr, $allowedFields);
+        }
+        catch (TransactionException $e)
+        {
+            throw new TransactionException(sprintf('Gagal menambah %s', $this->domain), $this->domain);
+        }
+    }
+
+    /**
+     * @param CI_DB_driver|CI_DB_query_builder $db
+     * @param string $table
      * @param array $data
      * @param array|null $allowedFields
      * @return object
@@ -31,7 +52,29 @@ abstract class APP_Model extends MY_Model
         }
         catch (TransactionException $e)
         {
-            throw new TransactionException(sprintf('Gagal menambah %s', $this->domain), $this->domain);
+            throw new TransactionException(sprintf('Gagal menambah %s, data kosong', $this->domain), $this->domain);
+        }
+    }
+
+    /**
+     * @param CI_DB_driver|CI_DB_query_builder $db
+     * @param string $table
+     * @param array $dataArr
+     * @param string $indexField
+     * @param array|null $allowedFields
+     * @return int
+     * @throws InvalidFormatException
+     * @throws TransactionException
+     */
+    protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
+    {
+        try
+        {
+            return parent::updateEntities($db, $table, $dataArr, $indexField, $allowedFields);
+        }
+        catch (TransactionException $e)
+        {
+            throw new TransactionException(sprintf('Gagal mengubah %s, data kosong', $this->domain), $this->domain);
         }
     }
 
@@ -169,6 +212,15 @@ abstract class APP_Model extends MY_Model
     protected function getWriteFieldMap ()
     {
         return array_merge(parent::getWriteFieldMap(), $this->upsertOnlyFieldMap);
+    }
+
+    protected function getNextId ($db, $table, $field, $padLength = 0, array $filters = null)
+    {
+        $entity = $this->getFirstEntity($db, $table, $filters, null,
+            ['-'.$field],
+            [$field]
+        );
+        return $this->getNextEntityId($entity, $field, $padLength);
     }
 
     protected function getNextEntityId ($entity, $field, $padLength = 0)

@@ -25,6 +25,7 @@ $lang['validation_numeric_integer'] = '{label} harus berupa (teks) angka bulat';
 $lang['validation_numeric_integer_positive'] = '{label} harus berupa (teks) angka bulat positif';
 $lang['validation_numeric_float'] = '{label} harus berupa (teks) angka desimal';
 $lang['validation_numeric_float_positive'] = '{label} harus berupa (teks) angka desimal positif';
+$lang['validation_one_of_values'] = '{label} harus salah satu dari: {values}';
 
 // file validation
 $lang['validation_file_required'] = '{label} harus di-upload';

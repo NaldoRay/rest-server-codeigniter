@@ -20,6 +20,7 @@ class ValueValidator implements Validation
     // can be string/integer/float
     private static $IDX_ONLY_NUMERIC = 1;
     private static $IDX_ONLY_ARRAY = 1;
+    private static $IDX_ONLY_ONE_OF = 1;
 
     // comparing content attributes
     private static $IDX_LENGTH_MIN = 6;
@@ -556,7 +557,7 @@ class ValueValidator implements Validation
                     else
                         return false;
                 }
-                return true;
+                return !empty($data);
             }
             return false;
         }, $errorMessage);
@@ -583,9 +584,33 @@ class ValueValidator implements Validation
                     if (!is_object($row))
                         return false;
                 }
-                return true;
+                return !empty($data);
             }
             return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Validation pass only if value is one of the specified values.
+     * @param array $values
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyOneOf (array $values, $errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = "{label} must be one of: '".implode("','", $values);
+
+        $errorMessage = $this->formatMessage($errorMessage, [
+            '{values}' => implode("','", $values)
+        ]);
+
+        $this->setValidation(self::$IDX_ONLY_ONE_OF, function ($value) use ($values)
+        {
+            $valueMap = array_flip($values);
+            return isset($valueMap[$value]);
         }, $errorMessage);
 
         return $this;
