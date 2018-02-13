@@ -31,7 +31,7 @@ abstract class APP_Model extends MY_Model
         }
         catch (TransactionException $e)
         {
-            throw new TransactionException(sprintf('Gagal menambah %s', $this->domain), $this->domain);
+            throw new TransactionException(sprintf('Gagal menambah %s, data kosong', $this->domain), $this->domain);
         }
     }
 
@@ -52,7 +52,7 @@ abstract class APP_Model extends MY_Model
         }
         catch (TransactionException $e)
         {
-            throw new TransactionException(sprintf('Gagal menambah %s, data kosong', $this->domain), $this->domain);
+            throw new TransactionException(sprintf('Gagal menambah %s', $this->domain), $this->domain);
         }
     }
 
@@ -75,6 +75,33 @@ abstract class APP_Model extends MY_Model
         catch (TransactionException $e)
         {
             throw new TransactionException(sprintf('Gagal mengubah %s, data kosong', $this->domain), $this->domain);
+        }
+    }
+
+    /**
+     * @param CI_DB_driver|CI_DB_query_builder $db
+     * @param string $table
+     * @param array $data
+     * @param array $conditions QueryCondition[]
+     * @param array|null $allowedFields
+     * @return object
+     * @throws InvalidFormatException
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
+     */
+    protected function updateEntityWithConditions ($db, $table, array $data, array $conditions, array $allowedFields = null)
+    {
+        try
+        {
+            return parent::updateEntityWithConditions($db, $table, $data, $conditions, $allowedFields);
+        }
+        catch (ResourceNotFoundException $e)
+        {
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+        }
+        catch (TransactionException $e)
+        {
+            throw new TransactionException(sprintf('Gagal mengubah %s', $this->domain), $this->domain);
         }
     }
 

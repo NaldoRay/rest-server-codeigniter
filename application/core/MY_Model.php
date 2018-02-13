@@ -148,6 +148,26 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
+     * @param array $conditions QueryCondition[]
+     * @param array|null $allowedFields entity's fields
+     * @return object entity with updated fields on success
+     * @throws InvalidFormatException
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
+     */
+    protected function updateEntityWithConditions ($db, $table, array $data, array $conditions, array $allowedFields = null)
+    {
+        $conditions = $this->toTableConditions($conditions);
+        foreach ($conditions as $condition)
+            $db->where($this->getWhereString($db, $condition));
+
+        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
