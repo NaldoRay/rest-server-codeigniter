@@ -7,16 +7,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 abstract class APP_Data_Model extends APP_Model
 {
-    /** @var  CI_DB_query_builder|CI_DB_driver */
-    private static $anyDb;
-
-
     protected function getAnyDb ()
     {
-        if (is_null(self::$anyDb))
-            self::$anyDb = $this->load->database('any', true);
-
-        return self::$anyDb;
+        return $this->getDb('any');
     }
 
     protected function loadData ($entity)

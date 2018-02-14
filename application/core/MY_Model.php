@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+include_once('DbManager.php');
 include_once('QueryCondition.php');
 
 /**
@@ -26,11 +27,49 @@ class MY_Model extends CI_Model
     /** will be displayed on validation error result */
     protected $domain = 'API';
 
+    /** @var DbManager */
+    private static $dbManager;
+
 
     public function __construct ()
     {
         parent::__construct();
         $this->validation->setDomain($this->domain);
+
+        if (!isset(self::$dbManager))
+            self::$dbManager = new DbManager();
+    }
+
+    protected function getDb ($name)
+    {
+        return self::$dbManager->getDb($name);
+    }
+
+    /**
+     * @param Closure $closure
+     * @return mixed
+     * @throws Exception
+     */
+    protected function doTransaction (Closure $closure)
+    {
+        self::$dbManager->startTransaction();
+
+        try
+        {
+            $result = $closure();
+
+            if (self::$dbManager->isTransactionSuccess())
+                self::$dbManager->commitTransaction();
+            else
+                throw new TransactionFailedException('Transaction failed', $this->domain);
+
+            return $result;
+        }
+        catch (Exception $e)
+        {
+            self::$dbManager->rollbackTransaction();
+            throw $e;
+        }
     }
 
     /**
