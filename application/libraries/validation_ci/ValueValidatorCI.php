@@ -168,6 +168,22 @@ class ValueValidatorCI extends ValueValidator
         return parent::onlyPositiveNumericFloat($errorMessage);
     }
 
+    public function onlyArrayOfAssociatives ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_array_associatives');
+
+        return parent::onlyArrayOfAssociatives($errorMessage);
+    }
+
+    public function onlyArrayOfObjects ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_array_objects');
+
+        return parent::onlyArrayOfObjects($errorMessage);
+    }
+
     public function onlyOneOf (array $values, $errorMessage = null)
     {
         if (is_null($errorMessage))

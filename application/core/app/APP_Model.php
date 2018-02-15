@@ -216,6 +216,25 @@ abstract class APP_Model extends MY_Model
             return $entity;
     }
 
+    /**
+     * @param $db
+     * @param $table
+     * @param array|null $filters
+     * @param array|null $searches
+     * @param array|null $sorts
+     * @param array|null $fields
+     * @return null|object
+     * @throws ResourceNotFoundException
+     */
+    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
+    {
+        $entity = parent::getFirstEntity($db, $table, $filters, $searches, $sorts, $fields);
+
+        if (is_null($entity))
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+        else
+            return $entity;
+    }
 
     protected function toEntity (array $row)
     {

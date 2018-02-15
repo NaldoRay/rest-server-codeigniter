@@ -609,13 +609,11 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_ONLY_ONE_OF, function ($value) use ($values)
         {
-            $valueMap = array_flip($values);
-            return isset($valueMap[$value]);
+            return in_array($value, $values);
         }, $errorMessage);
 
         return $this;
     }
-
 
     /**
      * @param Closure $validation

@@ -66,7 +66,7 @@ class MY_REST_Controller extends REST_Controller
         $context = $exception->getContext();
         if (is_array($context) && isset($context['sql']))
         {
-            // hanya berlaku untuk Oracle SQL
+            // only valid for Oracle SQL
             $message = $exception->getMessage();
             if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
                 $errorMessage = $this->getString('msg_unique_constraint');
