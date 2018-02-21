@@ -1,7 +1,7 @@
 <?php
 
 require_once('FieldValidator.php');
-require_once('FileValidator.php');
+require_once('ValidatorFactory.php');
 
 /**
  * @author Ray Naldo

@@ -43,7 +43,7 @@ class Validation_test extends TestCase
 
     public function testValueValidation ()
     {
-        $this->setExpectedException(BadValueException::class);
+        $this->setExpectedException(BadValueApiException::class);
 
         $this->validation->forValue('pwd', 'Password')
             ->required()
@@ -61,7 +61,7 @@ class Validation_test extends TestCase
 
     public function testRequiredShouldFailed ()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $data = [
             'address' => ' '
@@ -80,7 +80,7 @@ class Validation_test extends TestCase
 
     public function testEmailShouldInvalid ()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $this->validation->field('email')->validEmail();
         $this->validation->validate();
@@ -96,7 +96,7 @@ class Validation_test extends TestCase
 
     public function testMinLengthShouldFailed()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $data = [
             'address' => '',
@@ -119,7 +119,7 @@ class Validation_test extends TestCase
 
     public function testMaxLengthShouldFailed ()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $data = [
             'name' => 'Super long name of a person'
@@ -139,7 +139,7 @@ class Validation_test extends TestCase
 
     public function testLengthBetweenShouldFailed ()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $this->validation->field('address')->lengthBetween(10, 50);
         $this->validation->field('username')->lengthBetween(6, 10);
@@ -160,7 +160,7 @@ class Validation_test extends TestCase
 
     public function testNumericOnlyShouldFailed ()
     {
-        $this->setExpectedException(BadArrayException::class);
+        $this->setExpectedException(BadArrayApiException::class);
 
         $data = [
             'id' => '01 '
@@ -185,7 +185,7 @@ class Validation_test extends TestCase
             $this->validation->validate();
             $this->assertTrue(false);
         }
-        catch (BadArrayException $e)
+        catch (BadArrayApiException $e)
         {
             $errors = $e->getAllErrors();
             $this->assertContains('Address must be a valid e-mail', $errors['address']);
@@ -228,7 +228,7 @@ class Validation_test extends TestCase
             $this->validation->validate();
             $this->assertTrue(false);
         }
-        catch (BadArrayException $e)
+        catch (BadArrayApiException $e)
         {
             $errors = $e->getAllErrors();
             $this->assertContains('Label is required', $errors['notfound']);
@@ -271,7 +271,7 @@ class Validation_test extends TestCase
             $this->validation->validate();
             $this->assertTrue(false);
         }
-        catch (BadArrayException $e)
+        catch (BadArrayApiException $e)
         {
             $errors = $e->getAllErrors();
             $this->assertContains('Custom validation', $errors['username']);
@@ -295,7 +295,7 @@ class Validation_test extends TestCase
             $this->validation->validate();
             $this->assertTrue(false);
         }
-        catch (BadArrayException $e)
+        catch (BadArrayApiException $e)
         {
             $errors = $e->getAllErrors();
             $this->assertTrue(!isset($errors['username']));

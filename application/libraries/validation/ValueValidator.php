@@ -57,6 +57,15 @@ class ValueValidator implements Validation
     }
 
     /**
+     * @param mixed $value
+     */
+    public function setValue ($value)
+    {
+        $this->value = $value;
+        $this->error = '';
+    }
+
+    /**
      * Validation failed if value equals to null, '', or only whitespaces.
      * @param string $errorMessage custom error message
      * @return $this

@@ -1,5 +1,12 @@
 <?php
 
+require_once('ValidatorFactory.php');
+include_once('FieldValidator.php');
+include_once('BatchArrayValidator.php');
+include_once('exception/BadArrayException.php');
+include_once('exception/BadBatchArrayException.php');
+include_once('exception/BadValueException.php');
+
 /**
  * @author Ray Naldo
  */
@@ -10,8 +17,6 @@ class InputValidation
     /** @var FieldValidator|ValueValidator */
     private $validator;
 
-    private $domain = 'Validation';
-
 
     public function __construct (ValidatorFactory $validatorFactory = null)
     {
@@ -21,22 +26,15 @@ class InputValidation
         $this->validatorFactory = $validatorFactory;
     }
 
-    /**
-     * @param mixed $domain
-     */
-    public function setDomain ($domain)
+    public function forArray (array $arr)
     {
-        $this->domain = $domain;
+        $this->validator = $this->validatorFactory->createArrayValidator($arr);
     }
 
-    /**
-     * @return string
-     */
-    public function getDomain ()
+    public function forBatchArray (array $batchArr)
     {
-        return $this->domain;
+        $this->validator = $this->validatorFactory->createBatchArrayValidator($batchArr);
     }
-
 
     /**
      * @param mixed $value
@@ -49,11 +47,6 @@ class InputValidation
         return $this->validator;
     }
 
-    public function forArray (array $arr)
-    {
-        $this->validator = $this->validatorFactory->createArrayValidator($arr);
-    }
-
     /**
      * @param string $name
      * @param string|null $label
@@ -61,7 +54,7 @@ class InputValidation
      */
     public function field ($name, $label = 'Value')
     {
-        /** @var ArrayValidator $validator */
+        /** @var ArrayValidator|BatchArrayValidator $validator */
         $validator = $this->validator;
 
         return $validator->field($name, $label);
@@ -88,6 +81,7 @@ class InputValidation
     /**
      * Run validation.
      * @throws BadArrayException
+     * @throws BadBatchArrayException
      * @throws BadValueException
      */
     public function validate ()
@@ -95,9 +89,11 @@ class InputValidation
         if (!$this->validator->validate())
         {
             if ($this->validator instanceof FieldValidator)
-                throw new BadArrayException($this->validator->getAllErrors(), $this->domain);
+                throw new BadArrayException($this->validator->getAllErrors());
+            else if ($this->validator instanceof BatchArrayValidator)
+                throw new BadBatchArrayException($this->validator->getBatchErrors());
             else
-                throw new BadValueException($this->validator->getError(), $this->domain);
+                throw new BadValueException($this->validator->getError());
         }
     }
 }

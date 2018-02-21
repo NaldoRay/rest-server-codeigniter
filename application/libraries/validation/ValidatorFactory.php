@@ -1,6 +1,7 @@
 <?php
 
 include_once('ArrayValidator.php');
+include_once('BatchArrayValidator.php');
 include_once('ValueValidator.php');
 include_once('FilesValidator.php');
 include_once('FileValidator.php');
@@ -10,6 +11,15 @@ include_once('FileValidator.php');
  */
 class ValidatorFactory
 {
+    /**
+     * @param array $batchArr
+     * @return BatchArrayValidator
+     */
+    public function createBatchArrayValidator (array $batchArr)
+    {
+        return new BatchArrayValidator($this, $batchArr);
+    }
+
     /**
      * @param array $arr
      * @return ArrayValidator

@@ -9,9 +9,19 @@ include_once('validation_ci/ValidatorFactoryCI.php');
  */
 class Rest_validation extends InputValidation
 {
+    private $domain = 'Validation';
+
     public function __construct ()
     {
         parent::__construct(new ValidatorFactoryCI());
+    }
+
+    /**
+     * @param mixed $domain
+     */
+    public function setDomain ($domain)
+    {
+        $this->domain = $domain;
     }
 
     /**
@@ -26,9 +36,9 @@ class Rest_validation extends InputValidation
         {
             return $this->tryParseInteger($value, $errorMessage);
         }
-        catch (BadValueException $e)
+        catch (BadValueApiException $e)
         {
-            throw new ResourceNotFoundException($errorMessage, $this->getDomain());
+            throw new ResourceNotFoundException($errorMessage, $this->domain);
         }
     }
 
@@ -36,7 +46,7 @@ class Rest_validation extends InputValidation
      * @param string $value
      * @param string $errorMessage
      * @return int the integer value
-     * @throws BadValueException
+     * @throws BadValueApiException
      */
     public function tryParseInteger ($value, $errorMessage)
     {
@@ -44,7 +54,7 @@ class Rest_validation extends InputValidation
         if ($valid)
             return (int) $value;
         else
-            throw new BadValueException($errorMessage, $this->getDomain());
+            throw new BadValueApiException($errorMessage, $this->domain);
     }
 
     public function validatePositiveInteger ($value, Exception $exception)
@@ -69,7 +79,29 @@ class Rest_validation extends InputValidation
         }
         catch (Exception $e)
         {
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->getDomain()), $this->getDomain());
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
         }
     }
+
+    public function validate ()
+    {
+        try
+        {
+            parent::validate();
+        }
+        catch (BadArrayException $e)
+        {
+            throw new BadArrayApiException($e->getAllErrors(), $this->domain);
+        }
+        catch (BadBatchArrayException $e)
+        {
+            throw new BadBatchArrayApiException($e->getBatchErrors(), $this->domain);
+        }
+        catch (BadValueException $e)
+        {
+            throw new BadValueApiException($e->getMessage(), $this->domain);
+        }
+    }
+
+
 }

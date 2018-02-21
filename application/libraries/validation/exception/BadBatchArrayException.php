@@ -4,20 +4,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class BadArrayException extends ApiException
+class BadBatchArrayException extends Exception
 {
     private $errors;
 
-    public function __construct (array $errors, $domain = 'API')
+    public function __construct (array $errors)
     {
-        parent::__construct('', $domain);
+        parent::__construct();
         $this->errors = $errors;
     }
 
     /**
-     * @return array all error messages
+     * Get error messages.
+     * @return array
      */
-    public function getAllErrors ()
+    public function getBatchErrors ()
     {
         return $this->errors;
     }

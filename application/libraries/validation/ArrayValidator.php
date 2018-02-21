@@ -1,7 +1,7 @@
 <?php
 
 require_once('FieldValidator.php');
-require_once('ValueValidator.php');
+require_once('ValidatorFactory.php');
 
 /**
  * @author Ray Naldo
@@ -38,5 +38,22 @@ class ArrayValidator extends FieldValidator
         $this->addValidator($name, $validator);
 
         return $validator;
+    }
+
+    public function setArray (array $arr)
+    {
+        $this->arr = $arr;
+
+        $validators = $this->getValidators();
+        /** @var ValueValidator $validator */
+        foreach ($validators as $field => $validator)
+        {
+            if (isset($this->arr[$field]))
+                $value = $this->arr[$field];
+            else
+                $value = null;
+
+            $validator->setValue($value);
+        }
     }
 }

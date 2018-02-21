@@ -110,7 +110,7 @@ class MY_REST_Controller extends REST_Controller
             {
                 $this->respondNotFound($e->getMessage(), $e->getDomain());
             }
-            else if ($e instanceof BadBatchArrayException)
+            else if ($e instanceof BadBatchArrayApiException)
             {
                 $this->respondError(
                     self::HTTP_BAD_REQUEST,
@@ -120,7 +120,7 @@ class MY_REST_Controller extends REST_Controller
                     $e->getBatchErrors()
                 );
             }
-            else if ($e instanceof BadArrayException)
+            else if ($e instanceof BadArrayApiException)
             {
                 $this->respondError(
                     self::HTTP_BAD_REQUEST,
@@ -129,7 +129,7 @@ class MY_REST_Controller extends REST_Controller
                     $e->getAllErrors()
                 );
             }
-            else if ($e instanceof BadValueException)
+            else if ($e instanceof BadValueApiException)
             {
                 $this->respondBadRequest($e->getMessage(), $e->getDomain());
             }
@@ -742,7 +742,7 @@ class MY_REST_Controller extends REST_Controller
         {
             return $this->validation->tryParseInteger($limit, null);
         }
-        catch (BadValueException $e)
+        catch (BadValueApiException $e)
         {
             return -1;
         }
@@ -758,7 +758,7 @@ class MY_REST_Controller extends REST_Controller
         {
             return $this->validation->tryParseInteger($offset, null);
         }
-        catch (BadValueException $e)
+        catch (BadValueApiException $e)
         {
             return 0;
         }

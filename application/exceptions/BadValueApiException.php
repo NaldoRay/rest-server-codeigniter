@@ -4,5 +4,5 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class BadValueException extends ApiException
+class BadValueApiException extends ApiException
 {}

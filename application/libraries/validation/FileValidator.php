@@ -10,6 +10,7 @@ require_once('Validation.php');
 class FileValidator implements Validation
 {
     private static $IDX_REQUIRED = 0;
+    private static $IDX_OPTIONAL = 0;
     private static $IDX_ALLOW_TYPES = 1;
     private static $IDX_SIZE_MAX = 2;
 
@@ -26,6 +27,8 @@ class FileValidator implements Validation
     private $errorMessages;
     /** @var string */
     private $error;
+
+    private $optional = false;
 
 
     /**
@@ -49,6 +52,8 @@ class FileValidator implements Validation
      */
     public function required ($errorMessage = null)
     {
+        $this->optional = false;
+
         if (is_null($errorMessage))
             $errorMessage = '{label} is required';
 
@@ -56,6 +61,22 @@ class FileValidator implements Validation
         {
             return isset($file['tmp_name']) && (trim('tmp_name') !== '');
         }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * Mark this validation as optional.
+     * @return $this
+     */
+    public function optional ()
+    {
+        $this->optional = true;
+
+        $this->setValidation(self::$IDX_OPTIONAL, function ($value)
+        {
+            return true;
+        }, null);
 
         return $this;
     }
@@ -161,7 +182,15 @@ class FileValidator implements Validation
 
     private function setValidation ($idx, Closure $validation, $errorMessage)
     {
-        $this->validations[$idx] = $validation;
+        $fileValidation = function ($file) use ($validation)
+        {
+            if ((is_null($file) || !isset($file['tmp_name'])) && $this->optional)
+                return true;
+
+            return $validation($file);
+        };
+
+        $this->validations[$idx] = $fileValidation;
         $this->errorMessages[$idx] = $errorMessage;
     }
 

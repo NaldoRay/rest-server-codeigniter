@@ -1,5 +1,7 @@
 <?php
 
+include_once('Validation.php');
+
 /**
  * @author Ray Naldo
  */
@@ -16,9 +18,17 @@ class FieldValidator
         $this->errors = array();
     }
 
-    protected function addValidator ($field, $validator)
+    protected function addValidator ($field, Validation $validator)
     {
         $this->validators[$field] = $validator;
+    }
+
+    /**
+     * @return Validation[]
+     */
+    protected function getValidators ()
+    {
+        return $this->validators;
     }
 
     /**
