@@ -3,6 +3,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 include_once('DbManager.php');
 include_once('QueryCondition.php');
+include_once('QueryInCondition.php');
+include_once('QueryNotInCondition.php');
 
 /**
  * @author Ray Naldo
