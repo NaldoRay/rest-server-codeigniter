@@ -14,6 +14,37 @@ abstract class APP_Model extends MY_Model
     protected $numberPrefixes = ['N_'];
 
 
+    protected function getNextId ($db, $table, $field, $padLength = 0, array $filters = null)
+    {
+        try
+        {
+            $entity = $this->getFirstEntity($db, $table, $filters, null,
+                ['-' . $field],
+                [$field]
+            );
+        }
+        catch (ResourceNotFoundException $e)
+        {
+            $entity = null;
+        }
+
+        return $this->getNextEntityId($entity, $field, $padLength);
+    }
+
+    private function getNextEntityId ($entity, $field, $padLength = 0)
+    {
+        if (is_null($entity))
+            $lastId = 0;
+        else
+            $lastId = (int) $entity->$field;
+
+        $nextId = $lastId + 1;
+        if ($padLength > 0)
+            return str_pad($nextId, $padLength, '0', STR_PAD_LEFT);
+        else
+            return $nextId;
+    }
+
     /**
      * @param CI_DB_driver|CI_DB_query_builder $db
      * @param string $table
@@ -258,28 +289,5 @@ abstract class APP_Model extends MY_Model
     protected function getWriteFieldMap ()
     {
         return array_merge(parent::getWriteFieldMap(), $this->upsertOnlyFieldMap);
-    }
-
-    protected function getNextId ($db, $table, $field, $padLength = 0, array $filters = null)
-    {
-        $entity = $this->getFirstEntity($db, $table, $filters, null,
-            ['-'.$field],
-            [$field]
-        );
-        return $this->getNextEntityId($entity, $field, $padLength);
-    }
-
-    protected function getNextEntityId ($entity, $field, $padLength = 0)
-    {
-        if (is_null($entity))
-            $lastId = 0;
-        else
-            $lastId = (int) $entity->$field;
-
-        $nextId = $lastId + 1;
-        if ($padLength > 0)
-            return str_pad($nextId, $padLength, '0', STR_PAD_LEFT);
-        else
-            return $nextId;
     }
 }
