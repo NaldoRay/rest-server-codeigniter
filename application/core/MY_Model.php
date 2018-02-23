@@ -346,7 +346,7 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $conditions array of QueryCondition
      * @param array $fields entity's fields
@@ -372,7 +372,6 @@ class MY_Model extends CI_Model
         else
             return $this->toEntity($row);
     }
-
 
     protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
     {
@@ -430,18 +429,18 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters entity's filter field => filter value
      * @param array|null $searches entity's search field => search value
-     * @param array $sorts entity's sort fields
      * @param array $fields entity's fields
      * @param bool $unique
+     * @param array $sorts entity's sort fields
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -453,23 +452,50 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $rows = $this->getAllRows($db, $table, $filters, $searches, $sorts, $fields, $unique, $limit, $offset);
+        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $unique, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $conditions array of QueryCondition
+     * @param array $fields entity's fields
+     * @param bool $unique
+     * @param array $sorts entity's sort fields
+     * @param int $limit
+     * @param int $offset
+     * @return object[]
+     */
+    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
+    {
+        $tableConditions = $this->toTableConditions($conditions);
+        if (!empty($fields))
+            $fields = $this->toTableFields($fields);
+        if (empty($sorts))
+            $sorts = $this->defaultSorts;
+        $sorts = $this->toTableSortData($sorts);
+
+        foreach ($tableConditions as $condition)
+            $db->where($this->getWhereString($db, $condition));
+
+        $rows = $this->getAllRows($db, $table, null, null, $fields, $unique, $sorts, $limit, $offset);
+        return $this->toEntities($rows);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
-     * @param array $sorts table's sort fields
      * @param array $fields table's fields
      * @param bool $unique
+     * @param array $sorts table's sort fields
      * @param int $limit
      * @param int $offset
      * @return array
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
@@ -482,33 +508,6 @@ class MY_Model extends CI_Model
             ->get($table);
 
         return $result->result_array();
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
-     * @param string $table
-     * @param array $conditions array of QueryCondition
-     * @param array $sorts entity's sort fields
-     * @param array $fields entity's fields
-     * @param bool $unique
-     * @param int $limit
-     * @param int $offset
-     * @return object[]
-     */
-    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $sorts = null, array $fields = null, $unique = false, $limit = -1, $offset = 0)
-    {
-        $tableConditions = $this->toTableConditions($conditions);
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
-        if (empty($sorts))
-            $sorts = $this->defaultSorts;
-        $sorts = $this->toTableSortData($sorts);
-
-        foreach ($tableConditions as $condition)
-            $db->where($this->getWhereString($db, $condition));
-
-        $rows = $this->getAllRows($db, $table, null, null, $sorts, $fields, $unique, $limit, $offset);
-        return $this->toEntities($rows);
     }
 
     private function toTableConditions (array $conditions)

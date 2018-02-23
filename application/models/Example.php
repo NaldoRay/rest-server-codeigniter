@@ -21,19 +21,9 @@ class Example extends APP_Data_Model
     public function add (array $data)
     {
         $this->validateData($data);
-        $data['id'] = $this->getNextId();
+        $data['id'] = $this->getNextId($this->getAnyDb(), self::$TABLE, 'id', 5);
 
         return $this->createEntity($this->getAnyDb(), self::$TABLE, $data);
-    }
-
-    private function getNextId ()
-    {
-        $entity = $this->getFirstEntity($this->getAnyDb(), self::$TABLE,
-            null, null,
-            ['-id'],
-            ['id']
-        );
-        return $this->getNextEntityId($entity, 'id', 5); // pad '0' to the left if next id length < 5
     }
 
     public function edit ($id, array $data)
@@ -73,7 +63,7 @@ class Example extends APP_Data_Model
 
     public function getAll (array $filters = null, array $searches = null, array $sorts = null, $limit = -1, $offset = 0)
     {
-        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $filters, $searches, $sorts, null, null, $limit, $offset);
+        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $filters, $searches, null, false, $sorts, $limit, $offset);
     }
 
     public function get ($id)
