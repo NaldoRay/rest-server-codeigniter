@@ -610,10 +610,10 @@ class ValueValidator implements Validation
     public function onlyOneOf (array $values, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = "{label} must be one of: '".implode("','", $values);
+            $errorMessage = "{label} must be one of: '".implode("','", $values)."'";
 
         $errorMessage = $this->formatMessage($errorMessage, [
-            '{values}' => implode("','", $values)
+            '{values}' => "'".implode("','", $values)."'"
         ]);
 
         $this->setValidation(self::$IDX_ONLY_ONE_OF, function ($value) use ($values)

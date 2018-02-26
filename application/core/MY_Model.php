@@ -1,10 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once('DbManager.php');
-include_once('QueryCondition.php');
-include_once('QueryInCondition.php');
-include_once('QueryNotInCondition.php');
+include_once('database/DbManager.php');
+include_once('database/QueryCondition.php');
 
 /**
  * @author Ray Naldo
@@ -81,7 +79,7 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
@@ -103,7 +101,7 @@ class MY_Model extends CI_Model
      * @param array $dataArr array of entity data entity's field => value
      * @param array|null $allowedFields
      * @return int number of entities created
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
@@ -127,7 +125,7 @@ class MY_Model extends CI_Model
      * @param array $data entity's field => value
      * @param array|null $allowedFields entity's fields
      * @return object
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
@@ -161,7 +159,7 @@ class MY_Model extends CI_Model
      * @param string $indexField
      * @param array|null $allowedFields entity's fields
      * @return int number of entities updated
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
@@ -189,18 +187,19 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
-     * @param array $conditions QueryCondition[]
+     * @param QueryCondition $condition
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
-     * @throws InvalidFormatException
+     * @throws BadFormatException
+     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntityWithConditions ($db, $table, array $data, array $conditions, array $allowedFields = null)
+    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
-        $conditions = $this->toTableConditions($conditions);
-        foreach ($conditions as $condition)
-            $db->where($this->getWhereString($db, $condition));
+        $this->toTableCondition($db, $condition);
+
+        $db->where($condition->getConditionString());
 
         return $this->updateEntity($db, $table, $data, array(), $allowedFields);
     }
@@ -212,7 +211,7 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
@@ -281,26 +280,27 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $conditions QueryCondition[]
+     * @param QueryCondition $condition
+     * @throws BadFormatException
+     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
-     * @internal param QueryCondition[] $filters
      */
-    protected function deleteEntityWithConditions ($db, $table, array $conditions)
+    protected function deleteEntityWithCondition ($db, $table, QueryCondition $condition)
     {
-        $conditions = $this->toTableConditions($conditions);
+        $this->toTableCondition($db, $condition);
 
-        foreach ($conditions as $condition)
-            $db->where($this->getWhereString($db, $condition));
+        $result = $db
+            ->where($condition->getConditionString())
+            ->delete($table);
 
-        $result = $db->delete($table);
         if ($result === false)
         {
             throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
         }
         else
         {
-            if ($db->affected_rows() == 0)
+           if ($db->affected_rows() == 0)
                 throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
         }
     }
@@ -348,21 +348,21 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $conditions array of QueryCondition
+     * @param QueryCondition $condition
      * @param array $fields entity's fields
      * @return object
+     * @throws BadFormatException
+     * @throws BadValueException
      */
-    protected function getEntityWithConditions ($db, $table, array $conditions, array $fields = null)
+    protected function getEntityWithCondition ($db, $table, QueryCondition $condition, array $fields = null)
     {
-        $tableConditions = $this->toTableConditions($conditions);
+        $this->toTableCondition($db, $condition);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
 
-        foreach ($tableConditions as $condition)
-            $db->where($this->getWhereString($db, $condition));
-
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
+            ->where($condition->getConditionString())
             ->limit(1)
             ->get($table);
 
@@ -394,7 +394,7 @@ class MY_Model extends CI_Model
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param $table
+     * @param string $table
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
      * @param array $sorts table's sort fields
@@ -408,24 +408,11 @@ class MY_Model extends CI_Model
         $this->setQuerySorts($db, $sorts, $fields);
 
         $select = $this->getSelectField($fields);
-        $query = $db->select($select)
+        $result = $db->select($select)
             ->limit(1)
             ->get($table);
 
-        return $query->row_array();
-    }
-
-    /**
-     * @param array $filters entity's filter field => filter value, eg. ['field1' => 'abc']
-     * @param array $searches entity's search field => search value
-     * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
-     * @param int $limit
-     * @param int $offset
-     * @return object[]
-     */
-    public function getAll (array $filters = null, array $searches = null, array $sorts = null, $limit = -1, $offset = 0)
-    {
-        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
+        return $result->row_array();
     }
 
     /**
@@ -459,28 +446,84 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $conditions array of QueryCondition
+     * @param QueryCondition $condition
      * @param array $fields entity's fields
      * @param bool $unique
      * @param array $sorts entity's sort fields
      * @param int $limit
      * @param int $offset
      * @return object[]
+     * @throws BadFormatException
+     * @throws BadValueException
      */
-    protected function getAllEntitiesWithConditions ($db, $table, array $conditions, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
+    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
     {
-        $tableConditions = $this->toTableConditions($conditions);
+        $this->toTableCondition($db, $condition);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
         if (empty($sorts))
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        foreach ($tableConditions as $condition)
-            $db->where($this->getWhereString($db, $condition));
+        $db->where($condition->getConditionString());
 
         $rows = $this->getAllRows($db, $table, null, null, $fields, $unique, $sorts, $limit, $offset);
         return $this->toEntities($rows);
+    }
+
+    /**
+     * Converts condition's field/value to table's field/value, and escape identifiers & values.
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param QueryCondition $condition
+     * @throws BadFormatException
+     * @throws BadValueException
+     */
+    private function toTableCondition ($db, QueryCondition $condition)
+    {
+        if ($condition instanceof LogicalCondition)
+        {
+            $conditions = $condition->getConditions();
+            foreach ($conditions as $condition)
+                $this->toTableCondition($db, $condition);
+        }
+        else if ($condition instanceof FieldValueCondition)
+        {
+            $fieldMap = $this->getFullFieldMap();
+            $tableFieldMap = array_flip($fieldMap);
+
+            $field = $condition->getField();
+            if (isset($fieldMap[ $field ]))
+            {
+                $field = $fieldMap[ $field ];
+            }
+            else
+            {
+                if (!isset($tableFieldMap[ $field ]))
+                    throw new BadValueException('Invalid search field');
+
+                // don't map if field is already a table's field
+            }
+
+            $value = $condition->getValue();
+            if (is_array($value))
+            {
+                $values = array();
+                foreach ($value as $val)
+                {
+                    $val = $this->toTableValue($field, $val);
+                    $values[] = $db->escape($val);
+                }
+
+                $value = $values;
+            }
+            else
+            {
+                $value = $this->toTableValue($field, $value);
+                $value = $db->escape($value);
+            }
+
+            $condition->setFieldValue($field, $value);
+        }
     }
 
     /**
@@ -508,57 +551,6 @@ class MY_Model extends CI_Model
             ->get($table);
 
         return $result->result_array();
-    }
-
-    private function toTableConditions (array $conditions)
-    {
-        $tableConditions = array();
-
-        $fieldMap = $this->getFullFieldMap();
-        /** @var QueryCondition $condition */
-        foreach ($conditions as $condition)
-        {
-            $field = $condition->field;
-            if (isset($fieldMap[$field]))
-            {
-                $field = $fieldMap[$field];
-                $condition->field = $field;
-
-                $value = $condition->value;
-                if (empty($value))
-                {
-                    $tableConditions[] = $condition;
-                }
-                else
-                {
-                    try
-                    {
-                        $value = $this->toTableValue($field, $value);
-
-                        $condition->value = $value;
-                        $tableConditions[] = $condition;
-                    }
-                    catch (InvalidFormatException $e)
-                    {}
-                }
-            }
-        }
-
-        return $tableConditions;
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
-     * @param QueryCondition $condition
-     * @return string
-     */
-    private function getWhereString ($db, QueryCondition $condition)
-    {
-        $whereStr = sprintf('%s %s', $condition->field, $condition->operator);
-        if (!empty($condition->value))
-            $whereStr .= ' ' . $db->escape($condition->value);
-
-        return $whereStr;
     }
 
     protected function getSelectField (array $tableFields = null)
@@ -610,11 +602,11 @@ class MY_Model extends CI_Model
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
 
-        $query = $db->select('1')
+        $result = $db->select('1')
             ->limit(1)
             ->get($table);
 
-        return ($query->num_rows() > 0);
+        return ($result->num_rows() > 0);
     }
 
     /**
@@ -700,7 +692,7 @@ class MY_Model extends CI_Model
      * @param array $data entity's field => value
      * @param array $allowedFields entity's fields
      * @return array
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      */
     protected function toWriteTableData (array $data, array $allowedFields = null)
     {
@@ -759,7 +751,7 @@ class MY_Model extends CI_Model
                     $value = $this->toTableValue($field, $value);
                     $filterData[$field] = $value;
                 }
-                catch (InvalidFormatException $e)
+                catch (BadFormatException $e)
                 {}
             }
         }
@@ -771,7 +763,7 @@ class MY_Model extends CI_Model
      * @param string $field table's field
      * @param mixed $value
      * @return bool|string
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      */
     private function toTableValue ($field, $value)
     {
@@ -932,7 +924,7 @@ class MY_Model extends CI_Model
     /**
      * @param mixed $value
      * @return bool
-     * @throws InvalidFormatException if value type is not a boolean or not one of boolean strings: 'true', 'false', '0', '1')
+     * @throws BadFormatException if value type is not a boolean or not one of boolean strings: 'true', 'false', '0', '1')
      */
     protected function tryParseBoolean ($value)
     {
@@ -942,7 +934,7 @@ class MY_Model extends CI_Model
         if (is_bool($value))
             return $value;
         else
-            throw new InvalidFormatException(sprintf('%s is not boolean or boolean string', $value), $this->domain);
+            throw new BadFormatException(sprintf('%s is not boolean or boolean string', $value), $this->domain);
     }
 
     private function isNumberField ($field)
@@ -958,14 +950,14 @@ class MY_Model extends CI_Model
     /**
      * @param mixed $value
      * @return bool
-     * @throws InvalidFormatException if value type is not a number or numeric string
+     * @throws BadFormatException if value type is not a number or numeric string
      */
     protected function tryParseNumber ($value)
     {
         if (is_numeric($value))
             return $value + 0;
         else
-            throw new InvalidFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
+            throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
     }
 
     /**

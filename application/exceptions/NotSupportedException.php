@@ -6,8 +6,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class NotSupportedException extends RuntimeException
 {
-    public function __construct ($message = 'Not supported', $code = 0, Exception $previous = null)
+    public function __construct ($message = 'Not supported')
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($message);
     }
 }

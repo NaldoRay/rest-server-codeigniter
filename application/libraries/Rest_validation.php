@@ -36,7 +36,7 @@ class Rest_validation extends InputValidation
         {
             return $this->tryParseInteger($value, $errorMessage);
         }
-        catch (BadValueApiException $e)
+        catch (BadValueException $e)
         {
             throw new ResourceNotFoundException($errorMessage, $this->domain);
         }
@@ -46,7 +46,7 @@ class Rest_validation extends InputValidation
      * @param string $value
      * @param string $errorMessage
      * @return int the integer value
-     * @throws BadValueApiException
+     * @throws BadValueException
      */
     public function tryParseInteger ($value, $errorMessage)
     {
@@ -54,7 +54,7 @@ class Rest_validation extends InputValidation
         if ($valid)
             return (int) $value;
         else
-            throw new BadValueApiException($errorMessage, $this->domain);
+            throw new BadValueException($errorMessage, $this->domain);
     }
 
     public function validatePositiveInteger ($value, Exception $exception)
@@ -89,17 +89,17 @@ class Rest_validation extends InputValidation
         {
             parent::validate();
         }
-        catch (BadArrayException $e)
+        catch (InvalidArrayException $e)
         {
-            throw new BadArrayApiException($e->getAllErrors(), $this->domain);
+            throw new BadArrayException($e->getAllErrors(), $this->domain);
         }
-        catch (BadBatchArrayException $e)
+        catch (InvalidBatchArrayException $e)
         {
-            throw new BadBatchArrayApiException($e->getBatchErrors(), $this->domain);
+            throw new BadBatchArrayException($e->getBatchErrors(), $this->domain);
         }
-        catch (BadValueException $e)
+        catch (InvalidValueException $e)
         {
-            throw new BadValueApiException($e->getMessage(), $this->domain);
+            throw new BadValueException($e->getMessage(), $this->domain);
         }
     }
 

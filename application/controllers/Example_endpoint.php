@@ -3,12 +3,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 
 /**
- * Author: RN
- * Date: 8/14/2017
- * Time: 15:01
+ * @author Ray Naldo
+ * @property Example $example
  */
 class Example_endpoint extends MY_REST_Controller
 {
+    public function __construct ()
+    {
+        parent::__construct();
+        $this->load->model(Example::class, 'example');
+    }
+
     public function examples_get ()
     {
         $data = [
@@ -52,5 +57,13 @@ class Example_endpoint extends MY_REST_Controller
     {
         // insert...
         $this->respondCreated(['id' => 3]);
+    }
+
+    public function searchExamples_post ()
+    {
+        $search = $this->post();
+
+        $examples = $this->search($this->example, $search);
+        $this->respondSuccess($examples);
     }
 }

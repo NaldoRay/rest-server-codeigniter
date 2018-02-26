@@ -2,8 +2,19 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
-/** @noinspection PhpIncludeInspection */
-require_once(APPPATH . 'libraries/REST_Controller.php');
+require_once('REST_Controller.php');
+include_once('database/Queriable.php');
+include_once('database/QueryCondition.php');
+include_once('database/LogicalOperator.php');
+include_once('database/FieldValueCondition.php');
+include_once('database/EqualsCondition.php');
+include_once('database/NotEqualsCondition.php');
+include_once('database/GreaterThanCondition.php');
+include_once('database/GreaterEqualsCondition.php');
+include_once('database/LessThanCondition.php');
+include_once('database/LessEqualsCondition.php');
+include_once('database/ContainsCondition.php');
+include_once('database/NotContainsCondition.php');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -42,6 +53,8 @@ class MY_REST_Controller extends REST_Controller
             $exception = new ContextErrorException($errstr, 0, $errno, $errfile, $errline, $errcontext, $backtrace);
 
             $this->handleContextError($exception);
+            // bypass PHP error handler
+            return true;
         });
     }
 
@@ -96,31 +109,23 @@ class MY_REST_Controller extends REST_Controller
 
     /**
      * Handle uncaught exception from REST method call.
+     * @param Exception $e
      */
     protected function handleUncaughtException (Exception $e)
     {
         if ($e instanceof ApiException)
         {
-            if ($e instanceof MissingArgumentException || $e instanceof InvalidFormatException
-                || $e instanceof SecurityException)
-            {
-                $this->respondBadRequest($e->getMessage(), $e->getDomain());
-            }
-            else if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
+            if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
             {
                 $this->respondNotFound($e->getMessage(), $e->getDomain());
             }
-            else if ($e instanceof BadBatchArrayApiException)
+            else if ($e instanceof SecurityException
+                || $e instanceof BadFormatException
+                || $e instanceof BadValueException)
             {
-                $this->respondError(
-                    self::HTTP_BAD_REQUEST,
-                    $this->getString('msg_validation_error'),
-                    $e->getDomain(),
-                    null,
-                    $e->getBatchErrors()
-                );
+                $this->respondBadRequest($e->getMessage(), $e->getDomain());
             }
-            else if ($e instanceof BadArrayApiException)
+            else if ($e instanceof BadArrayException)
             {
                 $this->respondError(
                     self::HTTP_BAD_REQUEST,
@@ -129,9 +134,15 @@ class MY_REST_Controller extends REST_Controller
                     $e->getAllErrors()
                 );
             }
-            else if ($e instanceof BadValueApiException)
+            else if ($e instanceof BadBatchArrayException)
             {
-                $this->respondBadRequest($e->getMessage(), $e->getDomain());
+                $this->respondError(
+                    self::HTTP_BAD_REQUEST,
+                    $this->getString('msg_validation_error'),
+                    $e->getDomain(),
+                    null,
+                    $e->getBatchErrors()
+                );
             }
             else
             {
@@ -663,7 +674,7 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    protected function getAll (MY_Model $model, array $extraFilters = null)
+    protected function getAll (Queriable $queriable, array $extraFilters = null)
     {
         $filters = $this->getQueryFilters();
         $searches = $this->getQuerySearches();
@@ -674,7 +685,7 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $model->getAll($filters, $searches, $sorts, $limit, $offset);
+        return $queriable->query($filters, $searches, $sorts, $limit, $offset);
     }
 
     protected function getQueryFields ()
@@ -742,7 +753,7 @@ class MY_REST_Controller extends REST_Controller
         {
             return $this->validation->tryParseInteger($limit, null);
         }
-        catch (BadValueApiException $e)
+        catch (BadValueException $e)
         {
             return -1;
         }
@@ -758,10 +769,97 @@ class MY_REST_Controller extends REST_Controller
         {
             return $this->validation->tryParseInteger($offset, null);
         }
-        catch (BadValueApiException $e)
+        catch (BadValueException $e)
         {
             return 0;
         }
+    }
+
+    protected function search (Queriable $searchable, array $search)
+    {
+        $condition = $this->parseSearchCondition($search);
+        $sorts = $this->getQuerySorts();
+        $limit = $this->getQueryLimit();
+        $offset = $this->getQueryOffset();
+
+        return $searchable->search($condition, $sorts, $limit, $offset);
+    }
+
+    private function parseSearchCondition (array $search)
+    {
+        if (isset($search['field']))
+        {
+            $this->validation->forArray($search);
+            $this->validation->field('field')
+                ->required()
+                ->onlyString();
+            $this->validation->field('operator')
+                ->required()
+                ->onlyOneOf(['=', '!=', '<', '<=', '>', '>=', '~', '!~']);
+            $this->validation->field('value')
+                ->required();
+            $this->validation->validate();
+
+            $field = $search['field'];
+            $operator = $search['operator'];
+            $value = $search['value'];
+
+            switch ($operator)
+            {
+                case '=':
+                    $search = new EqualsCondition($field, $value);
+                    break;
+                case '!=':
+                    $search = new NotEqualsCondition($field, $value);
+                    break;
+                case '<':
+                    $search = new LessThanCondition($field, $value);
+                    break;
+                case '<=':
+                    $search = new LessEqualsCondition($field, $value);
+                    break;
+                case '>':
+                    $search = new GreaterThanCondition($field, $value);
+                    break;
+                case '>=':
+                    $search = new GreaterEqualsCondition($field, $value);
+                    break;
+                case '~':
+                    $search = new ContainsCondition($field, $value);
+                    break;
+                case '!~':
+                    $search = new NotContainsCondition($field, $value);
+                    break;
+                default:
+                    return array();
+            }
+
+            return $search;
+        }
+        else if (isset($search['logicalOperator']))
+        {
+            $this->validation->forArray($search);
+            $this->validation->field('logicalOperator')
+                ->required()
+                ->onlyOneOf(['AND', 'OR']);
+            $this->validation->field('conditions')
+                ->required()
+                ->onlyArrayOfAssociatives();
+            $this->validation->validate();
+
+            $logicalOperator = $search['logicalOperator'];
+            $conditions = $search['conditions'];
+
+            foreach ($conditions as $idx => $condition)
+                $conditions[$idx] = $this->parseSearchCondition($condition);
+
+            if ($logicalOperator == 'AND')
+                return LogicalCondition::logicalAnd($conditions);
+            else
+                return LogicalCondition::logicalOr($conditions);
+        }
+
+        throw new BadValueException($this->getString('msg_search_invalid'));
     }
 
     protected function getString ($key)

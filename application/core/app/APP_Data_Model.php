@@ -15,7 +15,7 @@ abstract class APP_Data_Model extends APP_Model
     protected function loadData ($entity)
     {
         if (!isset($this->externalData))
-            $this->load->model(External_data::class, 'externalData');
+            $this->load->model(Join_data::class, 'externalData');
 
         $this->externalData->rightJoin($entity, ['extraData1', 'extraData2']);
     }

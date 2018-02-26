@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * English language
+ * Indonesian language
  */
 
 $lang['msg_unique_constraint'] = 'Konfigurasi sudah digunakan';
@@ -12,3 +12,4 @@ $lang['msg_integrity_constraint'] = 'Integrity constraint';
 $lang['msg_value_too_large'] = 'Nilai terlalu besar';
 $lang['msg_database_error'] = 'Database error';
 $lang['msg_validation_error'] = 'Validasi gagal';
+$lang['msg_search_invalid'] = 'Format pencarian tidak sesuai';

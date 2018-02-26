@@ -46,12 +46,7 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $dataArr
-     * @param array|null $allowedFields
-     * @return int
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
@@ -67,12 +62,7 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $data
-     * @param array|null $allowedFields
-     * @return object
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
@@ -88,13 +78,7 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $dataArr
-     * @param string $indexField
-     * @param array|null $allowedFields
-     * @return int
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws TransactionException
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
@@ -110,21 +94,16 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $data
-     * @param array $conditions QueryCondition[]
-     * @param array|null $allowedFields
-     * @return object
-     * @throws InvalidFormatException
+     * @throws BadFormatException
+     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntityWithConditions ($db, $table, array $data, array $conditions, array $allowedFields = null)
+    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
         try
         {
-            return parent::updateEntityWithConditions($db, $table, $data, $conditions, $allowedFields);
+            return parent::updateEntityWithCondition($db, $table, $data, $condition, $allowedFields);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -137,13 +116,7 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $data
-     * @param array $filters
-     * @param array|null $allowedFields
-     * @return object
-     * @throws InvalidFormatException
+     * @throws BadFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
@@ -173,11 +146,8 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $filters
-     * @throws ResourceNotFoundException jika objek yang ingin dihapus tidak ditemukan
-     * @throws TransactionException jika objek gagal dihapus
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
      */
     protected function deleteEntity ($db, $table, array $filters)
     {
@@ -195,11 +165,11 @@ abstract class APP_Model extends MY_Model
         }
     }
 
-    protected function deleteEntityWithConditions ($db, $table, array $conditions)
+    protected function deleteEntityWithCondition ($db, $table, QueryCondition $condition)
     {
         try
         {
-            parent::deleteEntityWithConditions($db, $table, $conditions);
+            parent::deleteEntityWithCondition($db, $table, $condition);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -212,11 +182,6 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $filters
-     * @param array|null $fields
-     * @return object
      * @throws ResourceNotFoundException
      */
     protected function getEntity ($db, $table, array $filters, array $fields = null)
@@ -230,16 +195,11 @@ abstract class APP_Model extends MY_Model
     }
 
     /**
-     * @param CI_DB_driver|CI_DB_query_builder $db
-     * @param string $table
-     * @param array $conditions
-     * @param array|null $fields
-     * @return object
      * @throws ResourceNotFoundException
      */
-    protected function getEntityWithConditions ($db, $table, array $conditions, array $fields = null)
+    protected function getEntityWithCondition ($db, $table, QueryCondition $condition, array $fields = null)
     {
-        $entity = parent::getEntityWithConditions($db, $table, $conditions, $fields);
+        $entity = parent::getEntityWithCondition($db, $table, $condition, $fields);
 
         if (is_null($entity))
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);

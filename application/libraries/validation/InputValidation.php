@@ -3,9 +3,9 @@
 require_once('ValidatorFactory.php');
 include_once('FieldValidator.php');
 include_once('BatchArrayValidator.php');
-include_once('exception/BadArrayException.php');
-include_once('exception/BadBatchArrayException.php');
-include_once('exception/BadValueException.php');
+include_once('exception/InvalidArrayException.php');
+include_once('exception/InvalidBatchArrayException.php');
+include_once('exception/InvalidValueException.php');
 
 /**
  * @author Ray Naldo
@@ -80,20 +80,20 @@ class InputValidation
 
     /**
      * Run validation.
-     * @throws BadArrayException
-     * @throws BadBatchArrayException
-     * @throws BadValueException
+     * @throws InvalidArrayException
+     * @throws InvalidBatchArrayException
+     * @throws InvalidValueException
      */
     public function validate ()
     {
         if (!$this->validator->validate())
         {
             if ($this->validator instanceof FieldValidator)
-                throw new BadArrayException($this->validator->getAllErrors());
+                throw new InvalidArrayException($this->validator->getAllErrors());
             else if ($this->validator instanceof BatchArrayValidator)
-                throw new BadBatchArrayException($this->validator->getBatchErrors());
+                throw new InvalidBatchArrayException($this->validator->getBatchErrors());
             else
-                throw new BadValueException($this->validator->getError());
+                throw new InvalidValueException($this->validator->getError());
         }
     }
 }

@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class BadArrayException extends Exception
+class InvalidArrayException extends Exception
 {
     private $errors;
 

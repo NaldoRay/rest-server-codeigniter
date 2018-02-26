@@ -4,5 +4,5 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class InvalidFormatException extends ApiException
+class BadFormatException extends ApiException
 {}
