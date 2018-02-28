@@ -3,18 +3,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // This can be removed if you use __autoload() in config.php OR use Modular Extensions
 require_once('REST_Controller.php');
-include_once('database/Queriable.php');
-include_once('database/QueryCondition.php');
-include_once('database/LogicalOperator.php');
-include_once('database/FieldValueCondition.php');
-include_once('database/EqualsCondition.php');
-include_once('database/NotEqualsCondition.php');
-include_once('database/GreaterThanCondition.php');
-include_once('database/GreaterEqualsCondition.php');
-include_once('database/LessThanCondition.php');
-include_once('database/LessEqualsCondition.php');
-include_once('database/ContainsCondition.php');
-include_once('database/NotContainsCondition.php');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -222,7 +210,11 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
-            if ($this->input->method(true) == 'GET')
+            $requestMethod = $this->input->method(true);
+            $filterData = ($requestMethod == 'GET')
+                || ($requestMethod == 'POST' && endsWith($this->uri->uri_string(), 'search'));
+
+            if ($filterData)
                 $data = $this->filterData($data);
 
             $response = array(

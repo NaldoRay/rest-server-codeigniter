@@ -1,9 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once('database/DbManager.php');
-include_once('database/QueryCondition.php');
-
 /**
  * @author Ray Naldo
  * @property Rest_validation $validation

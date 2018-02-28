@@ -11,25 +11,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |	https://codeigniter.com/user_guide/general/hooks.html
 |
 */
-$hook['pre_system'] = function ()
-{
-    spl_autoload_register(function ($class)
-    {
-        $filePath = null;
-        if (strpos($class, 'MY_') === 0)
-        {
-            $filePath = sprintf('%score/%s.php', APPPATH, $class);
-        }
-        else if (strpos($class, 'APP_') === 0)
-        {
-            $filePath = sprintf('%score/app/%s.php', APPPATH, $class);
-        }
-        else if (strpos($class, 'Exception') !== false)
-        {
-            $filePath = APPPATH.'exceptions/' . $class . '.php';
-        }
 
-        if (file_exists($filePath))
-            include_once($filePath);
-    });
-};
+/**
+ * Author: Ray Naldo
+ */
+$hook['pre_system'] = array(
+    'class'    => 'Autoloader',
+    'function' => 'init',
+    'filename' => 'Autoloader.php',
+    'filepath' => 'hooks'
+);
