@@ -231,23 +231,30 @@ class MY_REST_Controller extends REST_Controller
 
         $fields = $this->getQueryFields();
         if (!empty($fields))
-        {
             $data = $this->filterObjectFields($data, $fields);
-            if ($this->isUniqueQuery() && $this->isArrayOfObjects($data))
-                $data = $this->getUniqueObjects($data, $fields);
-        }
 
         return $data;
     }
 
     private function filterObjectFields ($data, array $fields)
     {
-        if (is_array($data))
+        if (is_array($data) )
         {
             $filteredData = array();
-            foreach ($data as $key => $value)
+            if ($this->isSequentialArray($data))
             {
-                $filteredData[ $key ] = $this->filterObjectFields($value, $fields);
+                foreach ($data as $idx => $row)
+                {
+                    $filteredData[$idx] = $this->filterObjectFields($row, $fields);
+                }
+            }
+            else
+            {
+                foreach ($fields as $field)
+                {
+                    if (isset($data[$field]))
+                        $filteredData[$field] = $data[$field];
+                }
             }
             return $filteredData;
         }
@@ -257,7 +264,7 @@ class MY_REST_Controller extends REST_Controller
             foreach ($fields as $field)
             {
                 if (isset($data->$field))
-                    $filteredData[$field] = $this->filterObjectFields($data->$field, $fields);
+                    $filteredData[$field] = $data->$field;
             }
             return (object) $filteredData;
         }
@@ -267,63 +274,14 @@ class MY_REST_Controller extends REST_Controller
         }
     }
 
-    private function isArrayOfObjects (array $data)
+    private function isSequentialArray (array $arr)
     {
-        foreach ($data as $row)
+        foreach ($arr as $key => $value)
         {
-            if (!is_object($row))
+            if (is_string($key))
                 return false;
         }
         return true;
-    }
-
-    private function getUniqueObjects (array $data, array $fields)
-    {
-        if (empty($data))
-            return $data;
-
-        $uniqueEntities = array();
-        $fields = $this->getObjectFields($data[0], $fields);
-        foreach ($data as $entity)
-        {
-            $arr =& $uniqueEntities;
-
-            $fieldCount = count($fields);
-            for ($count = 1; $count <= $fieldCount; $count++)
-            {
-                $field = $fields[$count-1];
-                $fieldValue = $entity->$field;
-                if ($count == $fieldCount)
-                {
-                    $arr[$fieldValue] = $entity;
-                }
-                else
-                {
-                    if (!isset($arr[$fieldValue]))
-                        $arr[$fieldValue] = array();
-
-                    $arr =& $arr[$fieldValue];
-                }
-            }
-        }
-
-        $result = array();
-        array_walk_recursive($uniqueEntities, function ($entity) use (&$result)
-        {
-            $result[] = $entity;
-        });
-        return $result;
-    }
-
-    private function getObjectFields ($object, array $fields)
-    {
-        $objectFields = array();
-        foreach ($fields as $field)
-        {
-            if (isset($object->$field))
-                $objectFields[] = $field;
-        }
-        return $objectFields;
     }
 
     /*
@@ -724,15 +682,6 @@ class MY_REST_Controller extends REST_Controller
             $searchesParam = array();
 
         return $searchesParam;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function isUniqueQuery ()
-    {
-        $unique = $this->input->get('unique');
-        return ($unique === 'true');
     }
 
     /**
