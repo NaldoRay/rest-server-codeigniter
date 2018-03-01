@@ -18,9 +18,9 @@ abstract class APP_Model extends MY_Model
     {
         try
         {
-            $entity = $this->getFirstEntity($db, $table, $filters, null,
-                ['-' . $field],
-                [$field]
+            $entity = $this->getFirstEntity($db, $table,
+                $filters, null,
+                [$field], ['-' . $field]
             );
         }
         catch (ResourceNotFoundException $e)
@@ -212,14 +212,14 @@ abstract class APP_Model extends MY_Model
      * @param $table
      * @param array|null $filters
      * @param array|null $searches
-     * @param array|null $sorts
      * @param array|null $fields
+     * @param array|null $sorts
      * @return null|object
      * @throws ResourceNotFoundException
      */
-    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
+    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
     {
-        $entity = parent::getFirstEntity($db, $table, $filters, $searches, $sorts, $fields);
+        $entity = parent::getFirstEntity($db, $table, $filters, $searches, $fields, $sorts);
 
         if (is_null($entity))
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);

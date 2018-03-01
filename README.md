@@ -1,5 +1,21 @@
 ## Changelog
 
+v3.0.0
++ Support advanced search/query, rename validation exception class
++ Add `Queriable` interface
++ Remove `unique` query param
++ Fix `fields` query param affecting only the first level of object/associative array
++ Swap param order between `sorts` and `fields`, `unique`
++ Prevent out of memory when querying single entity
++ Add `searches` query param
++ log path now relatives to `application` folder
+
+v2.2.0
++ Add CI-specific validation, support custom default message
++ Support placeholders in validation error message
++ Add read-only field map on `MY_Model`
++ Fix `indonesian` language not found (should be `indonesia`)
+
 v2.1.0
 + add method to view file as PDF
 + use base file path to view local files, 

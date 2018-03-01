@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once('System.php');
+include_once('System.php');
 require_once('viewer/FileViewer.php');
 
 /**
@@ -20,7 +20,7 @@ class File_manager
         if (isset($config['file_base_path']))
             $this->baseFilePath = $config['file_base_path'];
         else
-            $this->baseFilePath = FCPATH.'files/';
+            $this->baseFilePath = '';
     }
 
     /**

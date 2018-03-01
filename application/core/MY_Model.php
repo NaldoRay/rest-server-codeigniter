@@ -370,7 +370,7 @@ class MY_Model extends CI_Model
             return $this->toEntity($row);
     }
 
-    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
+    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -382,7 +382,7 @@ class MY_Model extends CI_Model
             $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $row = $this->getFirstRow($db, $table, $filters, $searches, $sorts, $fields);
+        $row = $this->getFirstRow($db, $table, $filters, $searches, $fields, $sorts);
         if (is_null($row))
             return null;
         else
@@ -394,11 +394,11 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
-     * @param array $sorts table's sort fields
      * @param array $fields table's fields
+     * @param array $sorts table's sort fields
      * @return array|null
      */
-    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $sorts = null, array $fields = null)
+    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
     {
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
