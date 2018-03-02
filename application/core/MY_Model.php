@@ -3,7 +3,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * @author Ray Naldo
- * @property Rest_validation $validation
  */
 class MY_Model extends CI_Model
 {
@@ -24,6 +23,9 @@ class MY_Model extends CI_Model
     /** will be displayed on validation error result */
     protected $domain = 'API';
 
+    /** each model has its own validation instance (states) */
+    protected $validation;
+
     /** @var DbManager */
     private static $dbManager;
 
@@ -31,6 +33,8 @@ class MY_Model extends CI_Model
     public function __construct ()
     {
         parent::__construct();
+
+        $this->validation = new Rest_validation();
         $this->validation->setDomain($this->domain);
 
         if (!isset(self::$dbManager))
