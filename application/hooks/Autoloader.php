@@ -6,19 +6,26 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Autoloader
 {
-    private static $directories = array(
-        APPPATH.'core',
-        APPPATH.'models',
-        APPPATH.'exceptions',
-        APPPATH.'libraries'.DIRECTORY_SEPARATOR.'query'
-    );
-    private static $excludedDirectories = array();
+    private $includeDirectories;
+    private $excludeDirectories;
 
+
+    public function __construct ()
+    {
+        $this->includeDirectories  = array(
+            APPPATH.'core',
+            APPPATH.'models',
+            APPPATH.'exceptions',
+            APPPATH.'libraries'.DIRECTORY_SEPARATOR.'query'
+        );
+
+        $this->excludeDirectories = array();
+    }
 
     public function init ()
     {
         spl_autoload_register(function ($class) {
-            self::autoloadClass(self::$directories, $class);
+            self::autoloadClass($this->includeDirectories, $class);
         });
     }
 
@@ -27,11 +34,11 @@ class Autoloader
      * @param array $directories
      * @param string $class
      */
-    private static function autoloadClass (array $directories, $class)
+    private function autoloadClass (array $directories, $class)
     {
         foreach ($directories as $directory)
         {
-            if (!in_array($directory, self::$excludedDirectories))
+            if (!in_array($directory, $this->excludeDirectories))
             {
                 $filePath = $directory . DIRECTORY_SEPARATOR . $class . '.php';
                 if (file_exists($filePath))

@@ -297,7 +297,7 @@ class MY_Model extends CI_Model
         }
         else
         {
-           if ($db->affected_rows() == 0)
+            if ($db->affected_rows() == 0)
                 throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
         }
     }
@@ -585,6 +585,19 @@ class MY_Model extends CI_Model
             $searches = $this->toTableFilters($searches);
 
         return $this->rowExists($db, $table, $filters, $searches);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param QueryCondition $condition
+     * @return bool
+     */
+    protected function entityExistsWithCondition ($db, $table, QueryCondition $condition)
+    {
+        $db->where($condition->getConditionString());
+
+        return $this->rowExists($db, $table);
     }
 
     /**
