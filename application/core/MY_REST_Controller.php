@@ -599,7 +599,7 @@ class MY_REST_Controller extends REST_Controller
      * @param array $data
      * @return array
      */
-    protected function processData (array $data)
+    private function processData (array $data)
     {
         if (!empty($data))
         {

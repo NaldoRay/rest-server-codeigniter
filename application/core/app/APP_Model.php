@@ -13,6 +13,24 @@ abstract class APP_Model extends MY_Model
     protected $booleanPrefixes = ['F_'];
     protected $numberPrefixes = ['N_'];
 
+    private static $defaultInupby = null;
+
+
+    /**
+     * @param string $inupby
+     */
+    public static function setDefaultInupby ($inupby)
+    {
+        self::$defaultInupby = $inupby;
+    }
+
+    /**
+     * @return string|null
+     */
+    protected static function getDefaultInupby ()
+    {
+        return self::$defaultInupby;
+    }
 
     protected function getNextId ($db, $table, $field, $padLength = 0, array $filters = null)
     {
@@ -51,6 +69,12 @@ abstract class APP_Model extends MY_Model
      */
     protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
     {
+        for ($i = 0; $i < count($dataArr); $i++)
+        {
+            if (!isset($dataArr[$i]['inupby']))
+                $dataArr[$i]['inupby'] = self::$defaultInupby;
+        }
+
         try
         {
             return parent::createEntities($db, $table, $dataArr, $allowedFields);
@@ -67,6 +91,9 @@ abstract class APP_Model extends MY_Model
      */
     protected function createEntity ($db, $table, array $data, array $allowedFields = null)
     {
+        if (!isset($data['inupby']))
+            $data['inupby'] = self::$defaultInupby;
+
         try
         {
             return parent::createEntity($db, $table, $data, $allowedFields);
@@ -83,6 +110,12 @@ abstract class APP_Model extends MY_Model
      */
     protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
     {
+        for ($i = 0; $i < count($dataArr); $i++)
+        {
+            if (!isset($dataArr[$i]['inupby']))
+                $dataArr[$i]['inupby'] = self::$defaultInupby;
+        }
+
         try
         {
             return parent::updateEntities($db, $table, $dataArr, $indexField, $allowedFields);
@@ -95,15 +128,17 @@ abstract class APP_Model extends MY_Model
 
     /**
      * @throws BadFormatException
-     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
+    protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
     {
+        if (!isset($data['inupby']))
+            $data['inupby'] = self::$defaultInupby;
+
         try
         {
-            return parent::updateEntityWithCondition($db, $table, $data, $condition, $allowedFields);
+            return parent::updateEntity($db, $table, $data, $filters, $allowedFields);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -117,14 +152,18 @@ abstract class APP_Model extends MY_Model
 
     /**
      * @throws BadFormatException
+     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
+    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
+        if (!isset($data['inupby']))
+            $data['inupby'] = self::$defaultInupby;
+
         try
         {
-            return parent::updateEntity($db, $table, $data, $filters, $allowedFields);
+            return parent::updateEntityWithCondition($db, $table, $data, $condition, $allowedFields);
         }
         catch (ResourceNotFoundException $e)
         {

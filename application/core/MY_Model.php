@@ -184,27 +184,6 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
-     * @param QueryCondition $condition
-     * @param array|null $allowedFields entity's fields
-     * @return object entity with updated fields on success
-     * @throws BadFormatException
-     * @throws BadValueException
-     * @throws ResourceNotFoundException
-     * @throws TransactionException
-     */
-    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
-    {
-        $this->toTableCondition($db, $condition);
-
-        $db->where($condition->getConditionString());
-
-        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
-     * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
@@ -229,6 +208,27 @@ class MY_Model extends CI_Model
         {
             throw new TransactionException(sprintf('Failed to update %s', $this->domain), $this->domain);
         }
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $data entity's field => value
+     * @param QueryCondition $condition
+     * @param array|null $allowedFields entity's fields
+     * @return object entity with updated fields on success
+     * @throws BadFormatException
+     * @throws BadValueException
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
+     */
+    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
+    {
+        $this->toTableCondition($db, $condition);
+
+        $db->where($condition->getConditionString());
+
+        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
     }
 
     /**
@@ -326,25 +326,6 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters table's filter field => filter value
-     * @param array $fields table's fields
-     * @return array|null
-     */
-    protected function getRow ($db, $table, array $filters, array $fields = null)
-    {
-        $this->setQueryFilters($db, $filters);
-
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->limit(1)
-            ->get($table);
-
-        return $result->row_array();
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
      * @param QueryCondition $condition
      * @param array $fields entity's fields
      * @return object
@@ -357,17 +338,32 @@ class MY_Model extends CI_Model
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
 
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->where($condition->getConditionString())
-            ->limit(1)
-            ->get($table);
+        $db->where($condition->getConditionString());
 
-        $row = $result->row_array();
+        $row = $this->getRow($db, $table, array(), $fields);
         if (is_null($row))
             return null;
         else
             return $this->toEntity($row);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $filters table's filter field => filter value
+     * @param array $fields table's fields
+     * @return array|null
+     */
+    private function getRow ($db, $table, array $filters, array $fields = null)
+    {
+        $this->setQueryFilters($db, $filters);
+
+        $select = $this->getSelectField($fields);
+        $result = $db->select($select)
+            ->limit(1)
+            ->get($table);
+
+        return $result->row_array();
     }
 
     protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
