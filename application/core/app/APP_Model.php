@@ -60,7 +60,7 @@ abstract class APP_Model extends MY_Model
         if ($padLength > 0)
             return str_pad($nextId, $padLength, '0', STR_PAD_LEFT);
         else
-            return $nextId;
+            return (string) $nextId;
     }
 
     /**

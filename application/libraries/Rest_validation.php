@@ -57,20 +57,6 @@ class Rest_validation extends InputValidation
             throw new BadValueException($errorMessage, $this->domain);
     }
 
-    public function validatePositiveInteger ($value, Exception $exception)
-    {
-        $valid = $this->forValue($value)->onlyPositiveInteger()->validate();
-        if (!$valid)
-            throw $exception;
-    }
-
-    public function validatePositiveFloat ($value, Exception $exception)
-    {
-        $valid = $this->forValue($value)->onlyPositiveFloat()->validate();
-        if (!$valid)
-            throw $exception;
-    }
-
     public function validateOrNotFound ()
     {
         try
@@ -83,6 +69,11 @@ class Rest_validation extends InputValidation
         }
     }
 
+    /**
+     * @throws BadArrayException
+     * @throws BadBatchArrayException
+     * @throws BadValueException
+     */
     public function validate ()
     {
         try
@@ -102,6 +93,4 @@ class Rest_validation extends InputValidation
             throw new BadValueException($e->getMessage(), $this->domain);
         }
     }
-
-
 }

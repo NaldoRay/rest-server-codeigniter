@@ -625,7 +625,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * @param Closure $validation
+     * @param Closure $validation a Closure with one parameter: the value being validated
      * @param string|Closure $errorMessage error message or function to return error message (called on validation failed)
      * @return $this
      */
