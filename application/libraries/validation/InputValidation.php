@@ -50,7 +50,7 @@ class InputValidation
     /**
      * @param string $name
      * @param string|null $label
-     * @return ValueValidator
+     * @return ArrayValueValidator
      */
     public function field ($name, $label = 'Value')
     {

@@ -5,7 +5,7 @@ include_once('Validation.php');
 /**
  * @author Ray Naldo
  */
-class FieldValidator
+abstract class FieldValidator
 {
     /** @var Validation[] */
     private $validators;

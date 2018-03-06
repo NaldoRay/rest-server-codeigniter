@@ -49,7 +49,7 @@ class Validation_test extends TestCase
         $this->setExpectedException(BadValueException::class);
 
         $this->validation->forValue('pwd', 'Password')
-            ->required()
+            ->notEmpty()
             ->lengthBetween(8, 16);
 
         $this->validation->validate();
@@ -57,8 +57,8 @@ class Validation_test extends TestCase
 
     public function testRequiredShouldSuccess ()
     {
-        $this->validation->field('name')->required();
-        $this->validation->field('username')->required();
+        $this->validation->field('name')->notEmpty();
+        $this->validation->field('username')->notEmpty();
         $this->validation->validate();
     }
 
@@ -67,11 +67,11 @@ class Validation_test extends TestCase
         $this->setExpectedException(BadArrayException::class);
 
         $data = [
-            'address' => ' '
+            'address' => 'asd'
         ];
         $this->validation->forArray($data);
-        $this->validation->field('address')->required();
-        $this->validation->field('password')->required();
+        $this->validation->field('address')->notEmpty();
+        $this->validation->field('password')->required()->notEmpty();
         $this->validation->validate();
     }
 
@@ -157,7 +157,6 @@ class Validation_test extends TestCase
         {
             $errors = $e->getAllErrors();
 
-            var_dump($errors);
             $this->assertTrue(isset($errors['address']));
             $this->assertTrue(isset($errors['username']));
             $this->assertTrue(isset($errors['phones']));
@@ -192,14 +191,21 @@ class Validation_test extends TestCase
 
     public function testRepeatedValidationShouldOverride ()
     {
-        $this->validation->field('username')->validEmail()->lengthMax(6)->required()->lengthMax(30);
+        $this->validation->field('username')->validEmail()->lengthMax(6)->notEmpty()->lengthMax(30);
         $this->validation->validate();
     }
 
     public function testValidationOrderShouldCorrect ()
     {
-        $this->validation->field('address', 'Address')->lengthMax(6)->validEmail()->required();
-        $this->validation->field('password')->onlyNumeric()->lengthMin(6)->required();
+        $this->validation->field('address', 'Address')
+            ->required()
+            ->lengthMax(6)
+            ->validEmail()
+            ->notEmpty();
+        $this->validation->field('password')
+            ->required()
+            ->onlyNumeric()
+            ->lengthMin(6);
         try
         {
             $this->validation->validate();
@@ -208,7 +214,7 @@ class Validation_test extends TestCase
         catch (BadArrayException $e)
         {
             $errors = $e->getAllErrors();
-            $this->assertContains('Address must be a valid e-mail', $errors['address']);
+            $this->assertTrue(isset($errors['address']));
             $this->assertContains('required', $errors['password']);
         }
     }
@@ -217,24 +223,24 @@ class Validation_test extends TestCase
     {
         $_FILES = [
             'userfile1' => [
-                'name' => 'original.php',
+                'name' => 'index.php',
                 'type' => 'text/json',
-                'size' => 1024000,
-                'tmp_name' => FCPATH.'composer.json',
+                'size' => 11264,
+                'tmp_name' => FCPATH.'test.txt',
                 'error' => ''
             ],
             'userfile2' => [
                 'name' => 'original.php',
                 'type' => 'text/php',
-                'size' => 1024000,
+                'size' => 11264,
                 'tmp_name' => FCPATH.'index.php',
                 'error' => ''
             ],
             'userfile3' => [
                 'name' => 'original.php',
                 'type' => 'text/php',
-                'size' => 4096000,
-                'tmp_name' => FCPATH.'index.php',
+                'size' => 2097152,
+                'tmp_name' => FCPATH.'test.txt',
                 'error' => ''
             ]
         ];
@@ -242,7 +248,7 @@ class Validation_test extends TestCase
         $this->validation->file('notfound', 'Label')->required();
         $this->validation->file('userfile1')->required()->maxSize(512);
         $this->validation->file('userfile2')->required()->allowTypes(['json', 'txt']);
-        $this->validation->file('userfile3')->required()->maxSize(2390);
+        $this->validation->file('userfile3')->required()->maxSize(1390);
         try
         {
             $this->validation->validate();
@@ -255,21 +261,21 @@ class Validation_test extends TestCase
             $this->assertContains('Max file size is 512 KB', $errors['userfile1']);
             $this->assertContains('File type must be', $errors['userfile2']);
             $this->assertContains('json, txt', $errors['userfile2']);
-            $this->assertContains('2.33 MB', $errors['userfile3']);
+            $this->assertContains('1.35 MB', $errors['userfile3']);
         }
     }
 
     public function testCustomValidationShouldBeExecuted ()
     {
         $this->validation->field('username')
-            ->required()
+            ->notEmpty()
             ->addValidation(function ($value)
             {
                 return false;
             }, "Custom validation failed");
 
         $this->validation->field('address')
-            ->required()
+            ->notEmpty()
             ->addValidation(function ($value)
             {
                 return false;
@@ -277,7 +283,7 @@ class Validation_test extends TestCase
             ->lengthMin(10);
 
         $this->validation->field('name')
-            ->required()
+            ->notEmpty()
             ->addValidation(function ($value)
             {
                 return false;
@@ -302,11 +308,11 @@ class Validation_test extends TestCase
 
     public function testFailedValidation ()
     {
-        $this->validation->field('username')->required()->validEmail();
-        $this->validation->field('name')->required()->lengthMin(3);
-        $this->validation->field('email')->required()->validEmail();
-        $this->validation->field('address')->required()->lengthMin(10);
-        $this->validation->field('password')->required();
+        $this->validation->field('username')->required()->notEmpty()->validEmail();
+        $this->validation->field('name')->required()->notEmpty()->lengthMin(3);
+        $this->validation->field('email')->required()->notEmpty()->validEmail();
+        $this->validation->field('address')->required()->notEmpty()->lengthMin(10);
+        $this->validation->field('password')->required()->notEmpty();
         $this->validation->field('age')->onlyNumeric();
         $this->validation->field('birthdate', 'Date of Birth')->validDate();
         $this->validation->field('phones', 'Phones')->lengthEquals(3);

@@ -1,7 +1,8 @@
 <?php
 
-include_once('ArrayValidator.php');
 include_once('BatchArrayValidator.php');
+include_once('ArrayValidator.php');
+include_once('ArrayValueValidator.php');
 include_once('ValueValidator.php');
 include_once('FilesValidator.php');
 include_once('FileValidator.php');
@@ -30,6 +31,17 @@ class ValidatorFactory
     }
 
     /**
+     * @param array $arr
+     * @param string $field
+     * @param string $label
+     * @return ArrayValueValidator
+     */
+    public function createArrayValueValidator (array $arr, $field, $label = 'Value')
+    {
+        return new ArrayValueValidator($arr, $field, $label);
+    }
+
+    /**
      * @param $value
      * @param string $label
      * @return ValueValidator
@@ -48,12 +60,12 @@ class ValidatorFactory
     }
 
     /**
-     * @param array $file
+     * @param string $filePath
      * @param string $label
      * @return FileValidator
      */
-    public function createFileValidator ($file, $label = 'File')
+    public function createFileValidator ($filePath, $label = 'File')
     {
-        return new FileValidator($file, $label);
+        return new FileValidator($filePath, $label);
     }
 }

@@ -7,6 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // value validation
 $lang['validation_required'] = '{label} is required';
+$lang['validation_not_empty'] = '{label} must not be empty';
 $lang['validation_length_min'] = '{label} length must be at least {min}';
 $lang['validation_length_max'] = '{label} length must not be more than {max}';
 $lang['validation_length_between'] = '{label} length must be between {min} to {max}';

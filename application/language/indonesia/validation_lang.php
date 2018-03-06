@@ -7,6 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // value validation
 $lang['validation_required'] = '{label} harus diisi';
+$lang['validation_not_empty'] = '{label} harus diisi';
 $lang['validation_length_min'] = 'Panjang {label} minimal {min}';
 $lang['validation_length_max'] = 'Panjang {label} maksimal {max}';
 $lang['validation_length_between'] = 'Panjang {label} harus antara {min} hingga {max}';

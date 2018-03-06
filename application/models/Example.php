@@ -41,12 +41,13 @@ class Example extends APP_Data_Model implements Queriable
     private function validateData (array $data)
     {
         $this->validation->forArray($data);
-        $this->validation->field('field1', 'First Field')
+        $this->validation->field('field1', 'Required Field')
             ->required()
+            ->notEmpty()
             ->onlyString()
             ->lengthMax(100);
-        $this->validation->field('field2', 'Second Field')
-            ->required()
+        $this->validation->field('field2', 'Optional Field')
+            ->notEmpty()
             ->onlyString()
             ->lengthBetween(5, 200);
         $this->validation->validate();
@@ -90,7 +91,7 @@ class Example extends APP_Data_Model implements Queriable
 
     static function validatePrimaryKey (ValueValidator $idValidator)
     {
-        $idValidator->required()
+        $idValidator->notEmpty()
             ->onlyString()
             ->lengthEquals(5);
     }

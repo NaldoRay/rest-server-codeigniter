@@ -25,21 +25,11 @@ class FilesValidator extends FieldValidator
     public function field ($name, $label = 'File')
     {
         if (isset($_FILES[$name]))
-        {
-            $file = $_FILES[$name];
-        }
+            $filePath = $_FILES[$name]['tmp_name'];
         else
-        {
-            $file = array(
-                'name' => null,
-                'type' => null,
-                'size' => 0,
-                'tmp_name' => null,
-                'error' => null
-            );
-        }
+            $filePath = null;
 
-        $validator = $this->validatorFactory->createFileValidator($file, $label);
+        $validator = $this->validatorFactory->createFileValidator($filePath, $label);
         $this->addValidator($name, $validator);
 
         return $validator;

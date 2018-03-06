@@ -50,7 +50,7 @@ class Join_data extends APP_Data_Model
 
     static function validatePrimaryKey (ValueValidator $idValidator)
     {
-        $idValidator->required()
+        $idValidator->notEmpty()
             ->onlyString()
             ->lengthEquals(5);
     }

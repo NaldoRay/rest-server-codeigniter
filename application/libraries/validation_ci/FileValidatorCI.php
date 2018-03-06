@@ -12,9 +12,9 @@ class FileValidatorCI extends FileValidator
 {
     private $CI;
 
-    public function __construct (array $file, $label = 'File')
+    public function __construct ($filePath, $label = 'File')
     {
-        parent::__construct($file, $label);
+        parent::__construct($filePath, $label);
         $this->CI = get_instance();
     }
 

@@ -25,16 +25,11 @@ class ArrayValidator extends FieldValidator
     /**
      * @param string $name
      * @param string $label (optional)
-     * @return ValueValidator
+     * @return ArrayValueValidator
      */
     public function field ($name, $label = 'Value')
     {
-        if (isset($this->arr[$name]))
-            $value = $this->arr[$name];
-        else
-            $value = null;
-
-        $validator = $this->validatorFactory->createValueValidator($value, $label);
+        $validator = $this->validatorFactory->createArrayValueValidator($this->arr, $name, $label);
         $this->addValidator($name, $validator);
 
         return $validator;
@@ -45,15 +40,8 @@ class ArrayValidator extends FieldValidator
         $this->arr = $arr;
 
         $validators = $this->getValidators();
-        /** @var ValueValidator $validator */
+        /** @var ArrayValueValidator $validator */
         foreach ($validators as $field => $validator)
-        {
-            if (isset($this->arr[$field]))
-                $value = $this->arr[$field];
-            else
-                $value = null;
-
-            $validator->setValue($value);
-        }
+            $validator->setArrayValue($this->arr, $field);
     }
 }

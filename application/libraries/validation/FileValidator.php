@@ -17,33 +17,31 @@ class FileValidator implements Validation
     private static $IDX_OTHER = 10;
 
     /** @var array */
-    private $file;
+    private $filePath;
     /** @var string */
     private $label;
 
+    private $optional = true;
+
     /** @var array */
-    private $validations;
+    private $validations = array();
     /** @var array */
-    private $errorMessages;
+    private $errorMessages = array();
     /** @var string */
     private $error;
-
-    private $optional = false;
 
 
     /**
      * FileValidator constructor.
-     * @param array $file array from $_FILES['userfile']
+     * @param string $filePath
      * @param string $label
      */
-    public function __construct (array $file, $label = 'File')
+    public function __construct ($filePath, $label = 'File')
     {
-        $this->file = $file;
+        $this->filePath = $filePath;
         $this->label = $label;
 
-        $this->validations = array();
-        $this->errorMessages = array();
-        $this->error = null;
+        $this->error = '';
     }
 
     /**
@@ -56,27 +54,7 @@ class FileValidator implements Validation
 
         if (is_null($errorMessage))
             $errorMessage = '{label} is required';
-
-        $this->setValidation(self::$IDX_REQUIRED, function ($file)
-        {
-            return isset($file['tmp_name']) && (trim('tmp_name') !== '');
-        }, $errorMessage);
-
-        return $this;
-    }
-
-    /**
-     * Mark this validation as optional.
-     * @return $this
-     */
-    public function optional ()
-    {
-        $this->optional = true;
-
-        $this->setValidation(self::$IDX_OPTIONAL, function ($value)
-        {
-            return true;
-        }, null);
+        $this->errorMessages[self::$IDX_REQUIRED] = $errorMessage;
 
         return $this;
     }
@@ -95,23 +73,20 @@ class FileValidator implements Validation
             '{types}' => implode(', ', $types)
         ]);
 
-        $this->setValidation(self::$IDX_ALLOW_TYPES, function ($file) use ($types)
+        $this->setValidation(self::$IDX_ALLOW_TYPES, function ($filePath) use ($types)
         {
-            if (isset($file['tmp_name']))
+            $mime = mime_content_type($filePath);
+            $mimes = self::getMimes();
+            foreach ($types as $type)
             {
-                $mime = mime_content_type($file['tmp_name']);
-                $mimes = self::getMimes();
-                foreach ($types as $type)
+                if (is_array($mimes[ $type ]))
                 {
-                    if (is_array($mimes[ $type ]))
-                    {
-                        if (in_array($mime, $mimes[ $type ], true))
-                            return true;
-                    }
-                    else if ($mime === $mimes[ $type ])
-                    {
+                    if (in_array($mime, $mimes[ $type ], true))
                         return true;
-                    }
+                }
+                else if ($mime === $mimes[ $type ])
+                {
+                    return true;
                 }
             }
             return false;
@@ -139,14 +114,12 @@ class FileValidator implements Validation
             '{size}' => $size
         ]);
 
-        $this->setValidation(self::$IDX_SIZE_MAX, function ($file) use ($sizeKB)
+        $this->setValidation(self::$IDX_SIZE_MAX, function ($filePath) use ($sizeKB)
         {
-            if (isset($file['size']))
-            {
-                $sizeByte = $sizeKB * 1024;
-                return ($file['size'] <= $sizeByte);
-            }
-            return false;
+            $fileSize = filesize($filePath);
+            $sizeByte = $sizeKB * 1024;
+
+            return ($fileSize <= $sizeByte);
         }, $errorMessage);
 
         return $this;
@@ -182,15 +155,7 @@ class FileValidator implements Validation
 
     private function setValidation ($idx, Closure $validation, $errorMessage)
     {
-        $fileValidation = function ($file) use ($validation)
-        {
-            if ((is_null($file) || !isset($file['tmp_name'])) && $this->optional)
-                return true;
-
-            return $validation($file);
-        };
-
-        $this->validations[$idx] = $fileValidation;
+        $this->validations[$idx] = $validation;
         $this->errorMessages[$idx] = $errorMessage;
     }
 
@@ -200,28 +165,54 @@ class FileValidator implements Validation
      */
     public function validate ()
     {
-        $this->error = null;
+        $this->error = '';
+
+        if (empty($this->filePath))
+        {
+            if ($this->optional)
+            {
+                return true;
+            }
+            else
+            {
+                $errorMessage = $this->errorMessages[self::$IDX_REQUIRED];
+                if ($errorMessage instanceof Closure)
+                    $errorMessage = $errorMessage();
+
+                $this->error = $this->formatErrorMessage($errorMessage);
+                return false;
+            }
+        }
 
         $indexes = array_keys($this->validations);
         sort($indexes);
         foreach ($indexes as $idx)
         {
-            if (!$this->validations[$idx]($this->file))
+            if (!$this->validations[$idx]($this->filePath))
             {
                 $errorMessage = $this->errorMessages[$idx];
                 if ($errorMessage instanceof Closure)
                     $errorMessage = $errorMessage();
 
-                $errorMessage = $this->formatMessage($errorMessage, [
-                    '{label}' => $this->label
-                ]);
-
-                $this->error = $errorMessage;
+                $this->error = $this->formatErrorMessage($errorMessage);
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return string
+     */
+    protected function formatErrorMessage ($errorMessage)
+    {
+        $replacements = [
+            '{label}' => $this->label
+        ];
+
+        return $this->formatMessage($errorMessage, $replacements);
     }
 
     private function formatMessage ($message, array $replacements)

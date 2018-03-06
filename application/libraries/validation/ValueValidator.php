@@ -7,8 +7,7 @@ require_once('Validation.php');
  */
 class ValueValidator implements Validation
 {
-    private static $IDX_REQUIRED = 0;
-    private static $IDX_OPTIONAL = 0;
+    private static $IDX_NOT_EMPTY = 0;
 
     // comparing content type, same validation index
     private static $IDX_VALID_EMAIL = 1;
@@ -24,9 +23,9 @@ class ValueValidator implements Validation
 
     // comparing content attributes
     private static $IDX_LENGTH_MIN = 6;
-    private static $IDX_LENGTH_MAX = 7;
-    private static $IDX_LENGTH_BETWEEN = 8;
-    private static $IDX_LENGTH_EQUALS = 8;
+    private static $IDX_LENGTH_MAX = 6;
+    private static $IDX_LENGTH_BETWEEN = 6;
+    private static $IDX_LENGTH_EQUALS = 6;
 
     // other
     private static $IDX_OTHER = 11;
@@ -37,76 +36,49 @@ class ValueValidator implements Validation
     private $label;
 
     /** @var array */
-    private $validations;
+    private $validations = array();
     /** @var array */
-    private $errorMessages;
+    private $errorMessages = array();
     /** @var string */
     private $error;
 
-    private $optional = false;
 
-
+    /**
+     * @param mixed $value
+     * @param string $label
+     */
     public function __construct ($value, $label = 'Value')
     {
         $this->value = $value;
         $this->label = $label;
 
-        $this->validations = array();
-        $this->errorMessages = array();
-        $this->error = '';
+        $this->resetError();
     }
 
     /**
      * @param mixed $value
      */
-    public function setValue ($value)
+    protected function setValue ($value)
     {
         $this->value = $value;
-        $this->error = '';
+        $this->resetError();
     }
 
     /**
-     * Validation failed if value equals to null, '', or only whitespaces.
+     * Validation failed if value equals to null, empty string, or empty array.
      * @param string $errorMessage custom error message
      * @return $this
      */
-    public function required ($errorMessage = null)
+    public function notEmpty ($errorMessage = null)
     {
-        $this->optional = false;
-
         if (is_null($errorMessage))
-            $errorMessage = '{label} is required';
+            $errorMessage = '{label} must not be empty';
 
-        $this->setValidation(self::$IDX_REQUIRED, function ($value)
+        $this->setValidation(self::$IDX_NOT_EMPTY, function ($value)
         {
-            if (is_null($value))
-                return false;
-            else
-            {
-                if (is_scalar($value) && !is_bool($value))
-                    return (trim($value) !== '');
-                else if (is_array($value))
-                    return (count($value) > 0);
-                else
-                    return true;
-            }
+            // extra checks so 0, 0.0, "0", and false are not considered as empty by empty() method
+            return !empty($value) || is_numeric($value) || is_bool($value);
         }, $errorMessage);
-
-        return $this;
-    }
-
-    /**
-     * Mark this validation as optional.
-     * @return $this
-     */
-    public function optional ()
-    {
-        $this->optional = true;
-
-        $this->setValidation(self::$IDX_OPTIONAL, function ($value)
-        {
-            return true;
-        }, null);
 
         return $this;
     }
@@ -646,7 +618,7 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_ONLY_ONE_OF, function ($value) use ($values)
         {
-            return in_array($value, $values);
+            return in_array($value, $values, true);
         }, $errorMessage);
 
         return $this;
@@ -680,23 +652,15 @@ class ValueValidator implements Validation
         return $this;
     }
 
-    private function setValidation ($idx, Closure $validation, $errorMessage)
+    protected function setValidation ($idx, Closure $validation, $errorMessage)
     {
-        $valueValidation = function ($value) use ($validation)
-        {
-            if (is_null($value) && $this->optional)
-                return true;
-
-            return $validation($value);
-        };
-
-        $this->validations[$idx] = $valueValidation;
+        $this->validations[$idx] = $validation;
         $this->errorMessages[$idx] = $errorMessage;
     }
 
     public function validate ()
     {
-        $this->error = null;
+        $this->resetError();
 
         $indexes = array_keys($this->validations);
         sort($indexes);
@@ -704,22 +668,31 @@ class ValueValidator implements Validation
         {
             if (!$this->validations[$idx]($this->value))
             {
-                $errorMessage = $this->errorMessages[$idx];
+                $errorMessage = $this->errorMessages[ $idx ];
                 if ($errorMessage instanceof Closure)
                     $errorMessage = $errorMessage();
 
-                $replacements = [
-                    '{label}' => $this->label
-                ];
-                if (is_scalar($this->value))
-                    $replacements['{value}'] = $this->value;
-
-                $this->error = $this->formatMessage($errorMessage, $replacements);
+                $this->setError($this->formatErrorMessage($errorMessage));
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return string
+     */
+    protected function formatErrorMessage ($errorMessage)
+    {
+        $replacements = [
+            '{label}' => $this->label
+        ];
+        if (is_scalar($this->value))
+            $replacements['{value}'] = $this->value;
+
+        return $this->formatMessage($errorMessage, $replacements);
     }
 
     private function formatMessage ($message, array $replacements)
@@ -728,6 +701,19 @@ class ValueValidator implements Validation
             return '';
         else
             return str_replace(array_keys($replacements), array_values($replacements), $message);
+    }
+
+    protected function resetError ()
+    {
+        $this->setError('');
+    }
+
+    /**
+     * @param string $error
+     */
+    protected function setError ($error)
+    {
+        $this->error = $error;
     }
 
     public function getError ()

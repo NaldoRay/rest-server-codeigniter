@@ -733,12 +733,14 @@ class MY_REST_Controller extends REST_Controller
             $this->validation->forArray($search);
             $this->validation->field('field')
                 ->required()
+                ->notEmpty()
                 ->onlyString();
             $this->validation->field('operator')
                 ->required()
                 ->onlyOneOf(['=', '!=', '<', '<=', '>', '>=', '~', '!~']);
             $this->validation->field('value')
-                ->required();
+                ->required()
+                ->notEmpty();
             $this->validation->validate();
 
             $field = $search['field'];

@@ -1,19 +1,27 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'libraries/validation/ValueValidator.php');
+require_once(APPPATH.'libraries/validation/ArrayValueValidator.php');
 
 /**
  * @author Ray Naldo
  */
-class ValueValidatorCI extends ValueValidator
+class ArrayValueValidatorCI extends ArrayValueValidator
 {
     private $CI;
 
-    public function __construct ($value, $label = 'Value')
+    public function __construct (array $arr, $field, $label = 'Value')
     {
-        parent::__construct($value, $label);
+        parent::__construct($arr, $field, $label);
         $this->CI = get_instance();
+    }
+
+    public function required ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_required');
+
+        return parent::required($errorMessage);
     }
 
     public function notEmpty ($errorMessage = null)

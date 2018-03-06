@@ -25,7 +25,7 @@ class BatchArrayValidator
     /**
      * @param string $name
      * @param string $label (optional)
-     * @return ValueValidator
+     * @return ArrayValueValidator
      */
     public function field ($name, $label = 'Value')
     {
