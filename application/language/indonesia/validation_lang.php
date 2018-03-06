@@ -7,10 +7,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // value validation
 $lang['validation_required'] = '{label} harus diisi';
-$lang['validation_length_min'] = '{label} minimal {min} karakter';
-$lang['validation_length_max'] = '{label} maksimal {max} karakter';
-$lang['validation_length_between'] = '{label} harus antara {min} hingga {max} karakter';
-$lang['validation_length_equals'] = '{label} harus {length} karakter';
+$lang['validation_length_min'] = 'Panjang {label} minimal {min}';
+$lang['validation_length_max'] = 'Panjang {label} maksimal {max}';
+$lang['validation_length_between'] = 'Panjang {label} harus antara {min} hingga {max}';
+$lang['validation_length_equals'] = 'Panjang {label} harus {length}';
 $lang['validation_email'] = '{label} harus berupa e-mail yang valid';
 $lang['validation_date'] = '{label} harus valid dengan format [YYYY]-[MM]-[DD]';
 $lang['validation_datetime'] = '{label} harus valid dengan format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';

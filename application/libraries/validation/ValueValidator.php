@@ -79,7 +79,9 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_REQUIRED, function ($value)
         {
-            if (isset($value))
+            if (is_null($value))
+                return false;
+            else
             {
                 if (is_scalar($value) && !is_bool($value))
                     return (trim($value) !== '');
@@ -88,7 +90,6 @@ class ValueValidator implements Validation
                 else
                     return true;
             }
-            return false;
         }, $errorMessage);
 
         return $this;
@@ -111,14 +112,14 @@ class ValueValidator implements Validation
     }
 
     /**
-     * @param int $min
+     * @param int $min min number of bytes of the string or min number of elements in the array (or count on Countable)
      * @param string $errorMessage extra placeholders: {min}
      * @return $this
      */
     public function lengthMin ($min, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} must be at least {min} characters';
+            $errorMessage = '{label} length must be at least {min}';
 
         $errorMessage = $this->formatMessage($errorMessage, [
             '{min}' => $min
@@ -126,21 +127,28 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_LENGTH_MIN, function ($value) use ($min)
         {
-            return (strlen($value) >= $min);
+            if (is_scalar($value))
+                $length = strlen($value);
+            else if (is_array($value) || (is_object($value) && $value instanceof Countable))
+                $length = count($value);
+            else
+                return false;
+
+            return ($length >= $min);
         }, $errorMessage);
 
         return $this;
     }
 
     /**
-     * @param int $max
+     * @param int $max max number of bytes the string has or max number of elements in the array (or count on Countable)
      * @param string $errorMessage extra placeholders: {max}
      * @return $this
      */
     public function lengthMax ($max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} must not be more than {max} characters';
+            $errorMessage = '{label} length must not be more than {max}';
 
         $errorMessage = $this->formatMessage($errorMessage, [
             '{max}' => $max
@@ -148,7 +156,14 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_LENGTH_MAX, function ($value) use ($max)
         {
-            return (strlen($value) <= $max);
+            if (is_scalar($value))
+                $length = strlen($value);
+            else if (is_array($value) || (is_object($value) && $value instanceof Countable))
+                $length = count($value);
+            else
+                return false;
+
+            return ($length <= $max);
         }, $errorMessage);
 
         return $this;
@@ -163,7 +178,7 @@ class ValueValidator implements Validation
     public function lengthBetween ($min, $max, $errorMessage = null)
     {
         if (is_null($errorMessage))
-            $errorMessage = '{label} must be between {min} to {max} characters';
+            $errorMessage = '{label} length must be between {min} to {max}';
 
         $errorMessage = $this->formatMessage($errorMessage, [
             '{min}' => $min,
@@ -172,7 +187,13 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_LENGTH_BETWEEN, function ($value) use ($min, $max)
         {
-            $length = strlen($value);
+            if (is_scalar($value))
+                $length = strlen($value);
+            else if (is_array($value) || (is_object($value) && $value instanceof Countable))
+                $length = count($value);
+            else
+                return false;
+
             return ($length >= $min) && ($length <= $max);
         }, $errorMessage);
 
@@ -195,7 +216,14 @@ class ValueValidator implements Validation
 
         $this->setValidation(self::$IDX_LENGTH_EQUALS, function ($value) use ($length)
         {
-            return (strlen($value) === $length);
+            if (is_scalar($value))
+                $valueLength = strlen($value);
+            else if (is_array($value) || (is_object($value) && $value instanceof Countable))
+                $valueLength = count($value);
+            else
+                return false;
+
+            return ($valueLength === $length);
         }, $errorMessage);
 
         return $this;

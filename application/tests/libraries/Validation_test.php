@@ -36,7 +36,10 @@ class Validation_test extends TestCase
             'email' => 'wrong-email@format',
             'age' => 42,
             'address' => 'Bandung',
-            'birthdate' => '2017/2/04'
+            'birthdate' => '2017/2/04',
+            'phones' => [
+                '123', '022'
+            ]
         ];
         $this->validation->forArray($data);
     }
@@ -90,6 +93,7 @@ class Validation_test extends TestCase
     {
         $this->validation->field('username')->lengthMin(4);
         $this->validation->field('name')->lengthMin(3);
+        $this->validation->field('phones')->lengthMin(1);
 
         $this->validation->validate();
     }
@@ -105,6 +109,8 @@ class Validation_test extends TestCase
         $this->validation->forArray($data);
         $this->validation->field('address')->lengthMin(1);
         $this->validation->field('name')->lengthMin(10);
+        $this->validation->field('phones')->lengthMin(3);
+
         $this->validation->validate();
     }
 
@@ -113,6 +119,7 @@ class Validation_test extends TestCase
         $this->validation->field('username')->lengthMax(30);
         $this->validation->field('name')->lengthMax(3);
         $this->validation->field('age')->lengthMax(3);
+        $this->validation->field('phones')->lengthMax(3);
 
         $this->validation->validate();
     }
@@ -121,11 +128,8 @@ class Validation_test extends TestCase
     {
         $this->setExpectedException(BadArrayException::class);
 
-        $data = [
-            'name' => 'Super long name of a person'
-        ];
-        $this->validation->forArray($data);
-        $this->validation->field('name')->lengthMax(10);
+        $this->validation->field('username')->lengthMax(10);
+        $this->validation->field('phones')->lengthMax(1);
         $this->validation->validate();
     }
 
@@ -133,6 +137,7 @@ class Validation_test extends TestCase
     {
         $this->validation->field('username')->lengthBetween(6, 50);
         $this->validation->field('name')->lengthBetween(3, 30);
+        $this->validation->field('phones')->lengthBetween(1, 3);
 
         $this->validation->validate();
     }
@@ -141,9 +146,24 @@ class Validation_test extends TestCase
     {
         $this->setExpectedException(BadArrayException::class);
 
-        $this->validation->field('address')->lengthBetween(10, 50);
-        $this->validation->field('username')->lengthBetween(6, 10);
-        $this->validation->validate();
+        try
+        {
+            $this->validation->field('address')->lengthBetween(10, 50);
+            $this->validation->field('username')->lengthBetween(6, 10);
+            $this->validation->field('phones')->lengthBetween(0, 1);
+            $this->validation->validate();
+        }
+        catch (BadArrayException $e)
+        {
+            $errors = $e->getAllErrors();
+
+            var_dump($errors);
+            $this->assertTrue(isset($errors['address']));
+            $this->assertTrue(isset($errors['username']));
+            $this->assertTrue(isset($errors['phones']));
+
+            throw $e;
+        }
     }
 
     public function testNumericOnlyShouldSuccess ()
@@ -289,6 +309,7 @@ class Validation_test extends TestCase
         $this->validation->field('password')->required();
         $this->validation->field('age')->onlyNumeric();
         $this->validation->field('birthdate', 'Date of Birth')->validDate();
+        $this->validation->field('phones', 'Phones')->lengthEquals(3);
 
         try
         {
@@ -306,6 +327,8 @@ class Validation_test extends TestCase
             $this->assertTrue(!empty($errors['address']));
             $this->assertTrue(!empty($errors['password']));
             $this->assertTrue(!empty($errors['birthdate']));
+
+            $this->assertTrue(!empty($errors['phones']));
 
             $this->assertContains('10', $errors['address']);
             $this->assertContains('Date of Birth', $errors['birthdate']);

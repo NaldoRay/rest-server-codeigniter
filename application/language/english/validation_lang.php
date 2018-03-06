@@ -7,10 +7,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // value validation
 $lang['validation_required'] = '{label} is required';
-$lang['validation_length_min'] = '{label} must be at least {min} characters';
-$lang['validation_length_max'] = '{label} must not be more than {max} characters';
-$lang['validation_length_between'] = '{label} must be between {min} to {max} characters';
-$lang['validation_length_equals'] = '{label} must be exactly {length} characters';
+$lang['validation_length_min'] = '{label} length must be at least {min}';
+$lang['validation_length_max'] = '{label} length must not be more than {max}';
+$lang['validation_length_between'] = '{label} length must be between {min} to {max}';
+$lang['validation_length_equals'] = '{label} length must be exactly {length}';
 $lang['validation_email'] = '{label} must be a valid e-mail';
 $lang['validation_date'] = '{label} must be a valid date in the format: YYYY-MM-DD';
 $lang['validation_datetime'] = '{label} must be a valid date/time in the format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]';
