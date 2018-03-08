@@ -44,12 +44,14 @@ class LogicalCondition implements QueryCondition
 
     public function getConditionString ()
     {
-        $conjunction = sprintf(' %s ', $this->operator);
+        if (empty($this->conditions))
+            return '';
 
         $conditionStrings = array();
         foreach ($this->conditions as $condition)
             $conditionStrings[] = $condition->getConditionString();
 
+        $conjunction = sprintf(' %s ', $this->operator);
         return sprintf('(%s)', implode($conjunction, $conditionStrings));
     }
 }
