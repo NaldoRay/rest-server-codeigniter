@@ -57,15 +57,18 @@ class Rest_validation extends InputValidation
             throw new BadValueException($errorMessage, $this->domain);
     }
 
-    public function validateOrNotFound ()
+    public function validateOrNotFound ($label = null)
     {
+        if (empty($label))
+            $label = $this->domain;
+
         try
         {
             $this->validate();
         }
         catch (Exception $e)
         {
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $label), $this->domain);
         }
     }
 
