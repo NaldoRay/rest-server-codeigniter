@@ -71,4 +71,14 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
 
 		return $result;
 	}
+	
+	/**
+     * Fix `field_data()` returns one-less fields (missing the last field) on subsequent queries after doing select query with `limit()`.
+     * @author Ray Naldo.
+     */
+    protected function _reset_select ()
+    {
+        parent::_reset_select();
+        $this->limit_used = FALSE;
+    }
 }
