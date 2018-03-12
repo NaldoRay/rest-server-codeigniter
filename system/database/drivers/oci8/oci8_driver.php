@@ -675,16 +675,6 @@ class CI_DB_oci8_driver extends CI_DB {
 
 	// --------------------------------------------------------------------
 
-    /**
-     * Fix `field_data()` returns one-less fields on subsequent queries after doing select query with `limit()`.
-     * @author Ray Naldo.
-     */
-    protected function _reset_select ()
-    {
-        parent::_reset_select();
-        $this->limit_used = FALSE;
-    }
-
 	/**
 	 * Close DB Connection
 	 *
