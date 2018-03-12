@@ -10,6 +10,7 @@ class ArrayValueValidatorCI extends ArrayValueValidator
 {
     private $CI;
 
+
     public function __construct (array $arr, $field, $label = 'Value')
     {
         parent::__construct($arr, $field, $label);

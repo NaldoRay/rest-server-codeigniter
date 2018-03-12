@@ -35,6 +35,8 @@ class ValueValidator implements Validation
     /** @var string */
     private $label;
 
+    private $nullable = false;
+
     /** @var array */
     private $validations = array();
     /** @var array */
@@ -62,6 +64,12 @@ class ValueValidator implements Validation
     {
         $this->value = $value;
         $this->resetError();
+    }
+
+    public function nullable ()
+    {
+        $this->nullable = true;
+        return $this;
     }
 
     /**
@@ -661,6 +669,9 @@ class ValueValidator implements Validation
     public function validate ()
     {
         $this->resetError();
+
+        if (is_null($this->value) && $this->nullable)
+            return true;
 
         $indexes = array_keys($this->validations);
         sort($indexes);

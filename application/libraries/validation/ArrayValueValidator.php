@@ -32,7 +32,7 @@ class ArrayValueValidator extends ValueValidator
      */
     function setArrayValue (array $arr, $field)
     {
-        $this->undefined = !isset($arr[$field]);
+        $this->undefined = !array_key_exists($field, $arr);
 
         $value = ($this->undefined ? null : $arr[$field]);
         $this->setValue($value);
