@@ -62,7 +62,7 @@ class MY_Model extends CI_Model
             if (self::$dbManager->isTransactionSuccess())
                 self::$dbManager->commitTransaction();
             else
-                throw new TransactionFailedException('Transaction failed', $this->domain);
+                throw new TransactionException('Transaction failed', $this->domain);
 
             return $result;
         }
