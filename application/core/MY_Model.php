@@ -73,6 +73,34 @@ class MY_Model extends CI_Model
         }
     }
 
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $sql
+     * @return object[]
+     */
+    protected function getAllEntitiesFromRawQuery ($db, $sql)
+    {
+        /** @var CI_DB_result $result */
+        $result = $db->query($sql, false, true);
+        $rows = $result->result_array();
+
+        // free the memory associated with the result and deletes the result resource ID.
+        $result->free_result();
+        return $this->toEntities($rows);
+    }
+
+    /**
+     * Use this only for query that does not return result set e.g. create, update, delete.
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $sql
+     * @return bool
+     */
+    protected function executeRawQuery ($db, $sql)
+    {
+        return ($db->query($sql) !== false);
+    }
+
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
