@@ -18,8 +18,11 @@ class APP_REST_Controller extends MY_REST_Controller
         $inupby = $this->input->get_request_header('API-User');
         APP_Model::setDefaultInupby($inupby);
 
-        // override language
-        $this->setLanguage(self::$LANG_INDONESIA);
+        // default to Bahasa Indonesia if language header is not exists
+        $language = $this->input->get_request_header('Accept-Language');
+        if (is_null($language))
+            $this->setLanguage(self::$LANG_INDONESIA);
+
         $this->load->library(File_manager::class, null, 'fileManager');
     }
 }
