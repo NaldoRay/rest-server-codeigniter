@@ -60,7 +60,11 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
                                 // convert NUMBER field's value to number
                                 $fieldName = $field->name;
                                 foreach ($rows as $row)
-                                    $row->{$fieldName} = $row->{$fieldName} + 0;
+                                {
+                                    $fieldValue = $row->{$fieldName};
+                                    if (!is_null($fieldValue))
+                                        $row->{$fieldName} = $fieldValue + 0;
+                                }
                                 break;
                             }
                         }

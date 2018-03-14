@@ -10,7 +10,6 @@ require_once('Validation.php');
 class FileValidator implements Validation
 {
     private static $IDX_REQUIRED = 0;
-    private static $IDX_OPTIONAL = 0;
     private static $IDX_ALLOW_TYPES = 1;
     private static $IDX_SIZE_MAX = 2;
 
