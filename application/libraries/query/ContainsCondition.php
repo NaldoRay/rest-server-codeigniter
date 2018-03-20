@@ -1,5 +1,4 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once('FieldValueCondition.php');
 
@@ -8,8 +7,19 @@ require_once('FieldValueCondition.php');
  */
 class ContainsCondition extends FieldValueCondition
 {
+    private $ignoreCase;
+
+    public function __construct ($field, $value, $ignoreCase = false)
+    {
+        parent::__construct($field, $value);
+        $this->ignoreCase = $ignoreCase;
+    }
+
     public function getConditionString ()
     {
-        return sprintf("%s LIKE '%%%s%%'", $this->getField(), $this->getValue());
+        if ($this->ignoreCase)
+            return sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $this->getField(), $this->getValue());
+        else
+            return sprintf("%s LIKE '%%%s%%'", $this->getField(), $this->getValue());
     }
 }

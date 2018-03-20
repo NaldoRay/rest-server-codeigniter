@@ -9,19 +9,11 @@ interface Queriable
     /**
      * @param array $filters
      * @param array $searches
-     * @param array|null $sorts
+     * @param FieldsFilter $fieldsFilter
+     * @param array $sorts
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    public function query (array $filters = null, array $searches = null, array $sorts = null, $limit = -1, $offset = 0);
-
-    /**
-     * @param QueryCondition $condition
-     * @param array|null $sorts
-     * @param int $limit
-     * @param int $offset
-     * @return object[]
-     */
-    public function search (QueryCondition $condition, array $sorts = null, $limit = -1, $offset = 0);
+    public function query (array $filters = null, array $searches = null, FieldsFilter $fieldsFilter = null, array $sorts = null, $limit = -1, $offset = 0);
 }

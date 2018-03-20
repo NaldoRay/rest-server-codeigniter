@@ -1,5 +1,4 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once('QueryCondition.php');
 
@@ -42,13 +41,10 @@ abstract class FieldValueCondition implements QueryCondition
     /**
      * @param string $field
      * @param mixed $value
-     * @return FieldValueCondition
      */
     public function setFieldValue ($field, $value)
     {
         $this->field = $field;
         $this->value = $value;
     }
-
-
 }

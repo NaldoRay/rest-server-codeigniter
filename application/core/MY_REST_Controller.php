@@ -69,7 +69,7 @@ class MY_REST_Controller extends REST_Controller
         {
             // only valid for Oracle SQL
             $message = $exception->getMessage();
-            if (preg_match('/unique constraint \\(.+PK.+\\) violated/', $message))
+            if (preg_match('/unique constraint \\(.+\\) violated/', $message))
                 $errorMessage = $this->getString('msg_unique_constraint');
             else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
             {
@@ -628,6 +628,7 @@ class MY_REST_Controller extends REST_Controller
     {
         $filters = $this->getQueryFilters();
         $searches = $this->getQuerySearches();
+        $fields = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
@@ -635,95 +636,21 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        return $queriable->query($filters, $searches, $sorts, $limit, $offset);
+        FieldsFilter::fromString(str_getcsv($this->input->get('fields')));
+
+
+        return $queriable->query($filters, $searches, $fields, $sorts, $limit, $offset);
     }
 
-    protected function getQueryFields ()
-    {
-        $fieldsParam = $this->input->get('fields');
-        if (is_null($fieldsParam))
-            $fields = array();
-        else
-            $fields = explode(',', $fieldsParam);
-
-        return $fields;
-    }
-
-    protected function getQuerySorts ()
-    {
-        $sortsParam = $this->input->get('sorts');
-        if (is_null($sortsParam))
-            $sorts = array();
-        else
-            $sorts = explode(',', $sortsParam);
-
-        return $sorts;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getQueryFilters ()
-    {
-        $filtersParam = $this->input->get('filters');
-        if (!is_array($filtersParam))
-            $filtersParam = array();
-
-        return $filtersParam;
-    }
-
-    /**
-     * @return array
-     */
-    protected function getQuerySearches ()
-    {
-        $searchesParam = $this->input->get('searches');
-        if (!is_array($searchesParam))
-            $searchesParam = array();
-
-        return $searchesParam;
-    }
-
-    /**
-     * @return int
-     */
-    protected function getQueryLimit ()
-    {
-        $limit = $this->input->get('limit');
-        try
-        {
-            return $this->validation->tryParseInteger($limit, null);
-        }
-        catch (BadValueException $e)
-        {
-            return -1;
-        }
-    }
-
-    /**
-     * @return int
-     */
-    protected function getQueryOffset ()
-    {
-        $offset = $this->input->get('offset');
-        try
-        {
-            return $this->validation->tryParseInteger($offset, null);
-        }
-        catch (BadValueException $e)
-        {
-            return 0;
-        }
-    }
-
-    protected function search (Queriable $searchable, array $search)
+    protected function search (Searchable $searchable, array $search)
     {
         $condition = $this->parseSearchCondition($search);
+        $fieldsFilter = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        return $searchable->search($condition, $sorts, $limit, $offset);
+        return $searchable->search($condition, $fields, $sorts, $limit, $offset);
     }
 
     private function parseSearchCondition (array $search)
@@ -803,6 +730,79 @@ class MY_REST_Controller extends REST_Controller
         }
 
         throw new BadValueException($this->getString('msg_search_invalid'));
+    }
+
+    /**
+     * @return array
+     */
+    protected function getQueryFilters ()
+    {
+        $filtersParam = $this->input->get('filters');
+        if (!is_array($filtersParam))
+            $filtersParam = array();
+
+        return $filtersParam;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getQuerySearches ()
+    {
+        $searchesParam = $this->input->get('searches');
+        if (!is_array($searchesParam))
+            $searchesParam = array();
+
+        return $searchesParam;
+    }
+
+    protected function getQueryFields ()
+    {
+        $fieldsParam = $this->input->get('fields');
+        return FieldsFilter::createFromString($fieldsParam);
+    }
+
+    protected function getQuerySorts ()
+    {
+        $sortsParam = $this->input->get('sorts');
+        if (is_null($sortsParam))
+            $sorts = array();
+        else
+            $sorts = explode(',', $sortsParam);
+
+        return $sorts;
+    }
+
+    /**
+     * @return int
+     */
+    protected function getQueryLimit ()
+    {
+        $limit = $this->input->get('limit');
+        try
+        {
+            return $this->validation->tryParseInteger($limit, null);
+        }
+        catch (BadValueException $e)
+        {
+            return -1;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    protected function getQueryOffset ()
+    {
+        $offset = $this->input->get('offset');
+        try
+        {
+            return $this->validation->tryParseInteger($offset, null);
+        }
+        catch (BadValueException $e)
+        {
+            return 0;
+        }
     }
 
     protected function getString ($key)

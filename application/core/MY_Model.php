@@ -250,15 +250,14 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
      * @throws BadFormatException
-     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
     protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
-        $this->toTableCondition($db, $condition);
-
-        $db->where($condition->getConditionString());
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
 
         return $this->updateEntity($db, $table, $data, array(), $allowedFields);
     }
@@ -311,17 +310,16 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param QueryCondition $condition
      * @throws BadFormatException
-     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
      */
     protected function deleteEntityWithCondition ($db, $table, QueryCondition $condition)
     {
-        $this->toTableCondition($db, $condition);
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
 
-        $result = $db
-            ->where($condition->getConditionString())
-            ->delete($table);
+        $result = $db->delete($table);
 
         if ($result === false)
         {
@@ -362,15 +360,15 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields
      * @return object
      * @throws BadFormatException
-     * @throws BadValueException
      */
     protected function getEntityWithCondition ($db, $table, QueryCondition $condition, array $fields = null)
     {
-        $this->toTableCondition($db, $condition);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
 
-        $db->where($condition->getConditionString());
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
 
         $row = $this->getRow($db, $table, array(), $fields);
         if (is_null($row))
@@ -406,8 +404,6 @@ class MY_Model extends CI_Model
             $searches = $this->toTableFilters($searches);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
-        if (empty($sorts))
-            $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
         $row = $this->getFirstRow($db, $table, $filters, $searches, $fields, $sorts);
@@ -460,8 +456,6 @@ class MY_Model extends CI_Model
             $searches = $this->toTableFilters($searches);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
-        if (empty($sorts))
-            $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
         $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $unique, $sorts, $limit, $offset);
@@ -479,75 +473,115 @@ class MY_Model extends CI_Model
      * @param int $offset
      * @return object[]
      * @throws BadFormatException
-     * @throws BadValueException
      */
     protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
     {
-        $this->toTableCondition($db, $condition);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
-        if (empty($sorts))
-            $sorts = $this->defaultSorts;
         $sorts = $this->toTableSortData($sorts);
 
-        $db->where($condition->getConditionString());
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
 
         $rows = $this->getAllRows($db, $table, null, null, $fields, $unique, $sorts, $limit, $offset);
         return $this->toEntities($rows);
+    }
+
+    protected function getFiltersCondition (array $filters)
+    {
+        if (empty($filters))
+            return null;
+
+        $filterConditions = array();
+        foreach ($filters as $field => $value)
+            $filterConditions[] = new EqualsCondition($field, $value);
+
+        return LogicalCondition::logicalAnd($filterConditions);
+    }
+
+    protected function getSearchesCondition (array $searches)
+    {
+        if (empty($searches))
+            return null;
+
+        $filterConditions = array();
+        foreach ($searches as $field => $value)
+            $filterConditions[] = new ContainsCondition($field, $value, true);
+
+        return LogicalCondition::logicalOr($filterConditions);
     }
 
     /**
      * Converts condition's field/value to table's field/value, and escape identifiers & values.
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param QueryCondition $condition
+     * @return QueryCondition null if field is not found
      * @throws BadFormatException
-     * @throws BadValueException
      */
     private function toTableCondition ($db, QueryCondition $condition)
     {
         if ($condition instanceof LogicalCondition)
         {
-            $conditions = $condition->getConditions();
-            foreach ($conditions as $condition)
-                $this->toTableCondition($db, $condition);
+            $condition = clone $condition;
+
+            $tableConditions = array();
+            $queryConditions = $condition->getConditions();
+            foreach ($queryConditions as $queryCondition)
+            {
+                $tableCondition = $this->toTableCondition($db, $queryCondition);
+                if (!is_null($tableCondition))
+                    $tableConditions[] = $tableCondition;
+            }
+
+            if (empty($tableConditions))
+            {
+                return null;
+            }
+            else
+            {
+                $condition->setConditions($tableConditions);
+                return $condition;
+            }
         }
         else if ($condition instanceof FieldValueCondition)
         {
-            $fieldMap = $this->getFullFieldMap();
-            $tableFieldMap = array_flip($fieldMap);
+            $condition = clone $condition;
 
             $field = $condition->getField();
+            $fieldMap = $this->getReadFieldMap();
             if (isset($fieldMap[ $field ]))
             {
                 $field = $fieldMap[ $field ];
-            }
-            else
-            {
-                if (!isset($tableFieldMap[ $field ]))
-                    throw new BadValueException('Invalid search field');
-
-                // don't map if field is already a table's field
-            }
-
-            $value = $condition->getValue();
-            if (is_array($value))
-            {
-                $values = array();
-                foreach ($value as $val)
+                $value = $condition->getValue();
+                if (is_array($value))
                 {
-                    $val = $this->toTableValue($field, $val);
-                    $values[] = $db->escape($val);
-                }
+                    $values = array();
+                    foreach ($value as $val)
+                    {
+                        $val = $this->toTableValue($field, $val);
+                        $values[] = $db->escape($val);
+                    }
 
-                $value = $values;
+                    $value = $values;
+                }
+                else
+                {
+                    $value = $this->toTableValue($field, $value);
+                    $value = $db->escape($value);
+                }
+                $condition->setFieldValue($field, $value);
+
+                return $condition;
             }
             else
             {
-                $value = $this->toTableValue($field, $value);
-                $value = $db->escape($value);
+                return null;
             }
-
-            $condition->setFieldValue($field, $value);
+        }
+        else
+        {
+            return null;
         }
     }
 
@@ -580,7 +614,7 @@ class MY_Model extends CI_Model
 
     protected function getSelectField (array $tableFields = null)
     {
-        $fieldMap = $this->getFullFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         if (empty($tableFields))
         {
             if (empty($fieldMap))
@@ -742,26 +776,18 @@ class MY_Model extends CI_Model
         if (empty($allowedFields))
             $allowedFields = array_keys($fieldMap);
 
+        $dataFields = array_keys($data);
+        $writeFields = array_intersect($dataFields, $allowedFields);
+
         $tableData = array();
-        foreach ($data as $field => $value)
+        foreach ($writeFields as $field)
         {
-            if (in_array($field, $allowedFields))
-            {
-                if (isset($fieldMap[$field]))
-                    $field = $fieldMap[$field];
+            $tableField = $fieldMap[$field];
+            $tableValue = $data[$field];
+            if (!is_null($tableValue))
+                $tableValue = $this->toTableValue($tableField, $tableValue);
 
-                if ($this->isBooleanField($field))
-                {
-                    $value = $this->tryParseBoolean($value);
-                    $value = ($value ? '1' : '0');
-                }
-                else if ($this->isNumberField($field))
-                {
-                    $value = $this->tryParseNumber($value);
-                }
-
-                $tableData[$field] = $value;
-            }
+            $tableData[$tableField] = $tableValue;
         }
         return $tableData;
     }
@@ -778,7 +804,7 @@ class MY_Model extends CI_Model
 
         $filterData = array();
 
-        $fieldMap = $this->getFullFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         foreach ($filters as $field => $value)
         {
             if (isset($fieldMap[$field]))
@@ -826,13 +852,17 @@ class MY_Model extends CI_Model
      * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
      * @return array
      */
-    protected function toTableSortData (array $sorts)
+    protected function toTableSortData (array $sorts = null)
     {
         if (empty($sorts))
-            return array();
+        {
+            $sorts = $this->defaultSorts;
+            if (empty($sorts))
+                return array();
+        }
 
         $sortData = array();
-        $fieldMap = $this->getFullFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         foreach ($sorts as $sort)
         {
             if ($sort[0] === '-')
@@ -865,7 +895,7 @@ class MY_Model extends CI_Model
             return array();
 
         $tableFields = array();
-        $fieldMap = $this->getFullFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         foreach ($fields as $field)
         {
             if (isset($fieldMap[$field]))
@@ -904,7 +934,7 @@ class MY_Model extends CI_Model
         );
 
         $entity = new stdClass();
-        $fieldMap = array_flip($this->getFullFieldMap());
+        $fieldMap = array_flip($this->getReadFieldMap());
         foreach ($row as $field => $value)
         {
             if ($this->isBooleanField($field))
@@ -998,15 +1028,12 @@ class MY_Model extends CI_Model
             throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
     }
 
-    /**
-     * @return array default to $this->fieldMap
-     */
     protected function getWriteFieldMap ()
     {
         return $this->fieldMap;
     }
 
-    private function getFullFieldMap ()
+    private function getReadFieldMap ()
     {
         if (empty($this->readOnlyFieldMap))
             return $this->fieldMap;
@@ -1014,9 +1041,22 @@ class MY_Model extends CI_Model
             return array_merge($this->fieldMap, $this->readOnlyFieldMap);
     }
 
+    protected final function limitFields (array $fields, array $allowedFields)
+    {
+        if (empty($fields))
+            return $fields;
+
+        // default is to allow all read fields
+        if (empty($allowedFields))
+            $allowedFields = array_keys($this->getReadFieldMap());
+
+        return array_intersect($fields, $allowedFields);
+    }
+
     /**
      * @param object $entity
      * @param array|null $fields
+     * @throws NotSupportedException
      */
     protected function rightJoin ($entity, array $fields = null)
     {
@@ -1025,7 +1065,7 @@ class MY_Model extends CI_Model
             $joinEntity = $this->getJoinEntity($entity, $fields);
             foreach ($joinEntity as $field => $value)
             {
-                if (!isset($entity->$field))
+                if (!property_exists($entity, $field))
                     $entity->$field = $value;
             }
         }
@@ -1033,7 +1073,7 @@ class MY_Model extends CI_Model
         {
             foreach ($fields as $field)
             {
-                if (!isset($entity->$field))
+                if (!property_exists($entity, $field))
                     $entity->$field = null;
             }
         }
@@ -1043,6 +1083,7 @@ class MY_Model extends CI_Model
      * @param object $entity
      * @param array|null $fields
      * @return object join entity
+     * @throws NotSupportedException
      */
     protected function getJoinEntity ($entity, array $fields = null)
     {

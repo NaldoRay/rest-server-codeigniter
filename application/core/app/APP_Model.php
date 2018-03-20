@@ -277,6 +277,11 @@ abstract class APP_Model extends MY_Model
         return parent::toEntity($row);
     }
 
+    protected final function addUpsertOnlyFieldMap (array $fieldMap)
+    {
+        $this->upsertOnlyFieldMap = array_merge($this->upsertOnlyFieldMap, $fieldMap);
+    }
+
     protected function toWriteTableData (array $data, array $allowedFields = null)
     {
         if (!empty($allowedFields))

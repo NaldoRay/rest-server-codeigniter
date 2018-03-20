@@ -574,7 +574,7 @@ class ValueValidator implements Validation
                     else
                         return false;
                 }
-                return !empty($data);
+                return true;
             }
             return false;
         }, $errorMessage);
@@ -601,7 +601,7 @@ class ValueValidator implements Validation
                     if (!is_object($row))
                         return false;
                 }
-                return !empty($data);
+                return true;
             }
             return false;
         }, $errorMessage);

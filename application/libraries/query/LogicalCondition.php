@@ -1,5 +1,4 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once('QueryCondition.php');
 
@@ -53,5 +52,10 @@ class LogicalCondition implements QueryCondition
 
         $conjunction = sprintf(' %s ', $this->operator);
         return sprintf('(%s)', implode($conjunction, $conditionStrings));
+    }
+
+    public function setConditions (array $conditions)
+    {
+        $this->conditions = $conditions;
     }
 }

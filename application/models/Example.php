@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class Example extends APP_Data_Model implements Queriable
+class Example extends APP_Data_Model implements Queriable, Searchable
 {
     protected $fieldMap = [
         'id' => 'V_ID',
@@ -62,14 +62,18 @@ class Example extends APP_Data_Model implements Queriable
         );
     }
 
-    public function query (array $filters = null, array $searches = null, array $sorts = null, $limit = -1, $offset = 0)
+    public function query (array $filters = null, array $searches = null, FieldsFilter $fieldsFilter = null, array $sorts = null, $limit = -1, $offset = 0)
     {
-        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $filters, $searches, null, false, $sorts, $limit, $offset);
+        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $fieldsFilter->getFields(), $searches, null, false, $sorts, $limit, $offset);
     }
 
-    public function search (QueryCondition $condition, array $sorts = null, $limit = -1, $offset = 0)
+    public function search (SearchParam $param)
     {
-        return $this->getAllEntitiesWithCondition($this->getAnyDb(), self::$TABLE, $condition, null, null, $sorts, $limit, $offset);
+        return $this->getAllEntitiesWithCondition($this->getAnyDb(), self::$TABLE,
+            $param->getCondition(),
+            $param->getFields(), null,
+            $param->getSorts(), $param->getLimit(), $param->getOffset()
+        );
     }
 
     public function get ($id)
