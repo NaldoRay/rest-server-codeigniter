@@ -660,10 +660,11 @@ class MY_Model extends CI_Model
     {
         if (empty($tableFields))
         {
+            $fieldMap = $this->getReadFieldMap();
             if (empty($fieldMap))
                 return '*';
             else
-                return array_values($this->getReadFieldMap());
+                return array_values($fieldMap);
         }
         else
         {
