@@ -9,8 +9,12 @@ class MY_Model extends CI_Model
     /** for insert/update it's recommended to use $this->getFieldMap() e.g. ['field1' => 'table_field1', 'field2' => 'table_field2'] */
     protected $fieldMap = [];
 
+    /** for write-only fields */
+    protected $writeOnlyFieldMap = [];
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
+    /** for sorting-only fields, not used on read/write */
+    protected $hiddenReadOnlyFieldMap = [];
 
     /** prefix from column name with boolean type, for auto-convert */
     protected $booleanPrefixes = [];
@@ -458,6 +462,26 @@ class MY_Model extends CI_Model
             $fields = $this->toTableFields($fields);
         $sorts = $this->toTableSortData($sorts);
 
+        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
+        // If unique = true and there's a hidden read-only field in sorts,
+        // then we also need to select that field and hide it on the result
+        if ($unique && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        {
+            $tableSortFields = array_map(function ($sort)
+            {
+                return explode(' ', $sort)[0];
+            }, $sorts);
+            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+
+            if (!empty($hiddenSortFields))
+            {
+                if (empty($fields))
+                    $fields = array_values($this->getReadFieldMap());
+
+                $fields = array_merge($fields, $hiddenSortFields);
+            }
+        }
+
         $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $unique, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
@@ -479,6 +503,26 @@ class MY_Model extends CI_Model
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
         $sorts = $this->toTableSortData($sorts);
+
+        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
+        // If unique = true and there's a hidden read-only field in sorts,
+        // then we also need to select that field and hide it on the result
+        if ($unique && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        {
+            $tableSortFields = array_map(function ($sort)
+            {
+                return explode(' ', $sort)[0];
+            }, $sorts);
+            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+
+            if (!empty($hiddenSortFields))
+            {
+                if (empty($fields))
+                    $fields = array_values($this->getReadFieldMap());
+
+                $fields = array_merge($fields, $hiddenSortFields);
+            }
+        }
 
         $condition = $this->toTableCondition($db, $condition);
         if (!is_null($condition))
@@ -549,7 +593,7 @@ class MY_Model extends CI_Model
             $condition = clone $condition;
 
             $field = $condition->getField();
-            $fieldMap = $this->getReadFieldMap();
+            $fieldMap = $this->getFullReadFieldMap();
             if (isset($fieldMap[ $field ]))
             {
                 $field = $fieldMap[ $field ];
@@ -614,20 +658,15 @@ class MY_Model extends CI_Model
 
     protected function getSelectField (array $tableFields = null)
     {
-        $fieldMap = $this->getReadFieldMap();
         if (empty($tableFields))
         {
             if (empty($fieldMap))
                 return '*';
             else
-                return array_values($fieldMap);
+                return array_values($this->getReadFieldMap());
         }
         else
         {
-            $tableFields = array_filter($tableFields, function ($value) use ($fieldMap)
-            {
-                return in_array($value, $fieldMap);
-            });
             return implode(',', $tableFields);
         }
     }
@@ -719,6 +758,14 @@ class MY_Model extends CI_Model
     {
         if (!empty($sorts))
         {
+            if (!empty($this->hiddenReadOnlyFieldMap))
+            {
+                if (empty($fields))
+                    $fields = array_values($this->hiddenReadOnlyFieldMap);
+                else
+                    $fields = array_merge($fields, array_values($this->hiddenReadOnlyFieldMap));
+            }
+
             if (!empty($fields))
             {
                 $sorts = array_filter($sorts, function ($sort) use ($fields)
@@ -775,6 +822,8 @@ class MY_Model extends CI_Model
         // default is to allow all fields
         if (empty($allowedFields))
             $allowedFields = array_keys($fieldMap);
+        else
+            $allowedFields = array_merge($allowedFields, array_keys($this->writeOnlyFieldMap));
 
         $dataFields = array_keys($data);
         $writeFields = array_intersect($dataFields, $allowedFields);
@@ -804,7 +853,7 @@ class MY_Model extends CI_Model
 
         $filterData = array();
 
-        $fieldMap = $this->getReadFieldMap();
+        $fieldMap = $this->getFullReadFieldMap();
         foreach ($filters as $field => $value)
         {
             if (isset($fieldMap[$field]))
@@ -862,7 +911,7 @@ class MY_Model extends CI_Model
         }
 
         $sortData = array();
-        $fieldMap = $this->getReadFieldMap();
+        $fieldMap = $this->getFullReadFieldMap();
         foreach ($sorts as $sort)
         {
             if ($sort[0] === '-')
@@ -929,9 +978,13 @@ class MY_Model extends CI_Model
     {
         // using `limit 1` on oracle db / oci8 will add RNUM field
         // need to be removed  manually
-        unset(
-            $row['RNUM']
-        );
+        unset($row['RNUM']);
+
+        foreach ($this->writeOnlyFieldMap as $tableField)
+            unset($row[ $tableField ]);
+
+        foreach ($this->hiddenReadOnlyFieldMap as $tableField)
+            unset($row[ $tableField ]);
 
         $entity = new stdClass();
         $fieldMap = array_flip($this->getReadFieldMap());
@@ -1028,9 +1081,25 @@ class MY_Model extends CI_Model
             throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
     }
 
+    protected final function addWriteOnlyFieldMap (array $fieldMap)
+    {
+        $this->writeOnlyFieldMap = array_merge($this->writeOnlyFieldMap, $fieldMap);
+    }
+
     protected function getWriteFieldMap ()
     {
-        return $this->fieldMap;
+        return array_merge($this->fieldMap, $this->writeOnlyFieldMap);
+    }
+
+    /**
+     * @return array result of getReadFieldMap() file including hidden read-only field map
+     */
+    private function getFullReadFieldMap ()
+    {
+        if (empty($this->hiddenReadOnlyFieldMap))
+            return $this->getReadFieldMap();
+        else
+            return array_merge($this->getReadFieldMap(), $this->hiddenReadOnlyFieldMap);
     }
 
     private function getReadFieldMap ()
@@ -1065,6 +1134,7 @@ class MY_Model extends CI_Model
             $joinEntity = $this->getJoinEntity($entity, $fields);
             foreach ($joinEntity as $field => $value)
             {
+                // right join means only set the property if it's new (entity doesn't have the property)
                 if (!property_exists($entity, $field))
                     $entity->$field = $value;
             }

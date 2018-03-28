@@ -7,7 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 abstract class APP_Model extends MY_Model
 {
-    private $upsertOnlyFieldMap = [
+    protected $writeOnlyFieldMap = [
         'inupby' => 'V_INUPBY'
     ];
     protected $booleanPrefixes = ['F_'];
@@ -264,34 +264,5 @@ abstract class APP_Model extends MY_Model
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
         else
             return $entity;
-    }
-
-    protected function toEntity (array $row)
-    {
-        unset(
-            $row['T_INSERT'],
-            $row['T_UPDATE'],
-            $row['V_INUPBY']
-        );
-
-        return parent::toEntity($row);
-    }
-
-    protected final function addUpsertOnlyFieldMap (array $fieldMap)
-    {
-        $this->upsertOnlyFieldMap = array_merge($this->upsertOnlyFieldMap, $fieldMap);
-    }
-
-    protected function toWriteTableData (array $data, array $allowedFields = null)
-    {
-        if (!empty($allowedFields))
-            $allowedFields = array_merge($allowedFields, array_keys($this->upsertOnlyFieldMap));
-
-        return parent::toWriteTableData($data, $allowedFields);
-    }
-
-    protected function getWriteFieldMap ()
-    {
-        return array_merge(parent::getWriteFieldMap(), $this->upsertOnlyFieldMap);
     }
 }
