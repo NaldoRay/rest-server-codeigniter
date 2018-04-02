@@ -463,7 +463,7 @@ class MY_Model extends CI_Model
         $sorts = $this->toTableSortData($sorts);
 
         // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If unique = true and there's a hidden read-only field in sorts,
+        // If this's a distinct query and there's a hidden read-only field in sorts,
         // then we also need to select that field and hide it on the result
         if ($unique && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
         {

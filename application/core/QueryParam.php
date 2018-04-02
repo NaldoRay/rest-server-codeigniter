@@ -18,26 +18,33 @@ class QueryParam
     private $offset = 0;
 
 
-    public function getFieldsFilter ()
-    {
-        return $this->fieldsFilter;
-    }
-
     public function getFields ()
     {
         return $this->fieldsFilter->getFields();
     }
 
-    public function isFieldSet ($field)
+    public function fieldExists ($field)
     {
-        return $this->fieldsFilter->getFields();
+        return $this->fieldsFilter->fieldExists($field);
+    }
+
+    /**
+     * @param string $field
+     * @return FieldsFilter
+     */
+    public function getSubSelect ($field)
+    {
+        if (is_null($this->fieldsFilter))
+            return null;
+        else
+            return $this->fieldsFilter->getFieldsFilter($field);
     }
 
     /**
      * @param string $fieldsParam e.g. 'id,date,customer/name,items(name,price,quantity)'
      * @return $this
      */
-    public function fieldsFromString ($fieldsParam)
+    public function selectFromString ($fieldsParam)
     {
         $this->fieldsFilter = FieldsFilter::createFromString($fieldsParam);
         return $this;
@@ -47,13 +54,13 @@ class QueryParam
      * @param array $fields e.g. ['id', 'date', 'customer/name', 'items(name,price,quantity)']
      * @return $this
      */
-    public function fieldsFromArray (array $fields)
+    public function selectFromArray (array $fields)
     {
         $this->fieldsFilter = FieldsFilter::create($fields);
         return $this;
     }
 
-    public function fields (FieldsFilter $fieldsFilter)
+    public function select (FieldsFilter $fieldsFilter)
     {
         $this->fieldsFilter = $fieldsFilter;
         return $this;

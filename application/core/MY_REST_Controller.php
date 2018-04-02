@@ -628,7 +628,7 @@ class MY_REST_Controller extends REST_Controller
     {
         $filters = $this->getQueryFilters();
         $searches = $this->getQuerySearches();
-        $fields = $this->getQueryFields();
+        $fieldsFilter = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
@@ -636,10 +636,14 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        FieldsFilter::fromString(str_getcsv($this->input->get('fields')));
+        $queryParam = (new QueryParam())
+            ->filter($filters)
+            ->search($searches)
+            ->select($fieldsFilter)
+            ->sort($sorts)
+            ->limit($limit, $offset);
 
-
-        return $queriable->query($filters, $searches, $fields, $sorts, $limit, $offset);
+        return $queriable->query($queryParam);
     }
 
     protected function search (Searchable $searchable, array $search)
@@ -650,7 +654,13 @@ class MY_REST_Controller extends REST_Controller
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        return $searchable->search($condition, $fields, $sorts, $limit, $offset);
+        $searchParam = (new SearchParam())
+            ->withCondition($condition)
+            ->select($fieldsFilter)
+            ->sort($sorts)
+            ->limit($limit, $offset);
+
+        return $searchable->search($searchParam);
     }
 
     private function parseSearchCondition (array $search)

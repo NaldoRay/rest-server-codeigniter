@@ -7,13 +7,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 interface Queriable
 {
     /**
-     * @param array $filters
-     * @param array $searches
-     * @param FieldsFilter $fieldsFilter
-     * @param array $sorts
-     * @param int $limit
-     * @param int $offset
+     * @param QueryParam $param
      * @return object[]
      */
-    public function query (array $filters = null, array $searches = null, FieldsFilter $fieldsFilter = null, array $sorts = null, $limit = -1, $offset = 0);
+    public function query (QueryParam $param);
 }

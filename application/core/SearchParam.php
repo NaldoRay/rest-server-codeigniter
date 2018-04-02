@@ -21,7 +21,7 @@ class SearchParam
         return $this->fieldsFilter->getFields();
     }
 
-    public function isFieldSet ($field)
+    public function fieldExists ($field)
     {
         return $this->fieldsFilter->fieldExists($field);
     }
@@ -30,7 +30,7 @@ class SearchParam
      * @param string $field
      * @return FieldsFilter
      */
-    public function getFieldsFilter ($field)
+    public function getSubSelect ($field)
     {
         if (is_null($this->fieldsFilter))
             return null;
@@ -42,7 +42,7 @@ class SearchParam
      * @param string $fieldsParam e.g. 'id,date,customer/name,items(name,price,quantity)'
      * @return $this
      */
-    public function fieldsFromString ($fieldsParam)
+    public function selectFromString ($fieldsParam)
     {
         $this->fieldsFilter = FieldsFilter::createFromString($fieldsParam);
         return $this;
@@ -52,13 +52,13 @@ class SearchParam
      * @param array $fields e.g. ['id', 'date', 'customer/name', 'items(name,price,quantity)']
      * @return $this
      */
-    public function fieldsForArray (array $fields)
+    public function selectFromArray (array $fields)
     {
         $this->fieldsFilter = FieldsFilter::create($fields);
         return $this;
     }
 
-    public function fields (FieldsFilter $fieldsFilter)
+    public function select (FieldsFilter $fieldsFilter)
     {
         $this->fieldsFilter = $fieldsFilter;
         return $this;

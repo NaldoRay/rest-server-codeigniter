@@ -88,7 +88,7 @@ class FieldsFilter
                     else
                     {
                         $field .= substr($fieldsParam, $i);
-                        $fields[] = $field;
+                        $fields[] = trim($field);
                         return $fields;
                     }
                     break;
@@ -96,7 +96,7 @@ class FieldsFilter
 
             if ($fieldFound)
             {
-                $fields[] = $field;
+                $fields[] = trim($field);
                 $fieldFound = false;
                 $field = '';
             }
@@ -104,7 +104,7 @@ class FieldsFilter
                 $field .= $char;
         }
         if (!empty($field))
-            $fields[] = $field;
+            $fields[] = trim($field);
 
         return $fields;
     }

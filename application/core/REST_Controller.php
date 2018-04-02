@@ -2275,7 +2275,7 @@ abstract class REST_Controller extends \CI_Controller {
     }
 
     /**
-     * Kode dari Line 751 untuk support overriding
+     * Copied from Line 751~ to handle uncaught exception.
      * @param Exception $e
      */
     protected function handleUncaughtException (Exception $e)
@@ -2286,7 +2286,7 @@ abstract class REST_Controller extends \CI_Controller {
     }
 
     /**
-     * Kode dari Line 751 untuk nanganin error
+     * Copied from Line 751~ to handle uncaught error.
      * @param \Error $e
      */
     protected function handleUncaughtError (\Error $e)

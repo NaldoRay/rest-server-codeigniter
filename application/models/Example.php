@@ -62,9 +62,13 @@ class Example extends APP_Data_Model implements Queriable, Searchable
         );
     }
 
-    public function query (array $filters = null, array $searches = null, FieldsFilter $fieldsFilter = null, array $sorts = null, $limit = -1, $offset = 0)
+    public function query (QueryParam $param)
     {
-        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $fieldsFilter->getFields(), $searches, null, false, $sorts, $limit, $offset);
+        return $this->getAllEntities($this->getAnyDb(), self::$TABLE,
+            $param->getFilters(), $param->getSearches(),
+            $param->getFields(), false,
+            $param->getSorts(), $param->getLimit(), $param->getOffset()
+        );
     }
 
     public function search (SearchParam $param)
