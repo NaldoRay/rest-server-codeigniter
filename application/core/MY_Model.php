@@ -728,7 +728,15 @@ class MY_Model extends CI_Model
     private function setQueryFilters ($db, array $filters = null)
     {
         if (!empty($filters))
-            $db->where($filters);
+        {
+            foreach ($filters as $field => $value)
+            {
+                if (is_array($value))
+                    $db->where_in($field, $value);
+                else
+                    $db->where($field, $value);
+            }
+        }
     }
 
     /**
@@ -893,6 +901,12 @@ class MY_Model extends CI_Model
         }
         else
         {
+            if (is_array($value))
+            {
+                foreach ($value as $idx => $val)
+                    $value[$idx] = $this->toTableValue($field, $val);
+            }
+
             return $value;
         }
     }
