@@ -210,78 +210,11 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
-            $requestMethod = $this->input->method(true);
-            $filterData = ($requestMethod == 'GET')
-                || ($requestMethod == 'POST' && endsWith($this->uri->uri_string(), 'search'));
-
-            if ($filterData)
-                $data = $this->filterData($data);
-
             $response = array(
                 'data' => $data
             );
         }
         $this->response($response, $httpCode);
-    }
-
-    private function filterData ($data)
-    {
-        if (empty($data))
-            return $data;
-
-        $fields = $this->getQueryFields();
-        if (!empty($fields))
-            $data = $this->filterObjectFields($data, $fields);
-
-        return $data;
-    }
-
-    private function filterObjectFields ($data, array $fields)
-    {
-        if (is_array($data) )
-        {
-            $filteredData = array();
-            if ($this->isSequentialArray($data))
-            {
-                foreach ($data as $idx => $row)
-                {
-                    $filteredData[$idx] = $this->filterObjectFields($row, $fields);
-                }
-            }
-            else
-            {
-                foreach ($fields as $field)
-                {
-                    if (isset($data[$field]))
-                        $filteredData[$field] = $data[$field];
-                }
-            }
-            return $filteredData;
-        }
-        else if (is_object($data))
-        {
-            $filteredData = array();
-            foreach ($fields as $field)
-            {
-                if (isset($data->$field))
-                    $filteredData[$field] = $data->$field;
-            }
-            return (object) $filteredData;
-        }
-        else
-        {
-            return $data;
-        }
-    }
-
-    private function isSequentialArray (array $arr)
-    {
-        foreach ($arr as $key => $value)
-        {
-            if (is_string($key))
-                return false;
-        }
-        return true;
     }
 
     /*

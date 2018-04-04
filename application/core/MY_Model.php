@@ -770,7 +770,7 @@ class MY_Model extends CI_Model
             if (!empty($this->hiddenReadOnlyFieldMap))
             {
                 if (empty($fields))
-                    $fields = array_values($this->hiddenReadOnlyFieldMap);
+                    $fields = array_values($this->getFullReadFieldMap());
                 else
                     $fields = array_merge($fields, array_values($this->hiddenReadOnlyFieldMap));
             }
