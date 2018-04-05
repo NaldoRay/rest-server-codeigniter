@@ -6,139 +6,106 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class QueryParam
 {
-    /** @var FieldsFilter */
-    private $fieldsFilter = null;
     /** @var array */
-    private $filters = array();
+    private $filters;
+    /** @var QueryCondition[] */
+    private $searches;
     /** @var array */
-    private $searches = array();
-    /** @var QueryCondition */
-    private $condition = null;
-    /** @var array */
-    private $sorts = null;
-    private $limit = -1;
-    private $offset = 0;
-    private $distinct = false;
+    private $sorts;
+    private $limit;
+    private $offset;
 
 
-    /**
-     * @param QueryParam|null $param if supplied, this QueryParam will have same properties value
-     */
-    public function __construct (QueryParam $param = null)
+    public static function createFilter (array $filters)
     {
-        if (!is_null($param))
-        {
-            $this->fieldsFilter = $param->fieldsFilter;
-            $this->filters = $param->filters;
-            $this->searches = $param->searches;
-            $this->condition = $param->condition;
-            $this->sorts = $param->sorts;
-            $this->limit = $param->limit;
-            $this->offset = $param->offset;
-            $this->distinct = $param->distinct;
-        }
+        return self::create()->filter($filters);
     }
 
-
-    public function getFields ()
+    public static function createSearch (QueryCondition $condition)
     {
-        return $this->fieldsFilter->getFields();
+        return self::create()->search($condition);
     }
 
-    public function fieldExists ($field)
+    public static function create ()
     {
-        return $this->fieldsFilter->fieldExists($field);
+        return new QueryParam();
+    }
+
+    private function __construct ()
+    {
+        $this->resetCondition();
+        $this->resetSort();
+        $this->resetLimit();
     }
 
     /**
-     * @param string $field
-     * @return FieldsFilter
+     * @return QueryCondition|null
      */
-    public function getSubSelect ($field)
+    public function getCondition ()
     {
-        if (is_null($this->fieldsFilter))
+        $conditions = array();
+
+        $filtersCondition = $this->getFiltersCondition();
+        if (!is_null($filtersCondition))
+            $conditions[] = $filtersCondition;
+
+        $searchesCondition = $this->getSearchesCondition();
+        if (!is_null($searchesCondition))
+            $conditions[] = $searchesCondition;
+
+        if (empty($conditions))
             return null;
         else
-            return $this->fieldsFilter->getFieldsFilter($field);
+            return LogicalCondition::logicalAnd($conditions);
     }
 
-    /**
-     * @param string $fieldsParam e.g. 'id,date,customer/name,items(name,price,quantity)'
-     * @return $this
-     */
-    public function selectFromString ($fieldsParam)
+    private function getFiltersCondition ()
     {
-        $this->fieldsFilter = FieldsFilter::createFromString($fieldsParam);
+        if (empty($this->filters))
+            return null;
+
+        $conditions = array();
+        foreach ($this->filters as $field => $value)
+            $conditions[] = new EqualsCondition($field, $value);
+
+        return LogicalCondition::logicalAnd($conditions);
+    }
+
+    private function getSearchesCondition ()
+    {
+        if (empty($this->searches))
+            return null;
+
+        return LogicalCondition::logicalAnd($this->searches);
+    }
+
+    public function resetCondition ()
+    {
+        $this->filters = array();
+        $this->searches = array();
         return $this;
     }
 
     /**
-     * @param array $fields e.g. ['id', 'date', 'customer/name', 'items(name,price,quantity)']
-     * @return $this
-     */
-    public function selectFromArray (array $fields)
-    {
-        $this->fieldsFilter = FieldsFilter::create($fields);
-        return $this;
-    }
-
-    public function select (FieldsFilter $fieldsFilter)
-    {
-        $this->fieldsFilter = $fieldsFilter;
-        return $this;
-    }
-
-    /**
+     * Subsequent calls will add the filters to the previous.
      * @param array $filters e.g. ['id' => 12, 'active' => true]
      * @return $this
      */
     public function filter (array $filters)
     {
-        $this->filters = $filters;
+        $this->filters = array_merge($this->filters, $filters);
         return $this;
     }
 
     /**
-     * @param array $searches e.g. ['name' => 'contains']
-     * @return $this
-     */
-    public function search (array $searches)
-    {
-        $this->searches = $searches;
-        return $this;
-    }
-
-    /**
+     * Subsequent calls will add the condition to the previous.
      * @param QueryCondition $condition
      * @return $this
      */
-    public function withCondition (QueryCondition $condition)
+    public function search (QueryCondition $condition)
     {
-        $this->condition = $condition;
+        $this->searches[] = $condition;
         return $this;
-    }
-
-    /**
-     * @return QueryCondition
-     */
-    public function getCondition ()
-    {
-        $subConditions = array();
-        if (!is_null($this->condition))
-            $subConditions[] = $this->condition;
-
-        $filtersCondition = $this->getFiltersCondition();
-        if (!is_null($filtersCondition))
-            $subConditions[] = $filtersCondition;
-
-        $searchesCondition = $this->getSearchesCondition();
-        if (!is_null($searchesCondition))
-            $subConditions[] = $searchesCondition;
-
-        if (empty($subConditions))
-            return null;
-        else
-            return LogicalCondition::logicalAnd($subConditions);
     }
 
     /**
@@ -156,6 +123,12 @@ class QueryParam
     public function sort (array $sorts)
     {
         $this->sorts = $sorts;
+        return $this;
+    }
+
+    public function resetSort ()
+    {
+        $this->sorts = array();
         return $this;
     }
 
@@ -187,37 +160,10 @@ class QueryParam
         return $this;
     }
 
-    public function isDistinct ()
+    public function resetLimit ()
     {
-        return $this->distinct;
-    }
-
-    public function distinct ()
-    {
-        $this->distinct = true;
-    }
-
-    private function getFiltersCondition ()
-    {
-        if (empty($this->filters))
-            return null;
-
-        $filterConditions = array();
-        foreach ($this->filters as $field => $value)
-            $filterConditions[] = new EqualsCondition($field, $value);
-
-        return LogicalCondition::logicalAnd($filterConditions);
-    }
-
-    private function getSearchesCondition ()
-    {
-        if (empty($this->searches))
-            return null;
-
-        $filterConditions = array();
-        foreach ($this->searches as $field => $value)
-            $filterConditions[] = new ContainsCondition($field, $value, true);
-
-        return LogicalCondition::logicalOr($filterConditions);
+        $this->limit = -1;
+        $this->offset = 0;
+        return $this;
     }
 }

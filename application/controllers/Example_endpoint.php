@@ -61,9 +61,9 @@ class Example_endpoint extends MY_REST_Controller
 
     public function searchExamples_post ()
     {
-        $search = $this->post();
+        $searchData = $this->post();
 
-        $examples = $this->search($this->example, $search);
+        $examples = $this->search($this->example, $searchData);
         $this->respondSuccess($examples);
     }
 }

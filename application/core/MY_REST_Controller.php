@@ -210,11 +210,86 @@ class MY_REST_Controller extends REST_Controller
         }
         else
         {
+            $requestMethod = $this->input->method(true);
+            $filterData = ($requestMethod == 'GET')
+                || ($requestMethod == 'POST' && endsWith($this->uri->uri_string(), 'search'));
+
+            if ($filterData)
+                $data = $this->filterData($data);
+
             $response = array(
                 'data' => $data
             );
         }
         $this->response($response, $httpCode);
+    }
+
+    private function filterData ($data)
+    {
+        if (empty($data))
+            return $data;
+
+        $fieldsFilter = $this->getQueryFieldsFilter();
+        $data = $this->filterObjectFields($data, $fieldsFilter);
+
+        return $data;
+    }
+
+    private function filterObjectFields ($data, FieldsFilter $fieldsFilter)
+    {
+        if ($fieldsFilter->isEmpty())
+            return $data;
+
+        if (is_array($data) )
+        {
+            $filteredData = array();
+            if ($this->isSequentialArray($data))
+            {
+                foreach ($data as $idx => $row)
+                {
+                    $filteredData[$idx] = $this->filterObjectFields($row, $fieldsFilter);
+                }
+            }
+            else
+            {
+                foreach ($data as $field => $value)
+                {
+                    if ($fieldsFilter->fieldExists($field))
+                    {
+                        $subFieldsFilter = $fieldsFilter->getFieldsFilter($field);
+                        $filteredData[ $field ] = $this->filterObjectFields($value, $subFieldsFilter);
+                    }
+                }
+            }
+            return $filteredData;
+        }
+        else if (is_object($data))
+        {
+            $filteredData = array();
+            foreach ($data as $field => $value)
+            {
+                if ($fieldsFilter->fieldExists($field))
+                {
+                    $subFieldsFilter = $fieldsFilter->getFieldsFilter($field);
+                    $filteredData[ $field ] = $this->filterObjectFields($value, $subFieldsFilter);
+                }
+            }
+            return (object) $filteredData;
+        }
+        else
+        {
+            return $data;
+        }
+    }
+
+    private function isSequentialArray (array $arr)
+    {
+        foreach ($arr as $key => $value)
+        {
+            if (is_string($key))
+                return false;
+        }
+        return true;
     }
 
     /*
@@ -560,8 +635,6 @@ class MY_REST_Controller extends REST_Controller
     protected function getAll (Queriable $queriable, array $extraFilters = null)
     {
         $filters = $this->getQueryFilters();
-        $searches = $this->getQuerySearches();
-        $fieldsFilter = $this->getQueryFields();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
@@ -569,27 +642,21 @@ class MY_REST_Controller extends REST_Controller
         if (!empty($extraFilters))
             $filters = array_merge($filters, $extraFilters);
 
-        $queryParam = (new QueryParam())
-            ->filter($filters)
-            ->search($searches)
-            ->select($fieldsFilter)
+        $queryParam = QueryParam::createFilter($filters)
             ->sort($sorts)
             ->limit($limit, $offset);
 
         return $queriable->query($queryParam);
     }
 
-    protected function search (Queriable $searchable, array $search)
+    protected function search (Queriable $searchable, array $searchData)
     {
-        $condition = $this->parseSearchCondition($search);
-        $fieldsFilter = $this->getQueryFields();
+        $condition = $this->parseSearchCondition($searchData);
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        $searchParam = (new QueryParam())
-            ->withCondition($condition)
-            ->select($fieldsFilter)
+        $searchParam = QueryParam::createSearch($condition)
             ->sort($sorts)
             ->limit($limit, $offset);
 
@@ -675,6 +742,18 @@ class MY_REST_Controller extends REST_Controller
         throw new BadValueException($this->getString('msg_search_invalid'));
     }
 
+    protected function getQueryParam ()
+    {
+        // non-search query param, no condition
+        $filters = $this->getQueryFilters();
+        $sorts = $this->getQuerySorts();
+        $limit = $this->getQueryLimit();
+        $offset = $this->getQueryOffset();
+
+        return QueryParam::createFilter($filters)
+            ->sort($sorts)
+            ->limit($limit, $offset);
+    }
     /**
      * @return array
      */
@@ -687,22 +766,10 @@ class MY_REST_Controller extends REST_Controller
         return $filtersParam;
     }
 
-    /**
-     * @return array
-     */
-    protected function getQuerySearches ()
-    {
-        $searchesParam = $this->input->get('searches');
-        if (!is_array($searchesParam))
-            $searchesParam = array();
-
-        return $searchesParam;
-    }
-
-    protected function getQueryFields ()
+    private function getQueryFieldsFilter ()
     {
         $fieldsParam = $this->input->get('fields');
-        return FieldsFilter::createFromString($fieldsParam);
+        return FieldsFilter::fromString($fieldsParam);
     }
 
     protected function getQuerySorts ()

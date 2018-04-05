@@ -13,18 +13,18 @@ class FieldsFilter
 {
     private $fieldMap;
 
-    
+
     /**
      * @param string $fieldsParam
      * @return FieldsFilter
      */
-    public static function createFromString ($fieldsParam)
+    public static function fromString ($fieldsParam)
     {
         $fields = self::parseFields($fieldsParam);
-        return self::create($fields);
+        return self::fromArray($fields);
     }
 
-    public static function create (array $fields)
+    public static function fromArray (array $fields)
     {
         // create FieldsFilter for current level
         $fieldMap = array();
@@ -128,13 +128,21 @@ class FieldsFilter
         return isset($this->fieldMap[$field]);
     }
 
+    public function isEmpty ()
+    {
+        return empty($this->fieldMap);
+    }
+
     /**
      * Get FieldsFilter for current level field.
      * @param string $field
-     * @return FieldsFilter fields filter for subfields/nested fields of the field, or null if not any
+     * @return FieldsFilter|null fields filter for subfields/nested fields of the field if any, or null if not
      */
     public function getFieldsFilter ($field)
     {
-        return self::create($this->fieldMap[$field]);
+        if (isset($this->fieldMap[$field]))
+            return self::fromArray($this->fieldMap[$field]);
+        else
+            return null;
     }
 }

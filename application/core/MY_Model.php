@@ -221,7 +221,7 @@ class MY_Model extends CI_Model
      */
     protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
     {
-        $filters = $this->toTableFilters($filters);
+        $filters = $this->getTableFilters($filters);
         $data = $this->toWriteTableData($data, $allowedFields);
 
         $success = $this->updateRow($db, $table, $data, $filters);
@@ -284,9 +284,9 @@ class MY_Model extends CI_Model
      */
     protected function deleteEntity ($db, $table, array $filters)
     {
-        $filters = $this->toTableFilters($filters);
-        if (!empty($filters))
-            $db->where($filters);
+        $filters = $this->getTableFilters($filters);
+
+        $this->setQueryFilters($db, $filters);
 
         $result = $db->delete($table);
         if ($result === false)
@@ -336,10 +336,8 @@ class MY_Model extends CI_Model
      */
     protected function getEntity ($db, $table, array $filters, array $fields = null)
     {
-        if (!empty($filters))
-            $filters = $this->toTableFilters($filters);
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
+        $filters = $this->getTableFilters($filters);
+        $fields = $this->getTableFields($fields);
 
         $row = $this->getRow($db, $table, $filters, $fields);
         if (is_null($row))
@@ -358,10 +356,9 @@ class MY_Model extends CI_Model
     private function getRow ($db, $table, array $filters, array $fields = null)
     {
         $this->setQueryFilters($db, $filters);
+        $this->setQueryFields($db, $fields);
 
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->limit(1)
+        $result = $db->limit(1)
             ->get($table);
 
         return $result->row_array();
@@ -377,11 +374,9 @@ class MY_Model extends CI_Model
      */
     protected function getFirstEntity ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
     {
-        if (!empty($filters))
-            $filters = $this->toTableFilters($filters);
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
-        $sorts = $this->toTableSortData($sorts);
+        $filters = $this->getTableFilters($filters);
+        $fields = $this->getTableFields($fields);
+        $sorts = $this->getTableSorts($sorts);
 
         $row = $this->getFirstRow($db, $table, $filters, $fields, $sorts);
         if (is_null($row))
@@ -401,11 +396,10 @@ class MY_Model extends CI_Model
     private function getFirstRow ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $this->setQueryFilters($db, $filters);
+        $this->setQueryFields($db, $fields);
         $this->setQuerySorts($db, $sorts, $fields);
 
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->limit(1)
+        $result = $db->limit(1)
             ->get($table);
 
         return $result->row_array();
@@ -415,51 +409,48 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param QueryParam $param
+     * @param array $fields
+     * @param bool $distinct
      * @return object[]
      * @throws BadFormatException
+     * @internal param array $allowedFields
      */
-    protected function getAllEntities ($db, $table, QueryParam $param = null)
+    protected function getAllEntities ($db, $table, QueryParam $param = null, array $fields = null, $distinct = false)
     {
         if (is_null($param))
-        {
-            $rows = $this->getAllRows($db, $table);
-        }
-        else
-        {
-            $condition = $param->getCondition();
-            $fields = $param->getFields();
-            $distinct = $param->isDistinct();
-            $sorts = $param->getSorts();
-            $limit = $param->getLimit();
-            $offset = $param->getOffset();
+            $param = QueryParam::create();
 
+        $condition = $param->getCondition();
+        $sorts = $param->getSorts();
+        $limit = $param->getLimit();
+        $offset = $param->getOffset();
+
+        if (!is_null($condition))
             $condition = $this->toTableCondition($db, $condition);
-            $fields = $this->toTableFields($fields);
-            $sorts = $this->toTableSortData($sorts);
+        $fields = $this->getTableFields($fields);
+        $sorts = $this->getTableSorts($sorts);
 
-            // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-            // If this is a distinct query and there's a hidden read-only field in sorts,
-            // then we also need to select that field and hide it on the result
-            if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
+        // If this is a distinct query and there's a hidden read-only field in sorts,
+        // then we also need to select that field and hide it on the result
+        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        {
+            $tableSortFields = array_map(function ($sort)
             {
-                $tableSortFields = array_map(function ($sort)
-                {
-                    return explode(' ', $sort)[0];
-                }, $sorts);
-                $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+                return explode(' ', $sort)[0];
+            }, $sorts);
+            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
 
-                if (!empty($hiddenSortFields))
-                {
-                    if (empty($fields))
-                        $fields = array_values($this->getReadFieldMap());
+            if (!empty($hiddenSortFields))
+            {
+                if (empty($fields))
+                    $fields = array_values($this->getReadFieldMap());
 
-                    $fields = array_merge($fields, $hiddenSortFields);
-                }
+                $fields = array_merge($fields, $hiddenSortFields);
             }
-
-            $rows = $this->getAllRows($db, $table, $condition, $fields, $distinct, $sorts, $limit, $offset);
         }
 
+        $rows = $this->getAllRows($db, $table, $condition, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -549,51 +540,29 @@ class MY_Model extends CI_Model
      */
     private function getAllRows ($db, $table, QueryCondition $condition = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
+
+        $this->setQueryFields($db, $fields);
         $this->setQuerySorts($db, $sorts, $fields);
         $this->setQueryDistinct($db, $distinct);
         $this->setQueryLimit($db, $limit, $offset);
 
-        if (!is_null($condition))
-            $db->where($condition->getConditionString());
-
-        $select = $this->getSelectField($fields);
-        $result = $db->select($select)
-            ->get($table);
-
+        $result = $db->get($table);
         return $result->result_array();
-    }
-
-    protected function getSelectField (array $tableFields = null)
-    {
-        if (empty($tableFields))
-        {
-            $fieldMap = $this->getReadFieldMap();
-            if (empty($fieldMap))
-                return '*';
-            else
-                return array_values($fieldMap);
-        }
-        else
-        {
-            return implode(',', $tableFields);
-        }
     }
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters entity's filter field => filter value
-     * @param array $searches entity's search field => search value
      * @return bool
      */
-    protected function entityExists ($db, $table, array $filters = null, array $searches = null)
+    protected function entityExists ($db, $table, array $filters = null)
     {
-        if (!empty($filters))
-            $filters = $this->toTableFilters($filters);
-        if (!empty($searches))
-            $searches = $this->toTableFilters($searches);
+        $filters = $this->getTableFilters($filters);
 
-        return $this->rowExists($db, $table, $filters, $searches);
+        return $this->rowExists($db, $table, $filters);
     }
 
     /**
@@ -613,19 +582,29 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters table's filter field => filter value
-     * @param array $searches table's search field => search value
      * @return bool
      */
-    protected function rowExists ($db, $table, array $filters = null, array $searches = null)
+    protected function rowExists ($db, $table, array $filters = null)
     {
         $this->setQueryFilters($db, $filters);
-        $this->setQuerySearches($db, $searches);
 
         $result = $db->select('1')
             ->limit(1)
             ->get($table);
 
         return ($result->num_rows() > 0);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db $db
+     * @param array $fields
+     */
+    private function setQueryFields ($db, array $fields = null)
+    {
+        if (!empty($fields))
+        {
+            $db->select(implode(',', $fields));
+        }
     }
 
     /**
@@ -643,25 +622,6 @@ class MY_Model extends CI_Model
                 else
                     $db->where($field, $value);
             }
-        }
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
-     * @param array $searches
-     */
-    private function setQuerySearches ($db, array $searches = null)
-    {
-        if (!empty($searches))
-        {
-            $searchWhereArr = array();
-            foreach ($searches as $field => $search)
-            {
-                $search = $db->escape($search);
-                $searchWhereArr[] = sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $field, $search);
-            }
-            if (!empty($searchWhereArr))
-                $db->where(sprintf('(%s)', implode(' OR ', $searchWhereArr)), null, false);
         }
     }
 
@@ -761,7 +721,7 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @return array
      */
-    protected function toTableFilters (array $filters)
+    protected function getTableFilters (array $filters = null)
     {
         if (empty($filters))
             return array();
@@ -822,7 +782,7 @@ class MY_Model extends CI_Model
      * @param array $sorts entity's sort fields, eg. ['field1', '-field2']
      * @return array
      */
-    protected function toTableSortData (array $sorts = null)
+    protected function getTableSorts (array $sorts = null)
     {
         if (empty($sorts))
         {
@@ -859,19 +819,27 @@ class MY_Model extends CI_Model
      * @param array $fields entity's fields, eg. ['field1', 'field2']
      * @return array
      */
-    protected function toTableFields (array $fields)
+    protected function getTableFields (array $fields = null)
     {
-        if (empty($fields))
-            return array();
-
-        $tableFields = array();
         $fieldMap = $this->getReadFieldMap();
-        foreach ($fields as $field)
+
+        if (empty($fields))
         {
-            if (isset($fieldMap[$field]))
-                $tableFields[] = $fieldMap[$field];
+            if (empty($fieldMap))
+                return array();
+            else
+                return array_values($fieldMap);
         }
-        return $tableFields;
+        else
+        {
+            $tableFields = array();
+            foreach ($fields as $field)
+            {
+                if (isset($fieldMap[ $field ]))
+                    $tableFields[] = $fieldMap[ $field ];
+            }
+            return $tableFields;
+        }
     }
 
     /**
@@ -1002,6 +970,47 @@ class MY_Model extends CI_Model
             throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
     }
 
+    /**
+     * @param object $entity
+     * @param array|null $fields
+     * @throws NotSupportedException
+     */
+    protected function rightJoin ($entity, array $fields = null)
+    {
+        $allowedFields = array_keys($this->getReadFieldMap());
+        $fields = $this->limitFields($fields, $allowedFields);
+
+        try
+        {
+            $joinEntity = $this->getJoinEntity($entity, $fields);
+            foreach ($joinEntity as $field => $value)
+            {
+                // right join means only set the property if it's new (entity doesn't have the property)
+                if (!property_exists($entity, $field))
+                    $entity->$field = $value;
+            }
+        }
+        catch (ResourceNotFoundException $e)
+        {
+            foreach ($fields as $field)
+            {
+                if (!property_exists($entity, $field))
+                    $entity->$field = null;
+            }
+        }
+    }
+
+    /**
+     * @param object $entity
+     * @param array|null $fields
+     * @return object join entity
+     * @throws NotSupportedException
+     */
+    protected function getJoinEntity ($entity, array $fields = null)
+    {
+        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
+    }
+
     protected final function addWriteOnlyFieldMap (array $fieldMap)
     {
         $this->writeOnlyFieldMap = array_merge($this->writeOnlyFieldMap, $fieldMap);
@@ -1033,51 +1042,14 @@ class MY_Model extends CI_Model
 
     protected final function limitFields (array $fields, array $allowedFields)
     {
+        // empty fields means select all, limit to select only allowed fields
         if (empty($fields))
-            return $fields;
+            return $allowedFields;
 
         // default is to allow all read fields
         if (empty($allowedFields))
             $allowedFields = array_keys($this->getReadFieldMap());
 
         return array_intersect($fields, $allowedFields);
-    }
-
-    /**
-     * @param object $entity
-     * @param array|null $fields
-     * @throws NotSupportedException
-     */
-    protected function rightJoin ($entity, array $fields = null)
-    {
-        try
-        {
-            $joinEntity = $this->getJoinEntity($entity, $fields);
-            foreach ($joinEntity as $field => $value)
-            {
-                // right join means only set the property if it's new (entity doesn't have the property)
-                if (!property_exists($entity, $field))
-                    $entity->$field = $value;
-            }
-        }
-        catch (ResourceNotFoundException $e)
-        {
-            foreach ($fields as $field)
-            {
-                if (!property_exists($entity, $field))
-                    $entity->$field = null;
-            }
-        }
-    }
-
-    /**
-     * @param object $entity
-     * @param array|null $fields
-     * @return object join entity
-     * @throws NotSupportedException
-     */
-    protected function getJoinEntity ($entity, array $fields = null)
-    {
-        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
 }
