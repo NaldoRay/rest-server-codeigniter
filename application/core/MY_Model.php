@@ -446,13 +446,13 @@ class MY_Model extends CI_Model
      * @param array $filters entity's filter field => filter value
      * @param array|null $searches entity's search field => search value
      * @param array $fields entity's fields
-     * @param bool $unique
+     * @param bool $distinct
      * @param array $sorts entity's sort fields
      * @param int $limit
      * @param int $offset
      * @return object[]
      */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
+    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
@@ -463,9 +463,9 @@ class MY_Model extends CI_Model
         $sorts = $this->toTableSortData($sorts);
 
         // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If this's a distinct query and there's a hidden read-only field in sorts,
+        // If this is a distinct query and there's a hidden read-only field in sorts,
         // then we also need to select that field and hide it on the result
-        if ($unique && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
         {
             $tableSortFields = array_map(function ($sort)
             {
@@ -482,7 +482,7 @@ class MY_Model extends CI_Model
             }
         }
 
-        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $unique, $sorts, $limit, $offset);
+        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -491,23 +491,23 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param QueryCondition $condition
      * @param array $fields entity's fields
-     * @param bool $unique
+     * @param bool $distinct
      * @param array $sorts entity's sort fields
      * @param int $limit
      * @param int $offset
      * @return object[]
      * @throws BadFormatException
      */
-    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
+    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
         $sorts = $this->toTableSortData($sorts);
 
         // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If unique = true and there's a hidden read-only field in sorts,
+        // If this is a distinct query and there's a hidden read-only field in sorts,
         // then we also need to select that field and hide it on the result
-        if ($unique && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
         {
             $tableSortFields = array_map(function ($sort)
             {
@@ -528,7 +528,7 @@ class MY_Model extends CI_Model
         if (!is_null($condition))
             $db->where($condition->getConditionString());
 
-        $rows = $this->getAllRows($db, $table, null, null, $fields, $unique, $sorts, $limit, $offset);
+        $rows = $this->getAllRows($db, $table, null, null, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -635,18 +635,18 @@ class MY_Model extends CI_Model
      * @param array $filters table's filter field => filter value
      * @param array $searches table's search field => search value
      * @param array $fields table's fields
-     * @param bool $unique
+     * @param bool $distinct
      * @param array $sorts table's sort fields
      * @param int $limit
      * @param int $offset
      * @return array
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, $unique = false, array $sorts = null, $limit = -1, $offset = 0)
+    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         $this->setQueryFilters($db, $filters);
         $this->setQuerySearches($db, $searches);
         $this->setQuerySorts($db, $sorts, $fields);
-        $this->setQueryUnique($db, $unique);
+        $this->setQueryDistinct($db, $distinct);
         $this->setQueryLimit($db, $limit, $offset);
 
         $select = $this->getSelectField($fields);
@@ -789,12 +789,11 @@ class MY_Model extends CI_Model
 
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db $db
-     * @param bool $unique
+     * @param bool $distinct
      */
-    private function setQueryUnique ($db, $unique = false)
+    private function setQueryDistinct ($db, $distinct = false)
     {
-        if ($unique)
-            $db->distinct();
+        $db->distinct((bool)$distinct);
     }
 
     /**
@@ -1016,12 +1015,12 @@ class MY_Model extends CI_Model
         return $entity;
     }
 
-    protected function getUniqueEntities (array $entities, array $fields)
+    protected function getDistinctEntities (array $entities, array $fields)
     {
-        $uniqueEntities = array();
+        $distinctEntities = array();
         foreach ($entities as $entity)
         {
-            $arr =& $uniqueEntities;
+            $arr =& $distinctEntities;
             $fieldCount = count($fields);
             for ($count = 1; $count <= $fieldCount; $count++)
             {
@@ -1040,7 +1039,7 @@ class MY_Model extends CI_Model
         }
 
         $result = array();
-        array_walk_recursive($uniqueEntities, function ($entity) use (&$result)
+        array_walk_recursive($distinctEntities, function ($entity) use (&$result)
         {
             $result[] = $entity;
         });
