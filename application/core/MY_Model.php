@@ -220,6 +220,26 @@ class MY_Model extends CI_Model
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
+     * @param QueryCondition $condition
+     * @param array|null $allowedFields entity's fields
+     * @return object entity with updated fields on success
+     * @throws BadFormatException
+     * @throws ResourceNotFoundException
+     * @throws TransactionException
+     */
+    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
+    {
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
+
+        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
      * @param array|null $allowedFields entity's fields
      * @return object entity with updated fields on success
@@ -249,26 +269,6 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $data entity's field => value
-     * @param QueryCondition $condition
-     * @param array|null $allowedFields entity's fields
-     * @return object entity with updated fields on success
-     * @throws BadFormatException
-     * @throws ResourceNotFoundException
-     * @throws TransactionException
-     */
-    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
-    {
-        $condition = $this->toTableCondition($db, $condition);
-        if (!is_null($condition))
-            $db->where($condition->getConditionString());
-
-        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
      * @param array $data table's field => value
      * @param array $filters table's filter field => filter value
      * @return bool
@@ -289,29 +289,6 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters entity's filter field => filter value
-     * @throws ResourceNotFoundException
-     * @throws TransactionException if delete failed because of database error
-     */
-    protected function deleteEntity ($db, $table, array $filters)
-    {
-        $filters = $this->toTableFilters($filters);
-
-        $result = $db->delete($table, $filters);
-        if ($result === false)
-        {
-            throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
-        }
-        else
-        {
-            if ($db->affected_rows() == 0)
-                throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
-        }
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
      * @param QueryCondition $condition
      * @throws BadFormatException
      * @throws ResourceNotFoundException
@@ -323,8 +300,23 @@ class MY_Model extends CI_Model
         if (!is_null($condition))
             $db->where($condition->getConditionString());
 
-        $result = $db->delete($table);
+        $this->deleteEntity($db, $table, array());
+    }
 
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array $filters entity's filter field => filter value
+     * @throws ResourceNotFoundException
+     * @throws TransactionException if delete failed because of database error
+     */
+    protected function deleteEntity ($db, $table, array $filters)
+    {
+        $filters = $this->toTableFilters($filters);
+        if (!empty($filters))
+            $db->where($filters);
+
+        $result = $db->delete($table);
         if ($result === false)
         {
             throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
@@ -443,6 +435,27 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
+     * @param QueryCondition $condition
+     * @param array $fields entity's fields
+     * @param bool $distinct
+     * @param array $sorts entity's sort fields
+     * @param int $limit
+     * @param int $offset
+     * @return object[]
+     * @throws BadFormatException
+     */
+    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
+    {
+        $condition = $this->toTableCondition($db, $condition);
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
+
+        return $this->getAllEntities($db, $table, null, null, $fields, $distinct, $sorts, $limit, $offset);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
      * @param array $filters entity's filter field => filter value
      * @param array|null $searches entity's search field => search value
      * @param array $fields entity's fields
@@ -484,76 +497,6 @@ class MY_Model extends CI_Model
 
         $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
-     * @param QueryCondition $condition
-     * @param array $fields entity's fields
-     * @param bool $distinct
-     * @param array $sorts entity's sort fields
-     * @param int $limit
-     * @param int $offset
-     * @return object[]
-     * @throws BadFormatException
-     */
-    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
-    {
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
-        $sorts = $this->toTableSortData($sorts);
-
-        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If this is a distinct query and there's a hidden read-only field in sorts,
-        // then we also need to select that field and hide it on the result
-        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
-        {
-            $tableSortFields = array_map(function ($sort)
-            {
-                return explode(' ', $sort)[0];
-            }, $sorts);
-            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
-
-            if (!empty($hiddenSortFields))
-            {
-                if (empty($fields))
-                    $fields = array_values($this->getReadFieldMap());
-
-                $fields = array_merge($fields, $hiddenSortFields);
-            }
-        }
-
-        $condition = $this->toTableCondition($db, $condition);
-        if (!is_null($condition))
-            $db->where($condition->getConditionString());
-
-        $rows = $this->getAllRows($db, $table, null, null, $fields, $distinct, $sorts, $limit, $offset);
-        return $this->toEntities($rows);
-    }
-
-    protected function getFiltersCondition (array $filters)
-    {
-        if (empty($filters))
-            return null;
-
-        $filterConditions = array();
-        foreach ($filters as $field => $value)
-            $filterConditions[] = new EqualsCondition($field, $value);
-
-        return LogicalCondition::logicalAnd($filterConditions);
-    }
-
-    protected function getSearchesCondition (array $searches)
-    {
-        if (empty($searches))
-            return null;
-
-        $filterConditions = array();
-        foreach ($searches as $field => $value)
-            $filterConditions[] = new ContainsCondition($field, $value, true);
-
-        return LogicalCondition::logicalOr($filterConditions);
     }
 
     /**
@@ -670,6 +613,30 @@ class MY_Model extends CI_Model
         {
             return implode(',', $tableFields);
         }
+    }
+
+    protected function getFiltersCondition (array $filters)
+    {
+        if (empty($filters))
+            return null;
+
+        $filterConditions = array();
+        foreach ($filters as $field => $value)
+            $filterConditions[] = new EqualsCondition($field, $value);
+
+        return LogicalCondition::logicalAnd($filterConditions);
+    }
+
+    protected function getSearchesCondition (array $searches)
+    {
+        if (empty($searches))
+            return null;
+
+        $filterConditions = array();
+        foreach ($searches as $field => $value)
+            $filterConditions[] = new ContainsCondition($field, $value, true);
+
+        return LogicalCondition::logicalOr($filterConditions);
     }
 
     /**
