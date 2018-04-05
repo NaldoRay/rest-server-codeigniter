@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class Example extends APP_Data_Model implements Queriable, Searchable
+class Example extends APP_Data_Model implements Queriable
 {
     protected $fieldMap = [
         'id' => 'V_ID',
@@ -64,20 +64,7 @@ class Example extends APP_Data_Model implements Queriable, Searchable
 
     public function query (QueryParam $param)
     {
-        return $this->getAllEntities($this->getAnyDb(), self::$TABLE,
-            $param->getFilters(), $param->getSearches(),
-            $param->getFields(), false,
-            $param->getSorts(), $param->getLimit(), $param->getOffset()
-        );
-    }
-
-    public function search (SearchParam $param)
-    {
-        return $this->getAllEntitiesWithCondition($this->getAnyDb(), self::$TABLE,
-            $param->getCondition(),
-            $param->getFields(), null,
-            $param->getSorts(), $param->getLimit(), $param->getOffset()
-        );
+        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $param);
     }
 
     public function get ($id)

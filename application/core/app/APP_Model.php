@@ -36,10 +36,7 @@ abstract class APP_Model extends MY_Model
     {
         try
         {
-            $entity = $this->getFirstEntity($db, $table,
-                $filters, null,
-                [$field], ['-' . $field]
-            );
+            $entity = $this->getFirstEntity($db, $table, $filters);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -236,29 +233,9 @@ abstract class APP_Model extends MY_Model
     /**
      * @throws ResourceNotFoundException
      */
-    protected function getEntityWithCondition ($db, $table, QueryCondition $condition, array $fields = null)
+    protected function getFirstEntity ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
     {
-        $entity = parent::getEntityWithCondition($db, $table, $condition, $fields);
-
-        if (is_null($entity))
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
-        else
-            return $entity;
-    }
-
-    /**
-     * @param $db
-     * @param $table
-     * @param array|null $filters
-     * @param array|null $searches
-     * @param array|null $fields
-     * @param array|null $sorts
-     * @return null|object
-     * @throws ResourceNotFoundException
-     */
-    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
-    {
-        $entity = parent::getFirstEntity($db, $table, $filters, $searches, $fields, $sorts);
+        $entity = parent::getFirstEntity($db, $table, $filters, $fields, $sorts);
 
         if (is_null($entity))
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);

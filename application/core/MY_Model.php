@@ -77,34 +77,6 @@ class MY_Model extends CI_Model
         }
     }
 
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $sql
-     * @return object[]
-     */
-    protected function getAllEntitiesFromRawQuery ($db, $sql)
-    {
-        /** @var CI_DB_result $result */
-        $result = $db->query($sql, false, true);
-        $rows = $result->result_array();
-
-        // free the memory associated with the result and deletes the result resource ID.
-        $result->free_result();
-        return $this->toEntities($rows);
-    }
-
-    /**
-     * Use this only for query that does not return result set e.g. create, update, delete.
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $sql
-     * @return bool
-     */
-    protected function executeRawQuery ($db, $sql)
-    {
-        return ($db->query($sql) !== false);
-    }
-
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
@@ -329,6 +301,33 @@ class MY_Model extends CI_Model
     }
 
     /**
+     * Use this only for query that does not return result set e.g. create, update, delete.
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $sql
+     * @return bool
+     */
+    protected function executeRawQuery ($db, $sql)
+    {
+        return ($db->query($sql) !== false);
+    }
+
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $sql
+     * @return object[]
+     */
+    protected function getAllEntitiesFromRawQuery ($db, $sql)
+    {
+        /** @var CI_DB_result $result */
+        $result = $db->query($sql, false, true);
+        $rows = $result->result_array();
+
+        // free the memory associated with the result and deletes the result resource ID.
+        $result->free_result();
+        return $this->toEntities($rows);
+    }
+
+    /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters entity's filter field => filter value, e.g. ['id' => 1]
@@ -343,30 +342,6 @@ class MY_Model extends CI_Model
             $fields = $this->toTableFields($fields);
 
         $row = $this->getRow($db, $table, $filters, $fields);
-        if (is_null($row))
-            return null;
-        else
-            return $this->toEntity($row);
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
-     * @param QueryCondition $condition
-     * @param array $fields entity's fields
-     * @return object
-     * @throws BadFormatException
-     */
-    protected function getEntityWithCondition ($db, $table, QueryCondition $condition, array $fields = null)
-    {
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
-
-        $condition = $this->toTableCondition($db, $condition);
-        if (!is_null($condition))
-            $db->where($condition->getConditionString());
-
-        $row = $this->getRow($db, $table, array(), $fields);
         if (is_null($row))
             return null;
         else
@@ -392,17 +367,23 @@ class MY_Model extends CI_Model
         return $result->row_array();
     }
 
-    protected function getFirstEntity ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    /**
+     * @param CI_DB_query_builder|CI_DB_driver $db
+     * @param string $table
+     * @param array|null $filters
+     * @param array|null $fields
+     * @param array|null $sorts
+     * @return null|object
+     */
+    protected function getFirstEntity ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
     {
         if (!empty($filters))
             $filters = $this->toTableFilters($filters);
-        if (!empty($searches))
-            $searches = $this->toTableFilters($searches);
         if (!empty($fields))
             $fields = $this->toTableFields($fields);
         $sorts = $this->toTableSortData($sorts);
 
-        $row = $this->getFirstRow($db, $table, $filters, $searches, $fields, $sorts);
+        $row = $this->getFirstRow($db, $table, $filters, $fields, $sorts);
         if (is_null($row))
             return null;
         else
@@ -412,16 +393,14 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters table's filter field => filter value
-     * @param array $searches table's search field => search value
+     * @param array $filters
      * @param array $fields table's fields
      * @param array $sorts table's sort fields
      * @return array|null
      */
-    protected function getFirstRow ($db, $table, array $filters = null, array $searches = null, array $fields = null, array $sorts = null)
+    private function getFirstRow ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $this->setQueryFilters($db, $filters);
-        $this->setQuerySearches($db, $searches);
         $this->setQuerySorts($db, $sorts, $fields);
 
         $select = $this->getSelectField($fields);
@@ -435,67 +414,52 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param QueryCondition $condition
-     * @param array $fields entity's fields
-     * @param bool $distinct
-     * @param array $sorts entity's sort fields
-     * @param int $limit
-     * @param int $offset
+     * @param QueryParam $param
      * @return object[]
      * @throws BadFormatException
      */
-    protected function getAllEntitiesWithCondition ($db, $table, QueryCondition $condition, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
+    protected function getAllEntities ($db, $table, QueryParam $param = null)
     {
-        $condition = $this->toTableCondition($db, $condition);
-        if (!is_null($condition))
-            $db->where($condition->getConditionString());
-
-        return $this->getAllEntities($db, $table, null, null, $fields, $distinct, $sorts, $limit, $offset);
-    }
-
-    /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
-     * @param string $table
-     * @param array $filters entity's filter field => filter value
-     * @param array|null $searches entity's search field => search value
-     * @param array $fields entity's fields
-     * @param bool $distinct
-     * @param array $sorts entity's sort fields
-     * @param int $limit
-     * @param int $offset
-     * @return object[]
-     */
-    protected function getAllEntities ($db, $table, array $filters = null, array $searches = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
-    {
-        if (!empty($filters))
-            $filters = $this->toTableFilters($filters);
-        if (!empty($searches))
-            $searches = $this->toTableFilters($searches);
-        if (!empty($fields))
-            $fields = $this->toTableFields($fields);
-        $sorts = $this->toTableSortData($sorts);
-
-        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If this is a distinct query and there's a hidden read-only field in sorts,
-        // then we also need to select that field and hide it on the result
-        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        if (is_null($param))
         {
-            $tableSortFields = array_map(function ($sort)
-            {
-                return explode(' ', $sort)[0];
-            }, $sorts);
-            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+            $rows = $this->getAllRows($db, $table);
+        }
+        else
+        {
+            $condition = $param->getCondition();
+            $fields = $param->getFields();
+            $distinct = $param->isDistinct();
+            $sorts = $param->getSorts();
+            $limit = $param->getLimit();
+            $offset = $param->getOffset();
 
-            if (!empty($hiddenSortFields))
-            {
-                if (empty($fields))
-                    $fields = array_values($this->getReadFieldMap());
+            $condition = $this->toTableCondition($db, $condition);
+            $fields = $this->toTableFields($fields);
+            $sorts = $this->toTableSortData($sorts);
 
-                $fields = array_merge($fields, $hiddenSortFields);
+            // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
+            // If this is a distinct query and there's a hidden read-only field in sorts,
+            // then we also need to select that field and hide it on the result
+            if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+            {
+                $tableSortFields = array_map(function ($sort)
+                {
+                    return explode(' ', $sort)[0];
+                }, $sorts);
+                $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+
+                if (!empty($hiddenSortFields))
+                {
+                    if (empty($fields))
+                        $fields = array_values($this->getReadFieldMap());
+
+                    $fields = array_merge($fields, $hiddenSortFields);
+                }
             }
+
+            $rows = $this->getAllRows($db, $table, $condition, $fields, $distinct, $sorts, $limit, $offset);
         }
 
-        $rows = $this->getAllRows($db, $table, $filters, $searches, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
@@ -575,8 +539,7 @@ class MY_Model extends CI_Model
     /**
      * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
-     * @param array $filters table's filter field => filter value
-     * @param array $searches table's search field => search value
+     * @param QueryCondition $condition
      * @param array $fields table's fields
      * @param bool $distinct
      * @param array $sorts table's sort fields
@@ -584,13 +547,14 @@ class MY_Model extends CI_Model
      * @param int $offset
      * @return array
      */
-    protected function getAllRows ($db, $table, array $filters = null, array $searches = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
+    private function getAllRows ($db, $table, QueryCondition $condition = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
-        $this->setQueryFilters($db, $filters);
-        $this->setQuerySearches($db, $searches);
         $this->setQuerySorts($db, $sorts, $fields);
         $this->setQueryDistinct($db, $distinct);
         $this->setQueryLimit($db, $limit, $offset);
+
+        if (!is_null($condition))
+            $db->where($condition->getConditionString());
 
         $select = $this->getSelectField($fields);
         $result = $db->select($select)
@@ -613,30 +577,6 @@ class MY_Model extends CI_Model
         {
             return implode(',', $tableFields);
         }
-    }
-
-    protected function getFiltersCondition (array $filters)
-    {
-        if (empty($filters))
-            return null;
-
-        $filterConditions = array();
-        foreach ($filters as $field => $value)
-            $filterConditions[] = new EqualsCondition($field, $value);
-
-        return LogicalCondition::logicalAnd($filterConditions);
-    }
-
-    protected function getSearchesCondition (array $searches)
-    {
-        if (empty($searches))
-            return null;
-
-        $filterConditions = array();
-        foreach ($searches as $field => $value)
-            $filterConditions[] = new ContainsCondition($field, $value, true);
-
-        return LogicalCondition::logicalOr($filterConditions);
     }
 
     /**

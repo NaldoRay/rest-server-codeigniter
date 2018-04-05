@@ -579,7 +579,7 @@ class MY_REST_Controller extends REST_Controller
         return $queriable->query($queryParam);
     }
 
-    protected function search (Searchable $searchable, array $search)
+    protected function search (Queriable $searchable, array $search)
     {
         $condition = $this->parseSearchCondition($search);
         $fieldsFilter = $this->getQueryFields();
@@ -587,13 +587,13 @@ class MY_REST_Controller extends REST_Controller
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        $searchParam = (new SearchParam())
+        $searchParam = (new QueryParam())
             ->withCondition($condition)
             ->select($fieldsFilter)
             ->sort($sorts)
             ->limit($limit, $offset);
 
-        return $searchable->search($searchParam);
+        return $searchable->query($searchParam);
     }
 
     private function parseSearchCondition (array $search)
