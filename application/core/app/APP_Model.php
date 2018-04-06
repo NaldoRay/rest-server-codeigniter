@@ -36,7 +36,9 @@ abstract class APP_Model extends MY_Model
     {
         try
         {
-            $entity = $this->getFirstEntity($db, $table, $filters);
+            $entity = $this->getFirstEntity($db, $table, $filters,
+                [$field], ['-' . $field]
+            );
         }
         catch (ResourceNotFoundException $e)
         {
