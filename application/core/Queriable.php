@@ -10,5 +10,5 @@ interface Queriable
      * @param QueryParam $param
      * @return object[]
      */
-    public function query (QueryParam $param);
+    public function query (QueryParam $param = null);
 }

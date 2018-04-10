@@ -62,7 +62,7 @@ class Example extends APP_Data_Model implements Queriable
         );
     }
 
-    public function query (QueryParam $param)
+    public function query (QueryParam $param = null)
     {
         return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $param);
     }
