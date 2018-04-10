@@ -742,6 +742,9 @@ class MY_REST_Controller extends REST_Controller
         throw new BadValueException($this->getString('msg_search_invalid'));
     }
 
+    /**
+     * @return QueryParam
+     */
     protected function getQueryParam ()
     {
         // non-search query param, no condition
