@@ -20,22 +20,22 @@ class DbManager
         $this->CI =& get_instance();
     }
 
-    public function getDb ($name)
+    public function getDb ($connectionName)
     {
-        if (isset($this->dbMap[$name]))
+        if (isset($this->dbMap[$connectionName]))
         {
-            return $this->dbMap[$name];
+            return $this->dbMap[$connectionName];
         }
         else
         {
-            $this->dbMap[$name] = $this->CI->load->database($name, true);
+            $this->dbMap[$connectionName] = $this->CI->load->database($connectionName, true);
             if ($this->transactionLevel > 0)
             {
                 for ($i = 0; $i < $this->transactionLevel; $i++)
-                    $this->dbMap[$name]->trans_begin();
+                    $this->dbMap[$connectionName]->trans_begin();
             }
 
-            return $this->dbMap[$name];
+            return $this->dbMap[$connectionName];
         }
     }
 

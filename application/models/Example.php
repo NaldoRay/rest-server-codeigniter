@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author Ray Naldo
  */
-class Example extends APP_Data_Model implements Queriable
+class Example extends APP_Default_model implements Queriable
 {
     protected $fieldMap = [
         'id' => 'V_ID',
@@ -21,9 +21,9 @@ class Example extends APP_Data_Model implements Queriable
     public function add (array $data)
     {
         $this->validateData($data);
-        $data['id'] = $this->getNextId($this->getAnyDb(), self::$TABLE, 'id', 5);
+        $data['id'] = $this->getNextId(self::$TABLE, 'id', 5);
 
-        return $this->createEntity($this->getAnyDb(), self::$TABLE, $data);
+        return $this->createEntity(self::$TABLE, $data);
     }
 
     public function edit ($id, array $data)
@@ -31,8 +31,7 @@ class Example extends APP_Data_Model implements Queriable
         $this->tryValidatePrimaryKey($id);
         $this->validateData($data);
 
-        return $this->updateEntity($this->getAnyDb(), self::$TABLE,
-            $data,
+        return $this->updateEntity(self::$TABLE, $data,
             ['id' => $id],
             ['field1', 'field2']
         );
@@ -57,22 +56,20 @@ class Example extends APP_Data_Model implements Queriable
     {
         $this->tryValidatePrimaryKey($id);
 
-        $this->deleteEntity($this->getAnyDb(), self::$TABLE,
-            ['id' => $id]
+        $this->deleteEntity(self::$TABLE, ['id' => $id]
         );
     }
 
     public function query (QueryParam $param = null)
     {
-        return $this->getAllEntities($this->getAnyDb(), self::$TABLE, $param);
+        return $this->getAllEntities(self::$TABLE, $param);
     }
 
     public function get ($id)
     {
         $this->tryValidatePrimaryKey($id);
 
-        return $this->getEntity($this->getAnyDb(), self::$TABLE,
-            ['id' => $id]
+        return $this->getEntity(self::$TABLE, ['id' => $id]
         );
     }
 

@@ -32,9 +32,11 @@ class MY_Model extends CI_Model
 
     /** @var DbManager */
     private static $dbManager;
+    /** @var CI_DB_driver|CI_DB_query_builder  */
+    private $db;
 
 
-    public function __construct ()
+    public function __construct ($connectionName = '')
     {
         parent::__construct();
 
@@ -43,11 +45,13 @@ class MY_Model extends CI_Model
 
         if (!isset(self::$dbManager))
             self::$dbManager = new DbManager();
+
+        $this->db = self::$dbManager->getDb($connectionName);
     }
 
-    protected function getDb ($name)
+    protected function getDb ()
     {
-        return self::$dbManager->getDb($name);
+        return $this->db;
     }
 
     /**
@@ -78,7 +82,6 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
@@ -88,20 +91,19 @@ class MY_Model extends CI_Model
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function createOrUpdateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
+    protected function createOrUpdateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
-        if ($this->entityExists($db, $table, $filters))
+        if ($this->entityExists($filters))
         {
-            return $this->updateEntity($db, $table, $data, $filters, $allowedFields);
+            return $this->updateEntity($table, $data, $filters, $allowedFields);
         }
         else
         {
-            return $this->createEntity($db, $table, $data, $allowedFields);
+            return $this->createEntity($table, $data, $allowedFields);
         }
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $dataArr array of entity data entity's field => value
      * @param array|null $allowedFields
@@ -109,7 +111,7 @@ class MY_Model extends CI_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
+    protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
         if (empty($dataArr))
             throw new TransactionException(sprintf('Failed to create %s, empty data', $this->domain), $this->domain);
@@ -117,7 +119,7 @@ class MY_Model extends CI_Model
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
-        $count = $db->insert_batch($table, $dataArr);
+        $count = $this->db->insert_batch($table, $dataArr);
         if ($count === false)
             return 0;
         else
@@ -125,7 +127,6 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
      * @param array|null $allowedFields entity's fields
@@ -133,10 +134,10 @@ class MY_Model extends CI_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function createEntity ($db, $table, array $data, array $allowedFields = null)
+    protected function createEntity ($table, array $data, array $allowedFields = null)
     {
         $data = $this->toWriteTableData($data, $allowedFields);
-        $success = $this->insertRow($db, $table, $data);
+        $success = $this->insertRow($table, $data);
         if ($success)
             return $this->toEntity($data);
         else
@@ -144,21 +145,19 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data table's field => value
      * @return bool
      */
-    protected function insertRow ($db, $table, array $data)
+    protected function insertRow ($table, array $data)
     {
         if (empty($data))
             return false;
         else
-            return $db->insert($table, $data);
+            return $this->db->insert($table, $data);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $dataArr array of entity data entity's field => value
      * @param string $indexField
@@ -167,7 +166,7 @@ class MY_Model extends CI_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
+    protected function updateEntities ($table, array $dataArr, $indexField, array $allowedFields = null)
     {
         if (empty($dataArr))
             throw new TransactionException(sprintf('Failed to update %s, empty data', $this->domain), $this->domain);
@@ -180,7 +179,7 @@ class MY_Model extends CI_Model
         {
             $indexField = $fieldMap[$indexField];
 
-            $count = $db->update_batch($table, $dataArr, $indexField);
+            $count = $this->db->update_batch($table, $dataArr, $indexField);
             if ($count !== false)
                 return $count;
         }
@@ -189,7 +188,6 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
      * @param QueryCondition $condition
@@ -199,17 +197,16 @@ class MY_Model extends CI_Model
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
+    protected function updateEntityWithCondition ($table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
-        $condition = $this->toTableCondition($db, $condition);
+        $condition = $this->toTableCondition($condition);
         if (!is_null($condition))
-            $db->where($condition->getConditionString());
+            $this->db->where($condition->getConditionString());
 
-        return $this->updateEntity($db, $table, $data, array(), $allowedFields);
+        return $this->updateEntity($table, $data, array(), $allowedFields);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
@@ -219,15 +216,15 @@ class MY_Model extends CI_Model
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
+    protected function updateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
         $filters = $this->getTableFilters($filters);
         $data = $this->toWriteTableData($data, $allowedFields);
 
-        $success = $this->updateRow($db, $table, $data, $filters);
+        $success = $this->updateRow($table, $data, $filters);
         if ($success)
         {
-            if ($db->affected_rows() > 0)
+            if ($this->db->affected_rows() > 0)
                 return $this->toEntity($data);
             else
                 throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
@@ -239,13 +236,12 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $data table's field => value
      * @param array $filters table's filter field => filter value
      * @return bool
      */
-    protected function updateRow ($db, $table, array $data, array $filters)
+    protected function updateRow ($table, array $data, array $filters)
     {
         if (empty($data))
         {
@@ -253,73 +249,69 @@ class MY_Model extends CI_Model
         }
         else
         {
-            $this->setQueryFilters($db, $filters);
-            return $db->update($table, $data);
+            $this->setQueryFilters($filters);
+            return $this->db->update($table, $data);
         }
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param QueryCondition $condition
      * @throws BadFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
      */
-    protected function deleteEntityWithCondition ($db, $table, QueryCondition $condition)
+    protected function deleteEntityWithCondition ($table, QueryCondition $condition)
     {
-        $condition = $this->toTableCondition($db, $condition);
+        $condition = $this->toTableCondition($condition);
         if (!is_null($condition))
-            $db->where($condition->getConditionString());
+            $this->db->where($condition->getConditionString());
 
-        $this->deleteEntity($db, $table, array());
+        $this->deleteEntity($table, array());
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters entity's filter field => filter value
      * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
      */
-    protected function deleteEntity ($db, $table, array $filters)
+    protected function deleteEntity ($table, array $filters)
     {
         $filters = $this->getTableFilters($filters);
 
-        $this->setQueryFilters($db, $filters);
+        $this->setQueryFilters($filters);
 
-        $result = $db->delete($table);
+        $result = $this->db->delete($table);
         if ($result === false)
         {
             throw new TransactionException(sprintf('Failed to delete %s', $this->domain), $this->domain);
         }
         else
         {
-            if ($db->affected_rows() == 0)
+            if ($this->db->affected_rows() == 0)
                 throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
         }
     }
 
     /**
      * Use this only for query that does not return result set e.g. create, update, delete.
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $sql
      * @return bool
      */
-    protected function executeRawQuery ($db, $sql)
+    protected function executeRawQuery ($sql)
     {
-        return ($db->query($sql) !== false);
+        return ($this->db->query($sql) !== false);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $sql
      * @return object[]
      */
-    protected function getAllEntitiesFromRawQuery ($db, $sql)
+    protected function getAllEntitiesFromRawQuery ($sql)
     {
         /** @var CI_DB_result $result */
-        $result = $db->query($sql, false, true);
+        $result = $this->db->query($sql, false, true);
         $rows = $result->result_array();
 
         // free the memory associated with the result and deletes the result resource ID.
@@ -328,18 +320,17 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters entity's filter field => filter value, e.g. ['id' => 1]
      * @param array $fields entity's fields
-     * @return object|null
+     * @return null|object
      */
-    protected function getEntity ($db, $table, array $filters, array $fields = null)
+    protected function getEntity ($table, array $filters, array $fields = null)
     {
         $filters = $this->getTableFilters($filters);
         $fields = $this->getTableFields($fields);
 
-        $row = $this->getRow($db, $table, $filters, $fields);
+        $row = $this->getRow($table, $filters, $fields);
         if (is_null($row))
             return null;
         else
@@ -347,38 +338,36 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters table's filter field => filter value
      * @param array $fields table's fields
      * @return array|null
      */
-    private function getRow ($db, $table, array $filters, array $fields = null)
+    private function getRow ($table, array $filters, array $fields = null)
     {
-        $this->setQueryFilters($db, $filters);
-        $this->setQueryFields($db, $fields);
+        $this->setQueryFilters($filters);
+        $this->setQueryFields($fields);
 
-        $result = $db->limit(1)
+        $result = $this->db->limit(1)
             ->get($table);
 
         return $result->row_array();
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array|null $filters
      * @param array|null $fields
      * @param array|null $sorts
      * @return null|object
      */
-    protected function getFirstEntity ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
+    protected function getFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $filters = $this->getTableFilters($filters);
         $fields = $this->getTableFields($fields);
         $sorts = $this->getTableSorts($sorts);
 
-        $row = $this->getFirstRow($db, $table, $filters, $fields, $sorts);
+        $row = $this->getFirstRow($table, $filters, $fields, $sorts);
         if (is_null($row))
             return null;
         else
@@ -386,36 +375,33 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param array $filters
      * @param array $fields table's fields
      * @param array $sorts table's sort fields
      * @return array|null
      */
-    private function getFirstRow ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
+    private function getFirstRow ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
-        $this->setQueryFilters($db, $filters);
-        $this->setQueryFields($db, $fields);
-        $this->setQuerySorts($db, $sorts, $fields);
+        $this->setQueryFilters($filters);
+        $this->setQueryFields($fields);
+        $this->setQuerySorts($sorts, $fields);
 
-        $result = $db->limit(1)
+        $result = $this->db->limit(1)
             ->get($table);
 
         return $result->row_array();
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param QueryParam $param
      * @param array $fields
      * @param bool $distinct
      * @return object[]
      * @throws BadFormatException
-     * @internal param array $allowedFields
      */
-    protected function getAllEntities ($db, $table, QueryParam $param = null, array $fields = null, $distinct = false)
+    protected function getAllEntities ($table, QueryParam $param = null, array $fields = null, $distinct = false)
     {
         if (is_null($param))
             $param = QueryParam::create();
@@ -426,7 +412,7 @@ class MY_Model extends CI_Model
         $offset = $param->getOffset();
 
         if (!is_null($condition))
-            $condition = $this->toTableCondition($db, $condition);
+            $condition = $this->toTableCondition($condition);
         $fields = $this->getTableFields($fields);
         $sorts = $this->getTableSorts($sorts);
 
@@ -450,18 +436,17 @@ class MY_Model extends CI_Model
             }
         }
 
-        $rows = $this->getAllRows($db, $table, $condition, $fields, $distinct, $sorts, $limit, $offset);
+        $rows = $this->getAllRows($table, $condition, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
     }
 
     /**
      * Converts condition's field/value to table's field/value, and escape identifiers & values.
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param QueryCondition $condition
      * @return QueryCondition null if field is not found
      * @throws BadFormatException
      */
-    private function toTableCondition ($db, QueryCondition $condition)
+    private function toTableCondition (QueryCondition $condition)
     {
         if ($condition instanceof LogicalCondition)
         {
@@ -471,7 +456,7 @@ class MY_Model extends CI_Model
             $queryConditions = $condition->getConditions();
             foreach ($queryConditions as $queryCondition)
             {
-                $tableCondition = $this->toTableCondition($db, $queryCondition);
+                $tableCondition = $this->toTableCondition($queryCondition);
                 if (!is_null($tableCondition))
                     $tableConditions[] = $tableCondition;
             }
@@ -502,7 +487,7 @@ class MY_Model extends CI_Model
                     foreach ($value as $val)
                     {
                         $val = $this->toTableValue($field, $val);
-                        $values[] = $db->escape($val);
+                        $values[] = $this->db->escape($val);
                     }
 
                     $value = $values;
@@ -510,7 +495,7 @@ class MY_Model extends CI_Model
                 else
                 {
                     $value = $this->toTableValue($field, $value);
-                    $value = $db->escape($value);
+                    $value = $this->db->escape($value);
                 }
                 $condition->setFieldValue($field, $value);
 
@@ -528,7 +513,6 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param QueryCondition $condition
      * @param array $fields table's fields
@@ -538,57 +522,54 @@ class MY_Model extends CI_Model
      * @param int $offset
      * @return array
      */
-    private function getAllRows ($db, $table, QueryCondition $condition = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
+    private function getAllRows ($table, QueryCondition $condition = null, array $fields = null, $distinct = false, array $sorts = null, $limit = -1, $offset = 0)
     {
         if (!is_null($condition))
-            $db->where($condition->getConditionString());
+            $this->db->where($condition->getConditionString());
 
-        $this->setQueryFields($db, $fields);
-        $this->setQuerySorts($db, $sorts, $fields);
-        $this->setQueryDistinct($db, $distinct);
-        $this->setQueryLimit($db, $limit, $offset);
+        $this->setQueryFields($fields);
+        $this->setQuerySorts($sorts, $fields);
+        $this->setQueryDistinct($distinct);
+        $this->setQueryLimit($limit, $offset);
 
-        $result = $db->get($table);
+        $result = $this->db->get($table);
         return $result->result_array();
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters entity's filter field => filter value
      * @return bool
      */
-    protected function entityExists ($db, $table, array $filters = null)
+    protected function entityExists ($table, array $filters = null)
     {
         $filters = $this->getTableFilters($filters);
 
-        return $this->rowExists($db, $table, $filters);
+        return $this->rowExists($table, $filters);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param string $table
      * @param QueryCondition $condition
      * @return bool
      */
-    protected function entityExistsWithCondition ($db, $table, QueryCondition $condition)
+    protected function entityExistsWithCondition ($table, QueryCondition $condition)
     {
-        $db->where($condition->getConditionString());
+        $this->db->where($condition->getConditionString());
 
-        return $this->rowExists($db, $table);
+        return $this->rowExists($table);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db
      * @param $table
      * @param array $filters table's filter field => filter value
      * @return bool
      */
-    protected function rowExists ($db, $table, array $filters = null)
+    protected function rowExists ($table, array $filters = null)
     {
-        $this->setQueryFilters($db, $filters);
+        $this->setQueryFilters($filters);
 
-        $result = $db->select('1')
+        $result = $this->db->select('1')
             ->limit(1)
             ->get($table);
 
@@ -596,41 +577,38 @@ class MY_Model extends CI_Model
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param array $fields
      */
-    private function setQueryFields ($db, array $fields = null)
+    private function setQueryFields (array $fields = null)
     {
         if (!empty($fields))
         {
-            $db->select(implode(',', $fields));
+            $this->db->select(implode(',', $fields));
         }
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param array $filters
      */
-    private function setQueryFilters ($db, array $filters = null)
+    private function setQueryFilters (array $filters = null)
     {
         if (!empty($filters))
         {
             foreach ($filters as $field => $value)
             {
                 if (is_array($value))
-                    $db->where_in($field, $value);
+                    $this->db->where_in($field, $value);
                 else
-                    $db->where($field, $value);
+                    $this->db->where($field, $value);
             }
         }
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param array $sorts
      * @param array $fields
      */
-    private function setQuerySorts ($db, array $sorts = null, array $fields = null)
+    private function setQuerySorts (array $sorts = null, array $fields = null)
     {
         if (!empty($sorts))
         {
@@ -650,25 +628,23 @@ class MY_Model extends CI_Model
                     return in_array($sortField, $fields);
                 });
             }
-            $db->order_by(implode(',', $sorts));
+            $this->db->order_by(implode(',', $sorts));
         }
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param bool $distinct
      */
-    private function setQueryDistinct ($db, $distinct = false)
+    private function setQueryDistinct ($distinct = false)
     {
-        $db->distinct((bool)$distinct);
+        $this->db->distinct((bool)$distinct);
     }
 
     /**
-     * @param CI_DB_query_builder|CI_DB_driver $db $db
      * @param int $limit
      * @param int $offset
      */
-    private function setQueryLimit ($db, $limit = -1, $offset = 0)
+    private function setQueryLimit ($limit = -1, $offset = 0)
     {
         if ($limit >= 0 || $offset > 0)
         {
@@ -677,7 +653,7 @@ class MY_Model extends CI_Model
             if ($offset < 0)
                 $offset = 0;
 
-            $db->limit($limit, $offset);
+            $this->db->limit($limit, $offset);
         }
     }
 
@@ -890,37 +866,6 @@ class MY_Model extends CI_Model
         return $entity;
     }
 
-    protected function getDistinctEntities (array $entities, array $fields)
-    {
-        $distinctEntities = array();
-        foreach ($entities as $entity)
-        {
-            $arr =& $distinctEntities;
-            $fieldCount = count($fields);
-            for ($count = 1; $count <= $fieldCount; $count++)
-            {
-                $field = $fields[$count-1];
-                $fieldValue = $entity->$field;
-                if ($count == $fieldCount)
-                {
-                    $arr[$fieldValue] = $entity;
-                }
-                else
-                {
-                    $arr[$fieldValue] = array();
-                    $arr =& $arr[$fieldValue];
-                }
-            }
-        }
-
-        $result = array();
-        array_walk_recursive($distinctEntities, function ($entity) use (&$result)
-        {
-            $result[] = $entity;
-        });
-        return $result;
-    }
-
     private function isBooleanField ($field)
     {
         foreach ($this->booleanPrefixes as $prefix)
@@ -968,47 +913,6 @@ class MY_Model extends CI_Model
             return $value + 0;
         else
             throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
-    }
-
-    /**
-     * @param object $entity
-     * @param array|null $fields
-     * @throws NotSupportedException
-     */
-    protected function rightJoin ($entity, array $fields = null)
-    {
-        $allowedFields = array_keys($this->getReadFieldMap());
-        $fields = $this->limitFields($fields, $allowedFields);
-
-        try
-        {
-            $joinEntity = $this->getJoinEntity($entity, $fields);
-            foreach ($joinEntity as $field => $value)
-            {
-                // right join means only set the property if it's new (entity doesn't have the property)
-                if (!property_exists($entity, $field))
-                    $entity->$field = $value;
-            }
-        }
-        catch (ResourceNotFoundException $e)
-        {
-            foreach ($fields as $field)
-            {
-                if (!property_exists($entity, $field))
-                    $entity->$field = null;
-            }
-        }
-    }
-
-    /**
-     * @param object $entity
-     * @param array|null $fields
-     * @return object join entity
-     * @throws NotSupportedException
-     */
-    protected function getJoinEntity ($entity, array $fields = null)
-    {
-        throw new NotSupportedException(sprintf('Get all not supported: %s', $this->domain));
     }
 
     protected final function addWriteOnlyFieldMap (array $fieldMap)

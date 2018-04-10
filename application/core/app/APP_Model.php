@@ -5,7 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author Ray Naldo
  * @property File_manager $fileManager
  */
-abstract class APP_Model extends MY_Model
+class APP_Model extends MY_Model
 {
     protected $writeOnlyFieldMap = [
         'inupby' => 'V_INUPBY'
@@ -32,12 +32,11 @@ abstract class APP_Model extends MY_Model
         return self::$defaultInupby;
     }
 
-    protected function getNextId ($db, $table, $field, $padLength = 0, array $filters = null)
+    protected function getNextId ($table, $field, $padLength = 0, array $filters = null)
     {
         try
         {
-            $entity = $this->getFirstEntity($db, $table, $filters,
-                [$field], ['-' . $field]
+            $entity = $this->getFirstEntity($table, $filters, [$field], ['-' . $field]
             );
         }
         catch (ResourceNotFoundException $e)
@@ -66,7 +65,7 @@ abstract class APP_Model extends MY_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function createEntities ($db, $table, array $dataArr, array $allowedFields = null)
+    protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
         for ($i = 0; $i < count($dataArr); $i++)
         {
@@ -76,7 +75,7 @@ abstract class APP_Model extends MY_Model
 
         try
         {
-            return parent::createEntities($db, $table, $dataArr, $allowedFields);
+            return parent::createEntities($table, $dataArr, $allowedFields);
         }
         catch (TransactionException $e)
         {
@@ -88,14 +87,14 @@ abstract class APP_Model extends MY_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function createEntity ($db, $table, array $data, array $allowedFields = null)
+    protected function createEntity ($table, array $data, array $allowedFields = null)
     {
         if (!isset($data['inupby']))
             $data['inupby'] = self::$defaultInupby;
 
         try
         {
-            return parent::createEntity($db, $table, $data, $allowedFields);
+            return parent::createEntity($table, $data, $allowedFields);
         }
         catch (TransactionException $e)
         {
@@ -107,7 +106,7 @@ abstract class APP_Model extends MY_Model
      * @throws BadFormatException
      * @throws TransactionException
      */
-    protected function updateEntities ($db, $table, array $dataArr, $indexField, array $allowedFields = null)
+    protected function updateEntities ($table, array $dataArr, $indexField, array $allowedFields = null)
     {
         for ($i = 0; $i < count($dataArr); $i++)
         {
@@ -117,7 +116,7 @@ abstract class APP_Model extends MY_Model
 
         try
         {
-            return parent::updateEntities($db, $table, $dataArr, $indexField, $allowedFields);
+            return parent::updateEntities($table, $dataArr, $indexField, $allowedFields);
         }
         catch (TransactionException $e)
         {
@@ -130,14 +129,14 @@ abstract class APP_Model extends MY_Model
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntity ($db, $table, array $data, array $filters, array $allowedFields = null)
+    protected function updateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
         if (!isset($data['inupby']))
             $data['inupby'] = self::$defaultInupby;
 
         try
         {
-            return parent::updateEntity($db, $table, $data, $filters, $allowedFields);
+            return parent::updateEntity($table, $data, $filters, $allowedFields);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -151,18 +150,17 @@ abstract class APP_Model extends MY_Model
 
     /**
      * @throws BadFormatException
-     * @throws BadValueException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function updateEntityWithCondition ($db, $table, array $data, QueryCondition $condition, array $allowedFields = null)
+    protected function updateEntityWithCondition ($table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
         if (!isset($data['inupby']))
             $data['inupby'] = self::$defaultInupby;
 
         try
         {
-            return parent::updateEntityWithCondition($db, $table, $data, $condition, $allowedFields);
+            return parent::updateEntityWithCondition($table, $data, $condition, $allowedFields);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -174,10 +172,11 @@ abstract class APP_Model extends MY_Model
         }
     }
 
-    protected function updateRow ($db, $table, array $data, array $filters)
+    protected function updateRow ($table, array $data, array $filters)
     {
+        $db = $this->getDb();
         $db->set('T_UPDATE', 'CURRENT_TIMESTAMP', false);
-        $success = parent::updateRow($db, $table, $data, $filters);
+        $success = parent::updateRow($table, $data, $filters);
         $db->reset_query();
 
         return $success;
@@ -187,11 +186,11 @@ abstract class APP_Model extends MY_Model
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function deleteEntity ($db, $table, array $filters)
+    protected function deleteEntity ($table, array $filters)
     {
         try
         {
-            parent::deleteEntity($db, $table, $filters);
+            parent::deleteEntity($table, $filters);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -203,11 +202,11 @@ abstract class APP_Model extends MY_Model
         }
     }
 
-    protected function deleteEntityWithCondition ($db, $table, QueryCondition $condition)
+    protected function deleteEntityWithCondition ($table, QueryCondition $condition)
     {
         try
         {
-            parent::deleteEntityWithCondition($db, $table, $condition);
+            parent::deleteEntityWithCondition($table, $condition);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -222,9 +221,9 @@ abstract class APP_Model extends MY_Model
     /**
      * @throws ResourceNotFoundException
      */
-    protected function getEntity ($db, $table, array $filters, array $fields = null)
+    protected function getEntity ($table, array $filters, array $fields = null)
     {
-        $entity = parent::getEntity($db, $table, $filters, $fields);
+        $entity = parent::getEntity($table, $filters, $fields);
 
         if (is_null($entity))
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
@@ -235,9 +234,9 @@ abstract class APP_Model extends MY_Model
     /**
      * @throws ResourceNotFoundException
      */
-    protected function getFirstEntity ($db, $table, array $filters = null, array $fields = null, array $sorts = null)
+    protected function getFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
-        $entity = parent::getFirstEntity($db, $table, $filters, $fields, $sorts);
+        $entity = parent::getFirstEntity($table, $filters, $fields, $sorts);
 
         if (is_null($entity))
             throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
