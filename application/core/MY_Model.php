@@ -93,7 +93,7 @@ class MY_Model extends CI_Model
      */
     protected function createOrUpdateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
-        if ($this->entityExists($filters))
+        if ($this->entityExists($table, $filters))
         {
             return $this->updateEntity($table, $data, $filters, $allowedFields);
         }

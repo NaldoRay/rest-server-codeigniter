@@ -1,5 +1,12 @@
 ## Changelog
 
+v5.0.0
++ Move database object to `MY_Model` that will be initialized in constructor. 
+All query helper methods from model will use the database object
+
+v4.0.0
++ Support nested field filtering
+
 v3.0.0
 + Support advanced search/query, rename validation exception class
 + Add `Queriable` interface
