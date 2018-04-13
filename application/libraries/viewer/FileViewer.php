@@ -8,25 +8,25 @@ class FileViewer
 {
     private $tmpFile;
 
-	public function viewImage ($imagePath, $imageNotFoundPath = null)
-	{
-		$shown = $this->view($imagePath);
-		if ($shown)
+    public function viewImage ($imagePath, $imageNotFoundPath = null)
+    {
+        $shown = $this->view($imagePath);
+        if ($shown)
         {
             return true;
         }
         else
         {
-		    if (is_null($imageNotFoundPath))
-		        return false;
-		    else
-			    return $this->viewFile($imageNotFoundPath);
-		}
-	}
+            if (is_null($imageNotFoundPath))
+                return false;
+            else
+                return $this->viewFile($imageNotFoundPath);
+        }
+    }
 
-    public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null)
+    public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl);
+        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl, $caFilePath);
         $shown = $this->view($tmpFilePath);
         if ($shown)
         {
@@ -42,30 +42,49 @@ class FileViewer
     }
 
     public function viewFile ($filePath, $renamedFilename = null)
-	{
-		return $this->view($filePath, $renamedFilename);
-	}
-
-    public function viewRemoteFile ($fileUrl, $renamedFilename = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl);
+        return $this->view($filePath, $renamedFilename);
+    }
+
+    public function viewRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
+    {
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $caFilePath);
         return $this->view($tmpFilePath, $renamedFilename);
     }
 
     public function downloadFile ($filePath, $renamedFilename = null)
-	{
-		return $this->download($filePath, $renamedFilename);
-	}
-
-    public function downloadRemoteFile ($fileUrl, $renamedFilename = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl);
+        return $this->download($filePath, $renamedFilename);
+    }
+
+    public function downloadRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
+    {
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $caFilePath);
         return $this->download($tmpFilePath, $renamedFilename);
     }
 
-    private function createTemporaryRemoteFile ($fileUrl)
+    private function createTemporaryRemoteFile ($fileUrl, $caFilePath = null)
     {
-        $content = file_get_contents($fileUrl);
+        if (empty($caFilePath))
+        {
+            $contextOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false
+                ]
+            ];
+        }
+        else
+        {
+            $contextOptions = [
+                'ssl' => [
+                    'verify_peer' => true,
+                    'cafile' => $caFilePath
+                ]
+            ];
+        }
+
+        $content = file_get_contents($fileUrl, null, stream_context_create($contextOptions));
         if ($content === false)
             return null;
 

@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once('System.php');
+require_once('System.php');
 require_once('viewer/FileViewer.php');
 
 /**
@@ -20,7 +20,7 @@ class File_manager
         if (isset($config['file_base_path']))
             $this->baseFilePath = $config['file_base_path'];
         else
-            $this->baseFilePath = '';
+            $this->baseFilePath = FCPATH.'files/';
     }
 
     /**
@@ -73,9 +73,9 @@ class File_manager
             show_404();
     }
 
-    public function viewRemoteFile ($fileUrl, $renamedFilename = null)
+    public function viewRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
     {
-        $shown = $this->fileViewer->viewRemoteFile($fileUrl, $renamedFilename);
+        $shown = $this->fileViewer->viewRemoteFile($fileUrl, $renamedFilename, $caFilePath);
         if (!$shown)
             show_404();
     }
@@ -88,9 +88,9 @@ class File_manager
             show_404();
     }
 
-    public function downloadRemoteFile ($fileUrl, $renamedFilename)
+    public function downloadRemoteFile ($fileUrl, $renamedFilename, $caFilePath = null)
     {
-        $shown = $this->fileViewer->downloadRemoteFile($fileUrl, $renamedFilename);
+        $shown = $this->fileViewer->downloadRemoteFile($fileUrl, $renamedFilename, $caFilePath);
         if (!$shown)
             show_404();
     }
