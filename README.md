@@ -1,5 +1,10 @@
 ## Changelog
 
+v5.0.3
++ Fix missing `Content-Disposition` header if filename is not renamed on view/download
++ Fix `createOrUpdateEntity()` not passing table param
++ Support verification of SSL certificate when download/view remote file (defaults to no verification if no CA file is provided)
+
 v5.0.0
 + Move database object to `MY_Model` that will be initialized in constructor. 
 All query helper methods from model will use the database object

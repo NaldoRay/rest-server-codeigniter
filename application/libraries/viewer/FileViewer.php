@@ -104,11 +104,13 @@ class FileViewer
             $contentType = $info->file($filePath);
             $fileSize = filesize($filePath);
 
-            if (!empty($renamedFilename))
+            if (empty($renamedFilename))
+                header('Content-Disposition: inline');
+            else
                 header('Content-Disposition: inline; filename="'.$renamedFilename.'"');
 
-            header('Content-type: ' . $contentType);
-            header('Content-length: ' . $fileSize);
+            header('Content-Type: ' . $contentType);
+            header('Content-Length: ' . $fileSize);
             // jangan di-cache
             header('Cache-Control: no-cache, no-store, must-revalidate');
             header('Expires: 0');
@@ -129,8 +131,12 @@ class FileViewer
             $contentType = $info->file($filePath);
             $fileSize = filesize($filePath);
 
+            if (empty($renamedFilename))
+                header('Content-Disposition: attachment');
+            else
+                header('Content-Disposition: attachment; filename="' . $renamedFilename . '"');
+
             header('Content-Type: ' . $contentType);
-            header('Content-Disposition: attachment; filename="' . $renamedFilename . '"');
             header('Content-Length: ' . $fileSize);
             // ga perlu di-cache
             header('Cache-Control: no-cache, no-store, must-revalidate');
