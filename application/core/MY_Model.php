@@ -944,7 +944,7 @@ class MY_Model extends CI_Model
             return array_merge($this->fieldMap, $this->readOnlyFieldMap);
     }
 
-    protected final function limitFields (array $fields, array $allowedFields)
+    protected final function limitFields (array $fields, array $allowedFields = [])
     {
         // empty fields means select all, limit to select only allowed fields
         if (empty($fields))
