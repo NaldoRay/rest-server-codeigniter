@@ -11,6 +11,8 @@ class QueryParam
     /** @var QueryCondition[] */
     private $searches;
     /** @var array */
+    private $expands;
+    /** @var array */
     private $sorts;
     private $limit;
     private $offset;
@@ -109,6 +111,27 @@ class QueryParam
     }
 
     /**
+     * @return bool
+     */
+    public function isExpanded ($field)
+    {
+        if (empty($this->expands) || !in_array($field, $this->expands))
+            return false;
+        else
+            return true;
+    }
+
+    /**
+     * @param array $expands e.g. ['addresses', 'phones']
+     * @return $this
+     */
+    public function expand (array $expands)
+    {
+        $this->expands = $expands;
+        return $this;
+    }
+
+    /**
      * @return array
      */
     public function getSorts ()
@@ -117,7 +140,7 @@ class QueryParam
     }
 
     /**
-     * @param array $sorts e.g. [name, -date]
+     * @param array $sorts e.g. ['name', '-date']
      * @return $this
      */
     public function sort (array $sorts)

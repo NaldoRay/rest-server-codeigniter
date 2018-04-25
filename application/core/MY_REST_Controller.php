@@ -635,6 +635,7 @@ class MY_REST_Controller extends REST_Controller
     protected function getAll (Queriable $queriable, array $extraFilters = null)
     {
         $filters = $this->getQueryFilters();
+        $expands = $this->getQueryExpands();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
@@ -643,6 +644,7 @@ class MY_REST_Controller extends REST_Controller
             $filters = array_merge($filters, $extraFilters);
 
         $queryParam = QueryParam::createFilter($filters)
+            ->expand($expands)
             ->sort($sorts)
             ->limit($limit, $offset);
 
@@ -652,11 +654,13 @@ class MY_REST_Controller extends REST_Controller
     protected function search (Queriable $searchable, array $searchData)
     {
         $condition = $this->parseSearchCondition($searchData);
+        $expands = $this->getQueryExpands();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
         $searchParam = QueryParam::createSearch($condition)
+            ->expand($expands)
             ->sort($sorts)
             ->limit($limit, $offset);
 
@@ -749,11 +753,13 @@ class MY_REST_Controller extends REST_Controller
     {
         // non-search query param, no condition
         $filters = $this->getQueryFilters();
+        $expands = $this->getQueryExpands();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
         return QueryParam::createFilter($filters)
+            ->expand($expands)
             ->sort($sorts)
             ->limit($limit, $offset);
     }
@@ -773,6 +779,17 @@ class MY_REST_Controller extends REST_Controller
     {
         $fieldsParam = $this->input->get('fields');
         return FieldsFilter::fromString($fieldsParam);
+    }
+
+    protected function getQueryExpands ()
+    {
+        $expandsParam = $this->input->get('expands');
+        if (is_null($expandsParam))
+            $expands = array();
+        else
+            $expands = explode(',', $expandsParam);
+
+        return $expands;
     }
 
     protected function getQuerySorts ()
