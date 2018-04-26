@@ -7,6 +7,11 @@ require_once('FieldValueCondition.php');
  */
 class NotEqualsCondition extends FieldValueCondition
 {
+    public function __construct ($field, $value)
+    {
+        parent::__construct($field, '!=', $value);
+    }
+
     public function getConditionString ()
     {
         $field = $this->getField();

@@ -11,7 +11,7 @@ class NotContainsCondition extends FieldValueCondition
 
     public function __construct ($field, $value, $ignoreCase = false)
     {
-        parent::__construct($field, $value);
+        parent::__construct($field, ($ignoreCase ? '!~' : '!~~'), $value);
         $this->ignoreCase = $ignoreCase;
     }
 

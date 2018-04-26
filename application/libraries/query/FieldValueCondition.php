@@ -8,17 +8,20 @@ require_once('QueryCondition.php');
 abstract class FieldValueCondition implements QueryCondition
 {
     private $field;
+    private $operator;
     private $value;
 
 
     /**
      * QuerySimpleCondition constructor.
-     * @param $field
-     * @param $value
+     * @param string $field
+     * @param string $operator
+     * @param mixed $value
      */
-    public function __construct ($field, $value)
+    public function __construct ($field, $operator, $value)
     {
         $this->field = $field;
+        $this->operator = $operator;
         $this->value = $value;
     }
 
@@ -46,5 +49,10 @@ abstract class FieldValueCondition implements QueryCondition
     {
         $this->field = $field;
         $this->value = $value;
+    }
+
+    public function jsonSerialize ()
+    {
+        return get_object_vars($this);
     }
 }

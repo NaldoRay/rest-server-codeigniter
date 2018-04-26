@@ -709,10 +709,16 @@ class MY_REST_Controller extends REST_Controller
                     $search = new GreaterEqualsCondition($field, $value);
                     break;
                 case '~':
-                    $search = new ContainsCondition($field, $value);
+                    $search = new ContainsCondition($field, $value, true);
+                    break;
+                case '~~':
+                    $search = new ContainsCondition($field, $value, false);
                     break;
                 case '!~':
-                    $search = new NotContainsCondition($field, $value);
+                    $search = new NotContainsCondition($field, $value, true);
+                    break;
+                case '!~~':
+                    $search = new NotContainsCondition($field, $value, false);
                     break;
                 default:
                     return array();

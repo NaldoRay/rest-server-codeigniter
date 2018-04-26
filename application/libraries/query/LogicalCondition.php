@@ -7,7 +7,7 @@ require_once('QueryCondition.php');
  */
 class LogicalCondition implements QueryCondition
 {
-    private $operator;
+    private $logicalOperator;
     /** @var QueryCondition[] */
     private $conditions;
 
@@ -24,12 +24,12 @@ class LogicalCondition implements QueryCondition
 
     /**
      * MY_Condition constructor.
-     * @param string $operator
+     * @param string $logicalOperator
      * @param QueryCondition[] $conditions
      */
-    private function __construct ($operator, array $conditions)
+    private function __construct ($logicalOperator, array $conditions)
     {
-        $this->operator = $operator;
+        $this->logicalOperator = $logicalOperator;
         $this->conditions = $conditions;
     }
 
@@ -50,12 +50,17 @@ class LogicalCondition implements QueryCondition
         foreach ($this->conditions as $condition)
             $conditionStrings[] = $condition->getConditionString();
 
-        $conjunction = sprintf(' %s ', $this->operator);
+        $conjunction = sprintf(' %s ', $this->logicalOperator);
         return sprintf('(%s)', implode($conjunction, $conditionStrings));
     }
 
     public function setConditions (array $conditions)
     {
         $this->conditions = $conditions;
+    }
+
+    public function jsonSerialize ()
+    {
+        return get_object_vars($this);
     }
 }

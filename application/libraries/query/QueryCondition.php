@@ -3,7 +3,7 @@
 /**
  * @author Ray Naldo
  */
-interface QueryCondition
+interface QueryCondition extends JsonSerializable
 {
     /**
      * @return string
