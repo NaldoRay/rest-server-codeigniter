@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'libraries/validation/ValueValidator.php');
+require_once(__DIR__.'/../ValueValidator.php');
 
 /**
  * @author Ray Naldo
@@ -9,6 +9,7 @@ require_once(APPPATH.'libraries/validation/ValueValidator.php');
 class ValueValidatorCI extends ValueValidator
 {
     private $CI;
+
 
     public function __construct ($value, $label = 'Value')
     {

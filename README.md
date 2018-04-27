@@ -1,4 +1,39 @@
+## How to use rest-client in the same project
+1. Copy `vendor`, `application/core`, `application/services`, and `application/third_party/webclient` from `rest-client-x` 
+to the respective directory in the project
+2. Edit config for composer's autoload in `application/config.php`
+```php
+$config['composer_autoload'] = FCPATH . 'vendor/autoload.php';
+```
+3. Add `application/services` directory to autoloader in `hooks/Autoloader.php` 
+by changing `Autoloader::__construct()`
+```php
+public function __construct ()
+{
+    $this->includeDirectories  = array(
+        APPPATH.'core',
+        APPPATH.'models',
+        APPPATH.'services',
+        APPPATH.'exceptions'
+    );
+
+    $this->excludeDirectories = array();
+}
+```
+
 ## Changelog
+
+v5.3.0
++ Move general libraries to `application/third_party`
++ Update helper `includeClass()` and `requireClass` to support include/require all files `*` in the directory
+
+v5.2.0
++ Add helper method to load service class
++ Update query condition library to support  json serialization
+
+v5.1.0
++ Add default values for allowed fields on `limitFields()`
++ Add new query param `expands` to expand nested field(s)
 
 v5.0.3
 + Fix missing `Content-Disposition` header if filename is not renamed on view/download

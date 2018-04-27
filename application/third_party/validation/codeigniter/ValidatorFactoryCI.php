@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'libraries/validation/ValidatorFactory.php');
+require_once(__DIR__.'/../ValidatorFactory.php');
 include_once('ArrayValueValidatorCI.php');
 include_once('ValueValidatorCI.php');
 include_once('FileValidatorCI.php');

@@ -1,8 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once('validation/InputValidation.php');
-include_once('validation_ci/ValidatorFactoryCI.php');
+include_once(APPPATH.'third_party/validation/InputValidation.php');
+include_once(APPPATH.'third_party/validation/codeigniter/ValidatorFactoryCI.php');
 
 /**
  * @author Ray Naldo
