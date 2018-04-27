@@ -36,6 +36,9 @@ public function __construct ()
 
 ## Changelog
 
+v5.3.2
++ Move `app_helper` autoload from `config/autoload.php` to `MY_REST_Controller`
+
 v5.3.1
 + Move general libraries to `application/third_party`
 + Update helper `includeClass()` and `requireClass` to support include/require all files `*` in the directory
