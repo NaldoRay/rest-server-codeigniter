@@ -5,7 +5,20 @@ to the respective directory in the project
 ```php
 $config['composer_autoload'] = FCPATH . 'vendor/autoload.php';
 ```
-3. Add `application/services` directory to autoloader in `hooks/Autoloader.php` 
+3. Add helper method to load service class in `MY_Loader`
+```php
+public function service ($service, $object_name = null)
+{
+    $CI = get_instance();
+
+    if (empty($object_name))
+        $object_name = strtolower($service);
+
+    if (!isset($CI->$object_name))
+        $CI->$object_name = new $service();
+}
+```
+4. Add `application/services` directory to autoloader in `hooks/Autoloader.php` 
 by changing `Autoloader::__construct()`
 ```php
 public function __construct ()
@@ -23,7 +36,7 @@ public function __construct ()
 
 ## Changelog
 
-v5.3.0
+v5.3.1
 + Move general libraries to `application/third_party`
 + Update helper `includeClass()` and `requireClass` to support include/require all files `*` in the directory
 
