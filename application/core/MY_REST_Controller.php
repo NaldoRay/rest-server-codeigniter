@@ -72,7 +72,10 @@ class MY_REST_Controller extends REST_Controller
             // only valid for Oracle SQL
             $message = $exception->getMessage();
             if (preg_match('/unique constraint \\(.+\\) violated/', $message))
+            {
                 $errorMessage = $this->getString('msg_unique_constraint');
+                $this->respondBadRequest($errorMessage);
+            }
             else if (preg_match('/integrity constraint \\(.+FK.+\\) violated - (parent key not found|child record found)/', $message, $matches))
             {
                 if ($matches[1] == 'parent key not found')
@@ -81,17 +84,23 @@ class MY_REST_Controller extends REST_Controller
                     $errorMessage = $this->getString('msg_child_found');
                 else
                     $errorMessage = $this->getString('msg_integrity_constraint');
+
+                $this->respondBadRequest($errorMessage);
             }
             else if (preg_match('/value too large/', $message))
+            {
                 $errorMessage = $this->getString('msg_value_too_large');
+                $this->respondBadRequest($errorMessage);
+            }
             else
+            {
                 $errorMessage = $this->getString('msg_database_error');
-
-            $this->respondBadRequest($errorMessage, null);
+                $this->respondInternalError($errorMessage);
+            }
         }
         else
         {
-            $this->respondInternalError('Internal Error', null);
+            $this->respondInternalError('Internal Error');
         }
 
         exit;
