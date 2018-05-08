@@ -24,13 +24,17 @@ class ArrayValidator extends FieldValidator
 
     /**
      * @param string $name
-     * @param string $label (optional)
-     * @return ArrayValueValidator
+     * @param string $label (optional) won't be used if there's previous validator with same name
+     * @return ArrayValueValidator will return existing validator with same name if already exists, otherwise returns new instance
      */
     public function field ($name, $label = 'Value')
     {
-        $validator = $this->validatorFactory->createArrayValueValidator($this->arr, $name, $label);
-        $this->addValidator($name, $validator);
+        $validator = $this->getValidator($name);
+        if (is_null($validator))
+        {
+            $validator = $this->validatorFactory->createArrayValueValidator($this->arr, $name, $label);
+            $this->addValidator($name, $validator);
+        }
 
         return $validator;
     }

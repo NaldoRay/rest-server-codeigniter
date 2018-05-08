@@ -18,17 +18,30 @@ abstract class FieldValidator
         $this->errors = array();
     }
 
-    protected function addValidator ($field, Validation $validator)
-    {
-        $this->validators[$field] = $validator;
-    }
-
     /**
      * @return Validation[]
      */
     protected function getValidators ()
     {
         return $this->validators;
+    }
+
+    /**
+     * @param string $field
+     * @return null|Validation
+     */
+    protected function getValidator ($field)
+    {
+        return (isset($this->validators[$field]) ? $this->validators[$field] : null);
+    }
+
+    /**
+     * @param string $field
+     * @param Validation $validator
+     */
+    protected function addValidator ($field, Validation $validator)
+    {
+        $this->validators[$field] = $validator;
     }
 
     /**
