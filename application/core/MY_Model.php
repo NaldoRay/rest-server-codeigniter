@@ -3,6 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * @author Ray Naldo
+ * @property MY_Loader $load
  */
 class MY_Model extends CI_Model
 {
@@ -955,5 +956,45 @@ class MY_Model extends CI_Model
             $allowedFields = array_keys($this->getReadFieldMap());
 
         return array_intersect($fields, $allowedFields);
+    }
+
+    /**
+     * @param $leftEntity
+     * @param Closure $getRightEntity returns the right entity for join, throws ResourceNotFoundException if entity is not found
+     * @param array $fields
+     */
+    protected function join ($leftEntity, Closure $getRightEntity, array $fields)
+    {
+        try
+        {
+            $rightEntity = $getRightEntity();
+            $this->leftJoin($leftEntity, $rightEntity, $fields);
+        }
+        catch (ResourceNotFoundException $e)
+        {
+            foreach ($fields as $field)
+            {
+                if (!property_exists($leftEntity, $field))
+                    $leftEntity->$field = null;
+            }
+        }
+    }
+
+    /**
+     * @param object $leftEntity
+     * @param object $rightEntity
+     * @param array|null $fields
+     */
+    private function leftJoin ($leftEntity, $rightEntity, array $fields = null)
+    {
+        if (empty($fields))
+            $fields = array_keys((array)$rightEntity);
+
+        foreach ($fields as $field)
+        {
+            // only set property if not exists on leftEntity
+            if (!property_exists($leftEntity, $field))
+                $leftEntity->$field = $rightEntity->$field;
+        }
     }
 }
