@@ -14,8 +14,8 @@ class MY_Model extends CI_Model
     protected $writeOnlyFieldMap = [];
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
-    /** for sorting-only fields, not used on read/write */
-    protected $hiddenReadOnlyFieldMap = [];
+    /** for sort-only fields, not readable/writable (hidden) */
+    protected $sortOnlyFieldMap = [];
 
     /** prefix from column name with boolean type, for auto-convert */
     protected $booleanPrefixes = [];
@@ -420,13 +420,13 @@ class MY_Model extends CI_Model
         // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
         // If this is a distinct query and there's a hidden read-only field in sorts,
         // then we also need to select that field and hide it on the result
-        if ($distinct && !empty($sorts) && !empty($this->hiddenReadOnlyFieldMap))
+        if ($distinct && !empty($sorts) && !empty($this->sortOnlyFieldMap))
         {
             $tableSortFields = array_map(function ($sort)
             {
                 return explode(' ', $sort)[0];
             }, $sorts);
-            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->hiddenReadOnlyFieldMap));
+            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->sortOnlyFieldMap));
 
             if (!empty($hiddenSortFields))
             {
@@ -613,12 +613,12 @@ class MY_Model extends CI_Model
     {
         if (!empty($sorts))
         {
-            if (!empty($this->hiddenReadOnlyFieldMap))
+            if (!empty($this->sortOnlyFieldMap))
             {
                 if (empty($fields))
                     $fields = array_values($this->getFullReadFieldMap());
                 else
-                    $fields = array_merge($fields, array_values($this->hiddenReadOnlyFieldMap));
+                    $fields = array_merge($fields, array_values($this->sortOnlyFieldMap));
             }
 
             if (!empty($fields))
@@ -849,7 +849,7 @@ class MY_Model extends CI_Model
         foreach ($this->writeOnlyFieldMap as $tableField)
             unset($row[ $tableField ]);
 
-        foreach ($this->hiddenReadOnlyFieldMap as $tableField)
+        foreach ($this->sortOnlyFieldMap as $tableField)
             unset($row[ $tableField ]);
 
         $entity = new stdClass();
@@ -931,10 +931,10 @@ class MY_Model extends CI_Model
      */
     private function getFullReadFieldMap ()
     {
-        if (empty($this->hiddenReadOnlyFieldMap))
+        if (empty($this->sortOnlyFieldMap))
             return $this->getReadFieldMap();
         else
-            return array_merge($this->getReadFieldMap(), $this->hiddenReadOnlyFieldMap);
+            return array_merge($this->getReadFieldMap(), $this->sortOnlyFieldMap);
     }
 
     private function getReadFieldMap ()
