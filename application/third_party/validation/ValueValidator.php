@@ -227,7 +227,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validate if value is a valid ISO-8601 date & time in the format '[YYYY]-[MM]-[DD]'.
+     * Validate if value is a valid ISO-8601 date in the format '[YYYY]-[MM]-[DD]'.
      * Reference: https://www.w3.org/TR/NOTE-datetime
      * @param string $errorMessage
      * @return $this
@@ -255,7 +255,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validate if value is a valid ISO-8601 UTC date & time in the format '[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]'.
+     * Validate if value is a valid ISO-8601 date & time with timezone in the format '[YYYY]-[MM]-[DD]T[hh]:[mm]:[ss][TZD]'.
      * Reference: https://www.w3.org/TR/NOTE-datetime
      * @param string $errorMessage
      * @return $this

@@ -17,10 +17,12 @@ class MY_Model extends CI_Model
     /** for sort-only fields, not readable/writable (hidden) */
     protected $sortOnlyFieldMap = [];
 
-    /** prefix from column name with boolean type, for auto-convert */
+    /** prefix from column name with boolean data type, for auto-convert */
     protected $booleanPrefixes = [];
-    /** prefix from column name with number type (integer, float), for auto-convert */
+    /** prefix from column name with number data type (integer, float), for auto-convert */
     protected $numberPrefixes = [];
+    /** prefix from column name with date & time data type (datetime, timestamp), for auto-convert */
+    protected $dateTimePrefixes = [];
 
     /** used as default when no sorts param given when calling get method e.g. ['field1', 'field2'] */
     protected $defaultSorts = [];
@@ -769,6 +771,14 @@ class MY_Model extends CI_Model
         {
             return $this->tryParseNumber($value);
         }
+        else if ($this->isDateTimeField($field))
+        {
+            // convert valid ISO-8601 date & time to local timezone
+            if ($this->isIso8601DateTime($value))
+                $value = date('Y-m-d H:i:s', strtotime($value));
+
+            return $value;
+        }
         else
         {
             if (is_array($value))
@@ -941,6 +951,27 @@ class MY_Model extends CI_Model
             return $value + 0;
         else
             throw new BadFormatException(sprintf('%s is not a number or numeric string', $value), $this->domain);
+    }
+
+    private function isDateTimeField ($field)
+    {
+        foreach ($this->dateTimePrefixes as $prefix)
+        {
+            if (strpos($field, $prefix) === 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function isIso8601DateTime ($value)
+    {
+        return $this->validation->forValue($value)
+            ->nullable()
+            ->notEmpty()
+            ->validDateTime()
+            ->validate();
     }
 
     protected final function addWriteOnlyFieldMap (array $fieldMap)

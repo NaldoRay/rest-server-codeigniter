@@ -94,6 +94,19 @@ class MY_DB_mysqli_driver extends CI_DB_mysqli_driver
                                 }
                                 break;
                             }
+                            case self::$TYPE_DATETIME:
+                            case self::$TYPE_TIMESTAMP:
+                            {
+                                // convert TIMESTAMP field's value to ISO-8601 date & time format
+                                $fieldName = $field->name;
+                                foreach ($rows as $row)
+                                {
+                                    $fieldValue = $row->{$fieldName};
+                                    if (!is_null($fieldValue))
+                                        $row->{$fieldName} = date('Y-m-d\TH:i:sP', strtotime($fieldValue));
+                                }
+                                break;
+                            }
                         }
                     }
                 }

@@ -14,6 +14,7 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
         parent::__construct($params);
         // set default date format to ISO-8601: [YYYY]-[MM]-[DD]
         parent::query("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'");
+        parent::query("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD\"T\"HH24:MI:SS.ff6'");
     }
 
 	public function query($sql, $binds = FALSE, $return_object = NULL)
@@ -66,6 +67,17 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
                                         $row->{$fieldName} = $fieldValue + 0;
                                 }
                                 break;
+                            }
+                            case 'TIMESTAMP':
+                            {
+                                // convert TIMESTAMP field's value to ISO-8601 date & time format
+                                $fieldName = $field->name;
+                                foreach ($rows as $row)
+                                {
+                                    $fieldValue = $row->{$fieldName};
+                                    if (!is_null($fieldValue))
+                                        $row->{$fieldName} = date('Y-m-d\TH:i:sP', strtotime($fieldValue));
+                                }
                             }
                         }
                     }

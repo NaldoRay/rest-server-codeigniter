@@ -12,6 +12,7 @@ class APP_Model extends MY_Model
     ];
     protected $booleanPrefixes = ['F_'];
     protected $numberPrefixes = ['N_'];
+    protected $dateTimePrefixes = ['T_'];
 
     private static $defaultInupby = null;
 
