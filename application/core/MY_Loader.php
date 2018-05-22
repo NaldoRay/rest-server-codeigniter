@@ -47,6 +47,19 @@ class MY_Loader extends CI_Loader
 		
 		return $this;
     }
+
+    public function service ($service, $object_name = null)
+    {
+        $CI =& get_instance();
+
+        if (empty($object_name))
+            $object_name = strtolower($service);
+
+        if (!isset($CI->$object_name))
+            $CI->$object_name = new $service();
+
+        return $this;
+    }
 }
 
 ?>

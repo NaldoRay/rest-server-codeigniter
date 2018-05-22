@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once(APPPATH . 'helpers/app_helper.php');
 includeClass('*', 'third_party/query/');
-includeClass('REST_Controller', 'libraries/');
+includeClass(REST_Controller::class, 'libraries/');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;

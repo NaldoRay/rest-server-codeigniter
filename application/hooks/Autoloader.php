@@ -15,7 +15,8 @@ class Autoloader
         $this->includeDirectories  = array(
             APPPATH.'core',
             APPPATH.'models',
-            APPPATH.'exceptions'
+            APPPATH.'exceptions',
+            APPPATH.'services'
         );
 
         $this->excludeDirectories = array();

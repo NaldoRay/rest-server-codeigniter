@@ -1,13 +1,18 @@
-def versionName = "5.4.0"
+def versionName = "5.6.0"
 
 task release (type: Zip) {
-	from '.'
-	include 'README.md'
-	include '.htaccess'
-	include 'index.php'
-	include 'application/**'
-	include 'system/**'
-	exclude 'application/tests/**'
+	from('.') {
+        include 'README.md'
+        include '.htaccess'
+        include 'index.php'
+        include 'application/**'
+        exclude 'application/tests/**'
+        include 'system/**'
+    }
+	from('vendor-production') {
+	    include '**'
+	    into 'vendor'
+	}
 	archiveName 'rest-server-' + versionName + '.zip'
 	destinationDir file('release/')
 }

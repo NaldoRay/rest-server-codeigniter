@@ -7,7 +7,10 @@
             "email": "narudor@gmail.com"
         }
     ],
-    "require": {},
+    "require": {
+        "php": ">=5.3.7",
+        "guzzlehttp/guzzle": "6.*"
+    },
     "require-dev": {
         "kenjis/ci-phpunit-test": "^0.15.0"
     }

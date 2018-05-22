@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
-Author: Ray Naldo
+ * Author: Ray Naldo
  */
 if (!function_exists('includeClass'))
 {
