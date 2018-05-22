@@ -1,8 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-include_once(APPPATH.'third_party/validation/InputValidation.php');
-include_once(APPPATH.'third_party/validation/codeigniter/ValidatorFactoryCI.php');
+require_once(APPPATH.'third_party/validation/InputValidation.php');
+require_once(APPPATH.'libraries/validation-ci/ValidatorFactoryCI.php');
 
 /**
  * @author Ray Naldo
@@ -14,6 +14,10 @@ class Rest_validation extends InputValidation
     public function __construct ()
     {
         parent::__construct(new ValidatorFactoryCI());
+
+        /** @var APP_REST_Controller $CI */
+        $CI = get_instance();
+        $CI->lang->load('validation');
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(__DIR__.'/../ValueValidator.php');
+require_once(APPPATH.'third_party/validation/ValueValidator.php');
 
 /**
  * @author Ray Naldo

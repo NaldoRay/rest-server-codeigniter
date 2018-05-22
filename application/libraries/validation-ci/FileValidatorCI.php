@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(__DIR__.'/../FileValidator.php');
+require_once(APPPATH.'third_party/validation/FileValidator.php');
 
 /**
  * $_FILES['userfile'] structure: http://php.net/manual/en/features.file-upload.post-method.php

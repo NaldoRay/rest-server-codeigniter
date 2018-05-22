@@ -7,6 +7,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class APP_REST_Controller extends MY_REST_Controller
 {
+    private static $LANG_INDONESIA = 'indonesia';
+
     public function __construct ()
     {
         parent::__construct();
@@ -18,11 +20,16 @@ class APP_REST_Controller extends MY_REST_Controller
         $inupby = $this->input->get_request_header('API-User');
         APP_Model::setDefaultInupby($inupby);
 
+        $this->load->library(File_manager::class, null, 'fileManager');
+    }
+
+    protected function getLanguage ()
+    {
         // default to Bahasa Indonesia if language header is not exists
         $language = $this->input->get_request_header('Accept-Language');
-        if (is_null($language))
-            $this->setLanguage(self::$LANG_INDONESIA);
-
-        $this->load->library(File_manager::class, null, 'fileManager');
+        if (empty($language) || $language == 'id')
+            return self::$LANG_INDONESIA;
+        else
+            return self::$LANG_ENGLISH;
     }
 }

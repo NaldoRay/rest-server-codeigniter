@@ -1,22 +1,19 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-// This can be removed if you use __autoload() in config.php OR use Modular Extensions
-require_once('REST_Controller.php');
 require_once(APPPATH . 'helpers/app_helper.php');
 includeClass('*', 'third_party/query/');
+includeClass('REST_Controller', 'libraries/');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
 
 /**
  * @author Ray Naldo
- * @property Rest_validation $validation
  */
 class MY_REST_Controller extends REST_Controller
 {
     protected static $LANG_ENGLISH = 'english';
-    protected static $LANG_INDONESIA = 'indonesia';
 
     // this property is for debugging-only
     /** @var  ContextErrorException */
@@ -26,11 +23,13 @@ class MY_REST_Controller extends REST_Controller
     public function __construct ()
     {
         parent::__construct();
-
         $this->load->helper(['file', 'log']);
-        $this->load->library(Rest_validation::class, null, 'validation');
 
-        $this->initLanguage();
+        $language = $this->getLanguage();
+        $this->setLanguage($language);
+        $this->lang->load('messages');
+
+        $this->load->library(Rest_validation::class, null, 'validation');
 
         set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext)
         {
@@ -48,19 +47,14 @@ class MY_REST_Controller extends REST_Controller
         });
     }
 
-    private function initLanguage ()
+    protected function getLanguage ()
     {
-        $language = $this->input->get_request_header('Accept-Language');
-        if ($language == 'id')
-            $this->setLanguage(self::$LANG_INDONESIA);
-        else // default
-            $this->setLanguage(self::$LANG_ENGLISH);
+        return self::$LANG_ENGLISH;
     }
 
-    protected function setLanguage ($language)
+    private function setLanguage ($language)
     {
-        $this->lang->load('messages', $language);
-        $this->lang->load('validation', $language);
+        $this->config->set_item('language', $language);
     }
 
     private function handleContextError (ContextErrorException $exception)
