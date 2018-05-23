@@ -32,35 +32,6 @@ class APP_Model extends MY_Model
         return self::$defaultInupby;
     }
 
-    protected function getNextId ($table, $field, $padLength = 0, array $filters = null)
-    {
-        try
-        {
-            $entity = $this->getFirstEntity($table, $filters, [$field], ['-' . $field]
-            );
-        }
-        catch (ResourceNotFoundException $e)
-        {
-            $entity = null;
-        }
-
-        return $this->getNextEntityId($entity, $field, $padLength);
-    }
-
-    private function getNextEntityId ($entity, $field, $padLength = 0)
-    {
-        if (is_null($entity))
-            $lastId = 0;
-        else
-            $lastId = (int) $entity->$field;
-
-        $nextId = $lastId + 1;
-        if ($padLength > 0)
-            return str_pad($nextId, $padLength, '0', STR_PAD_LEFT);
-        else
-            return (string) $nextId;
-    }
-
     /**
      * @throws BadFormatException
      * @throws TransactionException

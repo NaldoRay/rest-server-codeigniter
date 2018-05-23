@@ -55,6 +55,28 @@ class MY_Model extends CI_Model
         return $this->db;
     }
 
+    protected final function getNextId ($table, $field, $padLength = 0, array $filters = null)
+    {
+        $entity = $this->doGetFirstEntity($table, $filters,
+            [$field], ['-' . $field]
+        );
+        return $this->getNextEntityId($entity, $field, $padLength);
+    }
+
+    private function getNextEntityId ($entity, $field, $padLength = 0)
+    {
+        if (is_null($entity))
+            $lastId = 0;
+        else
+            $lastId = (int) $entity->$field;
+
+        $nextId = $lastId + 1;
+        if ($padLength > 0)
+            return str_pad($nextId, $padLength, '0', STR_PAD_LEFT);
+        else
+            return (string) $nextId;
+    }
+
     /**
      * @param Closure $closure
      * @return mixed
@@ -363,6 +385,11 @@ class MY_Model extends CI_Model
      * @return null|object
      */
     protected function getFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
+    {
+        return $this->doGetFirstEntity($table, $filters, $fields, $sorts);
+    }
+
+    private function doGetFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $filters = $this->getTableFilters($filters);
         $fields = $this->getTableFields($fields);
