@@ -274,16 +274,16 @@ class ValueValidator implements Validation
              * 2017-12-01T15:00:31-02:00 valid
              * 2017-12-01T15:00:31Z valid
              */
-            $dateTime = DateTime::createFromFormat('Y-m-d\TH:i:sP', $value);
+            $dateTime = DateTime::createFromFormat(DateTime::ISO8601, $value);
             if ($dateTime === false)
                 return false;
             else
             {
                 $lastIdx = strlen($value)-1;
                 if ($value[$lastIdx] == 'Z')
-                    $value = substr($value, 0, $lastIdx).'+00:00';
+                    $value = substr($value, 0, $lastIdx).'+0000';
 
-                return ($dateTime->format('Y-m-d\TH:i:sP') == $value);
+                return ($dateTime->format(DateTime::ISO8601) == $value);
             }
         }, $errorMessage);
 
