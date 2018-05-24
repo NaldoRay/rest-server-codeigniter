@@ -36,6 +36,16 @@ public function __construct ()
 
 ## Changelog
 
+v5.6.0
++ Auto-convert ISO-8601 for timestamp data type from/to database
++ Update datetime format validation to use `DateTime::ISO8601` constant
++ Add rest-client library to call another rest api
++ Massive refactor directories, init language now set language in `config.php`
++ Rename `hiddenReadOnlyFieldMap` to `sortOnlyFieldMap`
++ Add helper method to (left) join an entity with another
++ Returns existing validator if field validator with same field name already exists
++ Fix database error to respond 500 internal error
+
 v5.3.2
 + Move `app_helper` autoload from `config/autoload.php` to `MY_REST_Controller`
 
