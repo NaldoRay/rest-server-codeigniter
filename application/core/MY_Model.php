@@ -10,7 +10,7 @@ class MY_Model extends CI_Model
     /** for insert/update it's recommended to use $this->getFieldMap() e.g. ['field1' => 'table_field1', 'field2' => 'table_field2'] */
     protected $fieldMap = [];
 
-    /** for write-only fields */
+    /** for write-only fields, override to replace, use {@link addWriteOnlyFieldMap} to add into existing */
     protected $writeOnlyFieldMap = [];
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
@@ -894,7 +894,14 @@ class MY_Model extends CI_Model
         foreach ($row as $field => $value)
         {
             if ($this->isBooleanField($field))
+            {
                 $value = (bool)$value;
+            }
+            else if ($this->isDateTimeField($field))
+            {
+                if ($this->isIso8601DateTime($value))
+                    $value = date(DateTime::ISO8601, strtotime($value));
+            }
 
             if (isset($fieldMap[$field]))
                 $field = $fieldMap[$field];
