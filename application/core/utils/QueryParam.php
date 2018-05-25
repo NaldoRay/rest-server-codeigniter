@@ -37,6 +37,7 @@ class QueryParam
     private function __construct ()
     {
         $this->resetCondition();
+        $this->resetExpand();
         $this->resetSort();
         $this->resetLimit();
     }
@@ -122,13 +123,25 @@ class QueryParam
             return true;
     }
 
+    public function getExpands ()
+    {
+        return $this->expands;
+    }
+
     /**
+     * Subsequent calls will add the expand fields to the previous.
      * @param array $expands e.g. ['addresses', 'phones']
      * @return $this
      */
     public function expand (array $expands)
     {
-        $this->expands = $expands;
+        $this->expands = array_merge($this->expands, $expands);
+        return $this;
+    }
+
+    public function resetExpand ()
+    {
+        $this->expands = array();
         return $this;
     }
 
@@ -141,12 +154,15 @@ class QueryParam
     }
 
     /**
+     * Subsequent calls will add the sort fields to the previous.
      * @param array $sorts e.g. ['name', '-date']
      * @return $this
      */
     public function sort (array $sorts)
     {
-        $this->sorts = $sorts;
+        $this->sorts = array_merge($this->sorts, $sorts);
+        $this->sorts = array_unique($this->sorts);
+
         return $this;
     }
 
