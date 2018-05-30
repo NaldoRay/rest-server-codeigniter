@@ -8,6 +8,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class APP_Model extends MY_Model
 {
     protected $writeOnlyFieldMap = [
+        'updatedAt' => 'T_UPDATE',
         'inupby' => 'V_INUPBY'
     ];
     protected $booleanPrefixes = ['F_'];
@@ -80,8 +81,10 @@ class APP_Model extends MY_Model
      */
     protected function updateEntities ($table, array $dataArr, $indexField, array $allowedFields = null)
     {
+        $updatedAt = date(DateTime::ISO8601);
         for ($i = 0; $i < count($dataArr); $i++)
         {
+            $dataArr[$i]['updatedAt'] = $updatedAt;
             if (!isset($dataArr[$i]['inupby']))
                 $dataArr[$i]['inupby'] = self::$defaultInupby;
         }
@@ -103,6 +106,7 @@ class APP_Model extends MY_Model
      */
     protected function updateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
+        $data['updatedAt'] = date(DateTime::ISO8601);
         if (!isset($data['inupby']))
             $data['inupby'] = self::$defaultInupby;
 
@@ -127,6 +131,7 @@ class APP_Model extends MY_Model
      */
     protected function updateEntityWithCondition ($table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
+        $data['updatedAt'] = date(DateTime::ISO8601);
         if (!isset($data['inupby']))
             $data['inupby'] = self::$defaultInupby;
 
@@ -142,16 +147,6 @@ class APP_Model extends MY_Model
         {
             throw new TransactionException(sprintf('Gagal mengubah %s', $this->domain), $this->domain);
         }
-    }
-
-    protected function updateRow ($table, array $data, array $filters)
-    {
-        $db = $this->getDb();
-        $db->set('T_UPDATE', 'CURRENT_TIMESTAMP', false);
-        $success = parent::updateRow($table, $data, $filters);
-        $db->reset_query();
-
-        return $success;
     }
 
     /**

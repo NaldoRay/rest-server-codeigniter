@@ -266,7 +266,7 @@ class MY_Model extends CI_Model
      * @param array $filters table's filter field => filter value
      * @return bool
      */
-    protected function updateRow ($table, array $data, array $filters)
+    private function updateRow ($table, array $data, array $filters)
     {
         if (empty($data))
         {
