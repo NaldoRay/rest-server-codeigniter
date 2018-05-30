@@ -33,8 +33,11 @@ if (!function_exists('logQuery'))
                 $date = date("Ym");
                 break;
         }
-        $appName = $CI->config->item('app_name');
-        $fileName = $appName.'_'.$date.'.txt';
+
+        $prefix = $CI->config->item('app_name');
+        if (empty($prefix))
+            $prefix = 'log';
+        $fileName = $prefix.'_'.$date.'.txt';
 
         $ipAddress = $CI->input->ip_address();
         $timestamp = date("Y-m-d H:i:s");
@@ -63,8 +66,11 @@ if (!function_exists('logFailedQuery'))
                 $date = date("Ym");
                 break;
         }
-        $appName = $CI->config->item('app_name');
-        $fileName = $appName.'_'.$date.'_failed.txt';
+
+        $prefix = $CI->config->item('app_name');
+        if (empty($prefix))
+            $prefix = 'log';
+        $fileName = $prefix.'_'.$date.'_failed.txt';
         $filePath = LOG_PATH.$fileName;
 
         $ipAddress = $CI->input->ip_address();

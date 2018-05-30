@@ -10,6 +10,7 @@ use Restserver\Libraries\REST_Controller;
 
 /**
  * @author Ray Naldo
+ * @property Rest_validation $validation
  */
 class MY_REST_Controller extends REST_Controller
 {
