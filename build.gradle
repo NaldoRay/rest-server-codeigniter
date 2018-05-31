@@ -1,4 +1,4 @@
-def versionName = "5.7.0"
+def versionName = "5.8.0"
 
 task release (type: Zip) {
 	from('.') {

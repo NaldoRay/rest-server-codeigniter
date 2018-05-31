@@ -546,9 +546,78 @@ class ValueValidator implements Validation
         return $this;
     }
 
+    /**
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function onlyArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be array';
+
+        $this->setValidation(self::$IDX_ONLY_ARRAY, function ($data)
+        {
+            return is_array($data);
+        }, $errorMessage);
+
+        return $this;
+    }
 
     /**
-     * Validation failed if value equals to null, '', or only whitespaces.
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function onlyNumericArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be numeric array';
+
+        $this->setValidation(self::$IDX_ONLY_ARRAY, function ($data)
+        {
+            if (is_array($data))
+            {
+                foreach ($data as $key => $value)
+                {
+                    if (!is_int($key))
+                        return false;
+                }
+                return true;
+            }
+            else
+                return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage custom error message
+     * @return $this
+     */
+    public function onlyAssociativeArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be associative array';
+
+        $this->setValidation(self::$IDX_ONLY_ARRAY, function ($data)
+        {
+            if (is_array($data))
+            {
+                foreach ($data as $key => $value)
+                {
+                    if (!is_string($key))
+                        return false;
+                }
+                return true;
+            }
+            else
+                return false;
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
      * @param string $errorMessage custom error message
      * @return $this
      */
@@ -583,7 +652,6 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validation failed if value equals to null, '', or only whitespaces.
      * @param string $errorMessage custom error message
      * @return $this
      */
