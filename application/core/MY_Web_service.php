@@ -24,6 +24,22 @@ class MY_Web_service
         return $this->webService->getEndpointUrl($uri);
     }
 
+    public function isResetEachRequest ()
+    {
+        return $this->webService->isResetEachRequest();
+    }
+
+    public function resetEachRequest ($reset = true)
+    {
+        $this->webService->resetEachRequest($reset);
+    }
+
+    public function acceptLanguage ($language)
+    {
+        $this->webService->acceptLanguage($language);
+        return $this;
+    }
+
     public function setHeader ($field, $value)
     {
         $this->webService->setHeader($field, $value);

@@ -7,18 +7,34 @@ require_once 'WebClient.php';
  */
 class WebService
 {
-	private $webClient;
-	private $baseUrl;
-	
-	public function __construct ($baseUrl)
-	{
-		$this->webClient = new WebClient($baseUrl);
-		$this->baseUrl = $baseUrl;
-	}
-	
-	public function getEndpointUrl ($uri)
+    private $webClient;
+    private $baseUrl;
+
+    public function __construct ($baseUrl)
+    {
+        $this->webClient = new WebClient($baseUrl);
+        $this->baseUrl = $baseUrl;
+    }
+
+    public function getEndpointUrl ($uri)
     {
         return sprintf('%s%s', $this->baseUrl, $uri);
+    }
+
+    public function isResetEachRequest ()
+    {
+        return $this->webClient->isResetEachRequest();
+    }
+
+    public function resetEachRequest ($reset = true)
+    {
+        $this->webClient->resetEachRequest($reset);
+    }
+
+    public function acceptLanguage ($language)
+    {
+        $this->setHeader('Accept-Language', $language);
+        return $this;
     }
 
     public function setHeader ($field, $value)
@@ -153,17 +169,17 @@ class WebService
         return $body;
     }
 
-	private function getResponseBody (WebResponse $response)
-	{
-		$body = $response->getBody();
-		if (is_null($body))
+    private function getResponseBody (WebResponse $response)
+    {
+        $body = $response->getBody();
+        if (is_null($body))
         {
             $body = new stdClass();
         }
-		$body->success = $response->isSuccess();
-		$body->statusCode = $response->getStatusCode();
+        $body->success = $response->isSuccess();
+        $body->statusCode = $response->getStatusCode();
 
-		return $body;
-	}
+        return $body;
+    }
 }
 
