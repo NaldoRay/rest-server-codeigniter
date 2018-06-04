@@ -1,9 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-requireClass(WebService::class, 'third_party/webclient/');
-includeClass('*', 'third_party/query/');
-
 /**
  * Proxy class for {@see WebService}.
  * @author Ray Naldo

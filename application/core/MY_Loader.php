@@ -10,6 +10,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class MY_Loader extends CI_Loader
 {
+    public function initialize ()
+    {
+        parent::initialize();
+
+        $this->helper('file');
+        include_once(APPPATH.'core/helpers/log_helper.php');
+    }
+
     public function database($params = '', $return = FALSE, $query_builder = NULL)
     {
 		// Grab the super object
@@ -61,5 +69,3 @@ class MY_Loader extends CI_Loader
         return $this;
     }
 }
-
-?>

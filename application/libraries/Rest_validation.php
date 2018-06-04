@@ -1,7 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'third_party/validation/InputValidation.php');
 require_once(APPPATH.'libraries/validation-ci/ValidatorFactoryCI.php');
 
 /**

@@ -1,40 +1,17 @@
-## How to use rest-client in the same project
-1. Copy `vendor`, `application/core`, `application/services`, and `application/third_party/webclient` from `rest-client-x` 
-to the respective directory in the project
-2. Edit config for composer's autoload in `application/config.php`
-```php
-$config['composer_autoload'] = FCPATH . 'vendor/autoload.php';
-```
-3. Add helper method to load service class in `MY_Loader`
-```php
-public function service ($service, $object_name = null)
-{
-    $CI = get_instance();
-
-    if (empty($object_name))
-        $object_name = strtolower($service);
-
-    if (!isset($CI->$object_name))
-        $CI->$object_name = new $service();
-}
-```
-4. Add `application/services` directory to autoloader in `hooks/Autoloader.php` 
-by changing `Autoloader::__construct()`
-```php
-public function __construct ()
-{
-    $this->includeDirectories  = array(
-        APPPATH.'core',
-        APPPATH.'models',
-        APPPATH.'services',
-        APPPATH.'exceptions'
-    );
-
-    $this->excludeDirectories = array();
-}
-```
-
 ## Changelog
+
+v5.9.0
++ AuthorizationException  returns 403 forbidden
++ Add validation to check if value is array, numeric array, associative array
++ Move app helper function and log function to core/helpers
++ Load core helper on pre system hook
++ Load log helper in `MY_Loader
+
+v5.8.0
++ Update rest-client to v2.2.0
++ Remove hidden T_UPDATE set on update, allows table without T_UPDATE and/or V_INUPBY by overriding $writeOnlyFieldMap
++ Set default prefix for log files to "log"
++ Merge new expands & sorts with previous array, add `resetExpand()`
 
 v5.6.0
 + Auto-convert ISO-8601 for timestamp data type from/to database

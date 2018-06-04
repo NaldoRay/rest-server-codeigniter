@@ -27,6 +27,8 @@ class Autoloader
         spl_autoload_register(function ($class) {
             self::autoloadClass($this->includeDirectories, $class);
         });
+
+        include_once(APPPATH.'core/helpers/core_helper.php');
     }
 
     /**

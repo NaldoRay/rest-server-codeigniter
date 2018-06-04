@@ -1,9 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH . 'helpers/app_helper.php');
-includeClass('*', 'third_party/query/');
-includeClass(REST_Controller::class, 'libraries/');
+requireClass(REST_Controller::class, 'libraries/');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -24,7 +22,6 @@ class MY_REST_Controller extends REST_Controller
     public function __construct ()
     {
         parent::__construct();
-        $this->load->helper(['file', 'log']);
 
         $language = $this->getLanguage();
         $this->setLanguage($language);

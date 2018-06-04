@@ -71,7 +71,10 @@ if (!function_exists('endsWith'))
     function endsWith ($string, $suffix)
     {
         $offset = strlen($string) - strlen($suffix);
-        return (strpos($string, $suffix, $offset) === $offset);
+        if ($offset >= 0)
+            return (strpos($string, $suffix, $offset) === $offset);
+        else
+            return false;
     }
 }
 
