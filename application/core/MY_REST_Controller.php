@@ -109,7 +109,11 @@ class MY_REST_Controller extends REST_Controller
     {
         if ($e instanceof ApiException)
         {
-            if ($e instanceof AuthorizationException || $e instanceof ResourceNotFoundException)
+            if ($e instanceof AuthorizationException)
+            {
+                $this->respondForbidden($e->getMessage(), $e->getDomain());
+            }
+            else if ($e instanceof ResourceNotFoundException)
             {
                 $this->respondNotFound($e->getMessage(), $e->getDomain());
             }
