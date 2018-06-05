@@ -76,7 +76,7 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
                                 {
                                     $fieldValue = $row->{$fieldName};
                                     if (!is_null($fieldValue))
-                                        $row->{$fieldName} = date('Y-m-d\TH:i:sP', strtotime($fieldValue));
+                                        $row->{$fieldName} = date(DateTime::ISO8601, strtotime($fieldValue));
                                 }
                                 break;
                             }
