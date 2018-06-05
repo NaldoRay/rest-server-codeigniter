@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * English language
+ * English
  */
 
 $lang['msg_unique_constraint'] = 'ID has already been used';

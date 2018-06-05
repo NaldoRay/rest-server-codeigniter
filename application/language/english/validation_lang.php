@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * English language
+ * English
  */
 
 // value validation
@@ -26,6 +26,9 @@ $lang['validation_numeric_integer'] = '{label} must be integer number or integer
 $lang['validation_numeric_integer_positive'] = '{label} must be positive integer number or positive integer string';
 $lang['validation_numeric_float'] = '{label} must be float number or float string';
 $lang['validation_numeric_float_positive'] = '{label} must be positive float number or positive float string';
+$lang['validation_array'] = '{label} must be an array';
+$lang['validation_numeric_array'] = '{label} must be a numeric array';
+$lang['validation_associative_array'] = '{label} must be an associative array';
 $lang['validation_array_associatives'] = '{label} must be array of associatives';
 $lang['validation_array_objects'] = '{label} must be array of objects';
 $lang['validation_one_of_values'] = '{label} must be one of: {values}';

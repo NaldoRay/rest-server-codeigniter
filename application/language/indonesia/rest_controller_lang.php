@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /*
- * Indonesian language
+ * Indonesian
  */
 
 $lang['text_rest_invalid_api_key'] = 'Invalid API key %s'; // %s is the REST API key

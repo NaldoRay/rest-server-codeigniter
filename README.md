@@ -1,12 +1,13 @@
 ## Changelog
 
-v5.9.1
+v5.9.2
 + AuthorizationException  returns 403 forbidden
 + Add validation to check if value is array, numeric array, associative array
 + Move app helper function and log function to core/helpers
 + Load core helper on pre system hook
 + Load log helper in `MY_Loader
 + Fix auto-convert datetime/timestamp value from database to `DateTime::ISO8601` format
++ Override array validation's error messages to use language file
 
 v5.8.0
 + Update rest-client to v2.2.0

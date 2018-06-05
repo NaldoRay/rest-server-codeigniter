@@ -175,6 +175,30 @@ class ArrayValueValidatorCI extends ArrayValueValidator
         return parent::onlyPositiveNumericFloat($errorMessage);
     }
 
+    public function onlyArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_array');
+
+        return parent::onlyArray($errorMessage);
+    }
+
+    public function onlyNumericArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_numeric_array');
+
+        return parent::onlyNumericArray($errorMessage);
+    }
+
+    public function onlyAssociativeArray ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_associative_array');
+
+        return parent::onlyAssociativeArray($errorMessage);
+    }
+
     public function onlyArrayOfAssociatives ($errorMessage = null)
     {
         if (is_null($errorMessage))
