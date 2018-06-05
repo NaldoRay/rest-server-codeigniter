@@ -1,4 +1,6 @@
 ## Changelog
+v5.10.0
++ Autoload model in subfolders without specifying subfolder path
 
 v5.9.2
 + AuthorizationException  returns 403 forbidden
