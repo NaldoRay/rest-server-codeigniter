@@ -106,7 +106,11 @@ class MY_REST_Controller extends REST_Controller
     {
         if ($e instanceof ApiException)
         {
-            if ($e instanceof AuthorizationException)
+            if ($e instanceof AuthenticationException)
+            {
+                $this->respondUnauthorized($e->getMessage(), $e->getDomain());
+            }
+            else if ($e instanceof AuthorizationException)
             {
                 $this->respondForbidden($e->getMessage(), $e->getDomain());
             }
