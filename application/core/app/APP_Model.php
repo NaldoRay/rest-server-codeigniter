@@ -36,6 +36,7 @@ class APP_Model extends MY_Model
 
     /**
      * @throws BadFormatException
+     * @throws BadValueException
      * @throws TransactionException
      */
     protected function createEntities ($table, array $dataArr, array $allowedFields = null)
@@ -46,14 +47,22 @@ class APP_Model extends MY_Model
                 $dataArr[$i]['inupby'] = self::$defaultInupby;
         }
 
-        try
+        // gagal satu, gagal semua
+        return $this->doTransaction(function () use ($table, $dataArr, $allowedFields)
         {
-            return parent::createEntities($table, $dataArr, $allowedFields);
-        }
-        catch (TransactionException $e)
-        {
-            throw new TransactionException(sprintf('Gagal menambah %s, data kosong', $this->domain), $this->domain);
-        }
+            try
+            {
+                return parent::createEntities($table, $dataArr, $allowedFields);
+            }
+            catch (BadValueException $e)
+            {
+                throw new TransactionException(sprintf('Gagal menambah daftar %s, data kosong', $this->domain), $this->domain);
+            }
+            catch (TransactionException $e)
+            {
+                throw new TransactionException(sprintf('Gagal menambah daftar %s', $this->domain), $this->domain);
+            }
+        });
     }
 
     /**
@@ -155,13 +164,14 @@ class APP_Model extends MY_Model
      */
     protected function deleteEntity ($table, array $filters)
     {
+        // throw exception jika tidak ada entity yang dihapus
         try
         {
-            parent::deleteEntity($table, $filters);
-        }
-        catch (ResourceNotFoundException $e)
-        {
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+            $deletedCount = parent::deleteEntity($table, $filters);
+            if ($deletedCount == 0)
+                throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+
+            return $deletedCount;
         }
         catch (TransactionException $e)
         {

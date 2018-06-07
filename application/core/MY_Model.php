@@ -134,19 +134,20 @@ class MY_Model extends CI_Model
      * @param array|null $allowedFields
      * @return int number of entities created
      * @throws BadFormatException
+     * @throws BadValueException if array of entity data is empty
      * @throws TransactionException
-     */
+     */a
     protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
         if (empty($dataArr))
-            throw new TransactionException(sprintf('Failed to create %s, empty data', $this->domain), $this->domain);
+            throw new BadValueException(sprintf('Failed to create %s list, empty data', $this->domain), $this->domain);
 
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
         $count = $this->db->insert_batch($table, $dataArr);
         if ($count === false)
-            return 0;
+            throw new TransactionException(sprintf('Failed to create %s list', $this->domain), $this->domain);
         else
             return $count;
     }
@@ -298,7 +299,7 @@ class MY_Model extends CI_Model
     /**
      * @param string $table
      * @param array $filters entity's filter field => filter value
-     * @throws ResourceNotFoundException
+     * @return int number of deleted entities
      * @throws TransactionException if delete failed because of database error
      */
     protected function deleteEntity ($table, array $filters)
@@ -314,8 +315,7 @@ class MY_Model extends CI_Model
         }
         else
         {
-            if ($this->db->affected_rows() == 0)
-                throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
+            return $this->db->affected_rows();
         }
     }
 
