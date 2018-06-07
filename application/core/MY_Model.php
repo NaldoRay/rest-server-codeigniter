@@ -136,7 +136,7 @@ class MY_Model extends CI_Model
      * @throws BadFormatException
      * @throws BadValueException if array of entity data is empty
      * @throws TransactionException
-     */a
+     */
     protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
         if (empty($dataArr))
