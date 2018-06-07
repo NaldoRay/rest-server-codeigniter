@@ -511,21 +511,24 @@ class MY_Model extends CI_Model
             {
                 $field = $fieldMap[ $field ];
                 $value = $condition->getValue();
-                if (is_array($value))
+                if (!is_null($value))
                 {
-                    $values = array();
-                    foreach ($value as $val)
+                    if (is_array($value))
                     {
-                        $val = $this->toTableValue($field, $val);
-                        $values[] = $this->db->escape($val);
-                    }
+                        $values = array();
+                        foreach ($value as $val)
+                        {
+                            $val = $this->toTableValue($field, $val);
+                            $values[] = $this->db->escape($val);
+                        }
 
-                    $value = $values;
-                }
-                else
-                {
-                    $value = $this->toTableValue($field, $value);
-                    $value = $this->db->escape($value);
+                        $value = $values;
+                    }
+                    else
+                    {
+                        $value = $this->toTableValue($field, $value);
+                        $value = $this->db->escape($value);
+                    }
                 }
                 $condition->setFieldValue($field, $value);
 
