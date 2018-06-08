@@ -1,4 +1,12 @@
 ## Changelog
+v5.11.0
++ `MY_Model::createEntities()` dan `MY_Model::updateEntities` now doesn't allow partial success. Method will only returns when all entities area created/updated.  
++ `MY_Model::deleteEntity()` now returns number of deleted rows
++ `APP_Model::deleteEntity` throws `ResourceNotFoundException` if no entity deleted
++ `MY_Model::createEntities` throws `BadValueException` if data is empty, and TransactionException if failed to execute db
++ Fix query condition with `null` value (for `is null` / `is not null`)
++ Add authentication exception - returns 401 response
+
 v5.10.0
 + Autoload model in subfolders without specifying subfolder path
 

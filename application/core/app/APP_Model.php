@@ -47,22 +47,18 @@ class APP_Model extends MY_Model
                 $dataArr[$i]['inupby'] = self::$defaultInupby;
         }
 
-        // gagal satu, gagal semua
-        return $this->doTransaction(function () use ($table, $dataArr, $allowedFields)
+        try
         {
-            try
-            {
-                return parent::createEntities($table, $dataArr, $allowedFields);
-            }
-            catch (BadValueException $e)
-            {
-                throw new TransactionException(sprintf('Gagal menambah daftar %s, data kosong', $this->domain), $this->domain);
-            }
-            catch (TransactionException $e)
-            {
-                throw new TransactionException(sprintf('Gagal menambah daftar %s', $this->domain), $this->domain);
-            }
-        });
+            return parent::createEntities($table, $dataArr, $allowedFields);
+        }
+        catch (BadValueException $e)
+        {
+            throw new BadValueException(sprintf('Gagal menambah daftar %s', $this->domain), $this->domain);
+        }
+        catch (TransactionException $e)
+        {
+            throw new TransactionException(sprintf('Gagal menambah daftar %s', $this->domain), $this->domain);
+        }
     }
 
     /**
@@ -86,25 +82,32 @@ class APP_Model extends MY_Model
 
     /**
      * @throws BadFormatException
+     * @throws BadValueException
      * @throws TransactionException
      */
-    protected function updateEntities ($table, array $dataArr, $indexField, array $allowedFields = null)
+    protected function updateEntities ($table, array $dataArr, $indexField, array $filters = null, array $allowedFields = null)
     {
-        $updatedAt = date(DateTime::ISO8601);
-        for ($i = 0; $i < count($dataArr); $i++)
+        $updatedAtField = 'updatedAt';
+        $writeFieldMap = $this->getWriteFieldMap();
+        if (isset($writeFieldMap[$updatedAtField]))
         {
-            $dataArr[$i]['updatedAt'] = $updatedAt;
-            if (!isset($dataArr[$i]['inupby']))
-                $dataArr[$i]['inupby'] = self::$defaultInupby;
+            $updatedAtField = $writeFieldMap[$updatedAtField];
+
+            $updatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", date('Y-m-d H:i:s.u'));
+            $this->getDb()->set($updatedAtField, $updatedAt, false);
         }
 
         try
         {
-            return parent::updateEntities($table, $dataArr, $indexField, $allowedFields);
+            return parent::updateEntities($table, $dataArr, $indexField, $filters, $allowedFields);
+        }
+        catch (BadValueException $e)
+        {
+            throw new BadValueException(sprintf('Gagal mengubah daftar %s', $this->domain), $this->domain);
         }
         catch (TransactionException $e)
         {
-            throw new TransactionException(sprintf('Gagal mengubah %s, data kosong', $this->domain), $this->domain);
+            throw new TransactionException(sprintf('Gagal mengubah daftar %s', $this->domain), $this->domain);
         }
     }
 

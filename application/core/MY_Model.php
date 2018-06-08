@@ -132,24 +132,31 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $dataArr array of entity data entity's field => value
      * @param array|null $allowedFields
-     * @return int number of entities created
+     * @return int number of created entities, should be equals to the $dataArr length
      * @throws BadFormatException
-     * @throws BadValueException if array of entity data is empty
-     * @throws TransactionException
+     * @throws BadValueException if data is empty or one of entities are failed to be created
+     * @throws TransactionException if all entities are failed to be created because of db error
+     * @throws Exception
      */
     protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
         if (empty($dataArr))
-            throw new BadValueException(sprintf('Failed to create %s list, empty data', $this->domain), $this->domain);
+            throw new BadValueException(sprintf('Data must not be empty', $this->domain), $this->domain);
 
         foreach ($dataArr as $idx => $data)
             $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
-        $count = $this->db->insert_batch($table, $dataArr);
-        if ($count === false)
-            throw new TransactionException(sprintf('Failed to create %s list', $this->domain), $this->domain);
-        else
-            return $count;
+        // bulk create does not allow partial success i.e. transaction will be rollbacked if one them failed
+        return $this->doTransaction(function () use ($table, $dataArr)
+        {
+            $count = $this->db->insert_batch($table, $dataArr);
+            if ($count === false)
+                throw new TransactionException(sprintf('Failed to create entities', $this->domain), $this->domain);
+            else if ($count != count($dataArr))
+                throw new BadValueException(sprintf('Failed to create entities', $this->domain), $this->domain);
+            else
+                return $count;
+        });
     }
 
     /**
@@ -187,30 +194,44 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $dataArr array of entity data entity's field => value
      * @param string $indexField
+     * @param array $filters
      * @param array|null $allowedFields entity's fields
-     * @return int number of entities updated
+     * @return int number of updated entities, should be equals to the $dataArr length
      * @throws BadFormatException
-     * @throws TransactionException
+     * @throws BadValueException if data is empty or one of entities are failed to be updated
+     * @throws TransactionException if all entities are failed to be updated because of db error
+     * @throws Exception
      */
-    protected function updateEntities ($table, array $dataArr, $indexField, array $allowedFields = null)
+    protected function updateEntities ($table, array $dataArr, $indexField, array $filters = null, array $allowedFields = null)
     {
         if (empty($dataArr))
-            throw new TransactionException(sprintf('Failed to update %s, empty data', $this->domain), $this->domain);
-
-        foreach ($dataArr as $idx => $data)
-            $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
+            throw new BadValueException(sprintf('Data must not be empty', $this->domain), $this->domain);
 
         $fieldMap = $this->getWriteFieldMap();
         if (isset($fieldMap[$indexField]))
         {
-            $indexField = $fieldMap[$indexField];
+            $indexField = $fieldMap[ $indexField ];
+            $filters = $this->getTableFilters($filters);
+            foreach ($dataArr as $idx => $data)
+                $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
-            $count = $this->db->update_batch($table, $dataArr, $indexField);
-            if ($count !== false)
-                return $count;
+            // bulk update does not allow partial success i.e. transaction will be rollbacked if one them failed
+            return $this->doTransaction(function () use ($table, $dataArr, $indexField, $filters)
+            {
+                $this->setQueryFilters($filters);
+                $count = $this->db->update_batch($table, $dataArr, $indexField);
+                if ($count === false)
+                    throw new TransactionException('Failed to update entities', $this->domain);
+                else if ($count != count($dataArr))
+                    throw new BadValueException('Failed to update entities', $this->domain);
+                else
+                    return $count;
+            });
         }
-
-        return 0;
+        else
+        {
+            throw new BadValueException('Index field not found', $this->domain);
+        }
     }
 
     /**
