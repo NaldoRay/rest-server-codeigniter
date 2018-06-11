@@ -1051,13 +1051,14 @@ class MY_Model extends CI_Model
      * @param $leftEntity
      * @param Closure $getRightEntity returns the right entity for join, throws ResourceNotFoundException if entity is not found
      * @param array $fields
+     * @param string $joinSuffix
      */
-    protected function join ($leftEntity, Closure $getRightEntity, array $fields)
+    protected function join ($leftEntity, Closure $getRightEntity, array $fields, $joinSuffix = '')
     {
         try
         {
             $rightEntity = $getRightEntity();
-            $this->leftJoin($leftEntity, $rightEntity, $fields);
+            $this->leftJoin($leftEntity, $rightEntity, $fields, $joinSuffix);
         }
         catch (ResourceNotFoundException $e)
         {
@@ -1073,17 +1074,16 @@ class MY_Model extends CI_Model
      * @param object $leftEntity
      * @param object $rightEntity
      * @param array|null $fields
+     * @param string $joinSuffix
      */
-    private function leftJoin ($leftEntity, $rightEntity, array $fields = null)
+    private function leftJoin ($leftEntity, $rightEntity, array $fields, $joinSuffix = '')
     {
-        if (empty($fields))
-            $fields = array_keys((array)$rightEntity);
-
         foreach ($fields as $field)
         {
+            $joinField = $field.$joinSuffix;
             // only set property if not exists on leftEntity
-            if (!property_exists($leftEntity, $field))
-                $leftEntity->$field = $rightEntity->$field;
+            if (!property_exists($leftEntity, $joinField))
+                $leftEntity->$joinField = $rightEntity->$field;
         }
     }
 }
