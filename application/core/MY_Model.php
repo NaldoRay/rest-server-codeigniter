@@ -606,9 +606,11 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param QueryCondition $condition
      * @return bool
+     * @throws BadFormatException
      */
     protected function entityExistsWithCondition ($table, QueryCondition $condition)
     {
+        $condition = $this->toTableCondition($condition);
         $this->db->where($condition->getConditionString());
 
         return $this->rowExists($table);
