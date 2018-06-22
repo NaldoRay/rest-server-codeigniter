@@ -223,7 +223,7 @@ class MY_Model extends CI_Model
                 if ($count === false)
                     throw new TransactionException('Failed to update entities', $this->domain);
                 else if ($count != count($dataArr))
-                    throw new BadValueException('Failed to update entities', $this->domain);
+                    throw new BadValueException('Failed to update one of entities', $this->domain);
                 else
                     return $count;
             });
