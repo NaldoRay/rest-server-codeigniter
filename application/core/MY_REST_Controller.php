@@ -643,39 +643,61 @@ class MY_REST_Controller extends REST_Controller
         return $data;
     }
 
-    protected function getAll (Queriable $queriable, array $extraFilters = null)
+    protected function getAll (Queriable $queriable, QueryParam $queryParam = null)
     {
+        if (is_null($queryParam))
+            $queryParam = $this->getQueryParam();
+
+        return $queriable->query($queryParam);
+    }
+
+    /**
+     * @return QueryParam
+     */
+    protected function getQueryParam ()
+    {
+        // non-search query param, no condition
         $filters = $this->getQueryFilters();
         $expands = $this->getQueryExpands();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        if (!empty($extraFilters))
-            $filters = array_merge($filters, $extraFilters);
-
-        $queryParam = QueryParam::createFilter($filters)
+        return QueryParam::createFilter($filters)
             ->expand($expands)
             ->sort($sorts)
             ->limit($limit, $offset);
-
-        return $queriable->query($queryParam);
     }
 
-    protected function search (Queriable $searchable, array $searchData)
+    protected function search (Queriable $searchable, QueryParam $searchParam = null)
     {
+        if (is_null($searchParam))
+            $searchParam = $this->getSearchParam();
+
+        return $searchable->query($searchParam);
+    }
+
+    /**
+     * @return QueryParam
+     * @throws BadArrayException
+     * @throws BadBatchArrayException
+     * @throws BadValueException
+     */
+    protected function getSearchParam ()
+    {
+        // search must be POST
+        $searchData = $this->post();
+
         $condition = $this->parseSearchCondition($searchData);
         $expands = $this->getQueryExpands();
         $sorts = $this->getQuerySorts();
         $limit = $this->getQueryLimit();
         $offset = $this->getQueryOffset();
 
-        $searchParam = QueryParam::createSearch($condition)
+        return QueryParam::createSearch($condition)
             ->expand($expands)
             ->sort($sorts)
             ->limit($limit, $offset);
-
-        return $searchable->query($searchParam);
     }
 
     private function parseSearchCondition (array $search)
@@ -763,23 +785,6 @@ class MY_REST_Controller extends REST_Controller
         throw new BadValueException($this->getString('msg_search_invalid'));
     }
 
-    /**
-     * @return QueryParam
-     */
-    protected function getQueryParam ()
-    {
-        // non-search query param, no condition
-        $filters = $this->getQueryFilters();
-        $expands = $this->getQueryExpands();
-        $sorts = $this->getQuerySorts();
-        $limit = $this->getQueryLimit();
-        $offset = $this->getQueryOffset();
-
-        return QueryParam::createFilter($filters)
-            ->expand($expands)
-            ->sort($sorts)
-            ->limit($limit, $offset);
-    }
     /**
      * @return array
      */

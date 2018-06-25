@@ -1,4 +1,10 @@
 ## Changelog
+v5.12.0
++ Refactor controller helper method to get query param and search param
++ Fix `entityExistsWithCondition` haven't convert condition to table condition
++ Fix error message when failed to update one of entities
++ Add param to add suffix to  the joined fields
+
 v5.11.0
 + `MY_Model::createEntities()` dan `MY_Model::updateEntities` now doesn't allow partial success. Method will only returns when all entities area created/updated.  
 + `MY_Model::deleteEntity()` now returns number of deleted rows
