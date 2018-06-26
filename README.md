@@ -1,13 +1,14 @@
 ## Changelog
 v5.12.1
-+ Extract helper method to convert date time value to table's date time value
++ Add helper method to escape table value in `MY_Model`
++ Extract helper method to convert date time value to table's date time value in `MY_Model`
 + Refactor controller helper method to get query param and search param
 + Fix `entityExistsWithCondition` haven't convert condition to table condition
 + Fix error message when failed to update one of entities
 + Add param to add suffix to  the joined fields
 
 v5.11.0
-+ `MY_Model::createEntities()` dan `MY_Model::updateEntities` now doesn't allow partial success. Method will only returns when all entities area created/updated.  
++ `MY_Model::createEntities()` and `MY_Model::updateEntities` now doesn't allow partial success. Method will only returns when all entities area created/updated.  
 + `MY_Model::deleteEntity()` now returns number of deleted rows
 + `APP_Model::deleteEntity` throws `ResourceNotFoundException` if no entity deleted
 + `MY_Model::createEntities` throws `BadValueException` if data is empty, and TransactionException if failed to execute db

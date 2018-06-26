@@ -540,7 +540,7 @@ class MY_Model extends CI_Model
                         foreach ($value as $val)
                         {
                             $val = $this->toTableValue($field, $val);
-                            $values[] = $this->db->escape($val);
+                            $values[] = $this->escape($val);
                         }
 
                         $value = $values;
@@ -548,7 +548,7 @@ class MY_Model extends CI_Model
                     else
                     {
                         $value = $this->toTableValue($field, $value);
-                        $value = $this->db->escape($value);
+                        $value = $this->escape($value);
                     }
                 }
                 $condition->setFieldValue($field, $value);
@@ -1093,5 +1093,10 @@ class MY_Model extends CI_Model
             if (!property_exists($leftEntity, $joinField))
                 $leftEntity->$joinField = $rightEntity->$field;
         }
+    }
+
+    protected function escape ($value)
+    {
+        return $this->db->escape($value);
     }
 }
