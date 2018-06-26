@@ -780,9 +780,10 @@ class MY_Model extends CI_Model
     }
 
     /**
+     * This method DOES NOT escape the value.
      * @param string $field table's field
      * @param mixed $value
-     * @return bool|string
+     * @return bool|string unescaped table value
      * @throws BadFormatException
      */
     private function toTableValue ($field, $value)
@@ -799,11 +800,7 @@ class MY_Model extends CI_Model
         }
         else if ($this->isDateTimeField($field))
         {
-            // convert valid ISO-8601 date & time to local timezone
-            if ($this->isIso8601DateTime($value))
-                $value = date('Y-m-d H:i:s', strtotime($value));
-
-            return $value;
+            return $this->toTableDateTime($value);
         }
         else
         {
@@ -1005,6 +1002,15 @@ class MY_Model extends CI_Model
             ->notEmpty()
             ->validDateTime()
             ->validate();
+    }
+
+    protected function toTableDateTime ($value)
+    {
+        // convert valid ISO-8601 date & time to local timezone
+        if ($this->isIso8601DateTime($value))
+            $value = date('Y-m-d H:i:s', strtotime($value));
+
+        return $value;
     }
 
     protected final function addWriteOnlyFieldMap (array $fieldMap)

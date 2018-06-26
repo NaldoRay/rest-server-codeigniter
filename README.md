@@ -1,5 +1,6 @@
 ## Changelog
-v5.12.0
+v5.12.1
++ Extract helper method to convert date time value to table's date time value
 + Refactor controller helper method to get query param and search param
 + Fix `entityExistsWithCondition` haven't convert condition to table condition
 + Fix error message when failed to update one of entities
