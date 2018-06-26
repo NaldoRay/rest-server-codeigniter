@@ -343,11 +343,13 @@ class MY_Model extends CI_Model
     /**
      * Use this only for query that does not return result set e.g. create, update, delete.
      * @param string $sql
-     * @return bool
+     * @throws TransactionException
      */
     protected function executeRawQuery ($sql)
     {
-        return ($this->db->query($sql) !== false);
+        $result = $this->db->query($sql);
+        if ($result === false)
+            throw new TransactionException(sprintf('Failed to execute raw query: %s', $sql), $this->domain);
     }
 
     /**

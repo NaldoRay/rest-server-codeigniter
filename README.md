@@ -1,5 +1,6 @@
 ## Changelog
-v5.12.1
+v5.12.2
++ Throw `TransactionException` when `executeRawQuery(sql)` failed in `MY_Model`
 + Add helper method to escape table value in `MY_Model`
 + Extract helper method to convert date time value to table's date time value in `MY_Model`
 + Refactor controller helper method to get query param and search param
