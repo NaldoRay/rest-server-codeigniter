@@ -1074,8 +1074,9 @@ class MY_Model extends CI_Model
         {
             foreach ($fields as $field)
             {
-                if (!property_exists($leftEntity, $field))
-                    $leftEntity->$field = null;
+                $joinField = $field.$joinSuffix;
+                if (!property_exists($leftEntity, $joinField))
+                    $leftEntity->$joinField = null;
             }
         }
     }

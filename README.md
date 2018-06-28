@@ -1,4 +1,7 @@
 ## Changelog
+v5.12.3
++ Fix joined field name (add suffix) when join resource not found
+
 v5.12.2
 + Throw `TransactionException` when `executeRawQuery(sql)` failed in `MY_Model`
 + Add helper method to escape table value in `MY_Model`
