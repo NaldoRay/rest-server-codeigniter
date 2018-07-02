@@ -18,7 +18,7 @@ abstract class FieldValueCondition implements QueryCondition
      * @param string $operator
      * @param mixed $value
      */
-    public function __construct ($field, $operator, $value)
+    protected function __construct ($field, $operator, $value)
     {
         $this->field = $field;
         $this->operator = $operator;

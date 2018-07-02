@@ -1,4 +1,7 @@
 ## Changelog
+v5.13.0
++ Add `FieldPairCondition` to compare field with another field
+
 v5.12.3
 + Fix joined field name (add suffix) when join resource not found
 

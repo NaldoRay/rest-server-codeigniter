@@ -562,6 +562,28 @@ class MY_Model extends CI_Model
                 return null;
             }
         }
+        else if ($condition instanceof FieldPairCondition)
+        {
+            $condition = clone $condition;
+
+            $leftField = $condition->getLeftField();
+            $fieldMap = $this->getFullReadFieldMap();
+            if (isset($fieldMap[ $leftField ]))
+            {
+                $leftField = $fieldMap[ $leftField ];
+
+                $rightField = $condition->getRightField();
+                if (isset($fieldMap[ $rightField ]))
+                {
+                    $rightField = $fieldMap[ $rightField ];
+                    $condition->setFieldPair($leftField, $rightField);
+
+                    return $condition;
+                }
+            }
+
+            return null;
+        }
         else
         {
             return null;
