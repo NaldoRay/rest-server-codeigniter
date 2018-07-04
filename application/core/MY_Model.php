@@ -524,6 +524,21 @@ class MY_Model extends CI_Model
                 return $condition;
             }
         }
+        else if ($condition instanceof NotCondition)
+        {
+            $condition = clone $condition;
+
+            $tableCondition = $this->toTableCondition($condition->getCondition());
+            if (is_null($tableCondition))
+            {
+                return null;
+            }
+            else
+            {
+                $condition->setCondition($tableCondition);
+                return $condition;
+            }
+        }
         else if ($condition instanceof FieldValueCondition)
         {
             $condition = clone $condition;

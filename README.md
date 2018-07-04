@@ -1,4 +1,7 @@
 ## Changelog
+v5.14.0
++ Add `NotCondition` to negate whole condition
+
 v5.13.1
 + Update dependencies, fix [count on null](`https://github.com/guzzle/guzzle/pull/1686`)
 
