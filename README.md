@@ -1,4 +1,7 @@
 ## Changelog
+v5.13.1
++ Update dependencies, fix [count on null](`https://github.com/guzzle/guzzle/pull/1686`)
+
 v5.13.0
 + Add `FieldPairCondition` to compare field with another field
 
