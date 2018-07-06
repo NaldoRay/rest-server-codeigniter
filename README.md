@@ -1,4 +1,7 @@
 ## Changelog
+v5.14.1
++ Add `MY_Model::getString()` to get localization string
+
 v5.14.0
 + Add `NotCondition` to negate whole condition
 

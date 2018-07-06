@@ -1139,4 +1139,13 @@ class MY_Model extends CI_Model
     {
         return $this->db->escape($value);
     }
+
+    protected function getString ($key)
+    {
+        $line = $this->lang->line($key);
+        if ($line === false)
+            return null;
+        else
+            return $line;
+    }
 }
