@@ -1,4 +1,8 @@
 ## Changelog
+v5.15.0
++ Set WebClient::reset() visibility to public
++ Update `APP_REST_Controller` to use token
+
 v5.14.1
 + Add `MY_Model::getString()` to get localization string
 

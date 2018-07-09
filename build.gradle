@@ -1,4 +1,5 @@
-def versionName = "5.14.1"
+def versionName = "5.15.0"
+def versionNamePublic = "1.0.0"
 
 task release (type: Zip) {
 	from('.') {
@@ -14,5 +15,27 @@ task release (type: Zip) {
 	    into 'vendor'
 	}
 	archiveName 'rest-server-' + versionName + '.zip'
+	destinationDir file('release/')
+}
+
+task releasePublic (type: Zip) {
+	from('.') {
+        include 'README-public.md'
+        rename 'README-public.md', 'README.md'
+        include '.htaccess'
+        include 'index.php'
+        include 'application/**'
+        exclude 'application/tests/**'
+        exclude 'application/core/app/APP_REST_Controller.php'
+        exclude 'application/core/app/APP_Model.php'
+        exclude 'application/core/app/APP_Web_service.php'
+        exclude 'application/services/acl/**'
+        include 'system/**'
+    }
+	from('vendor-production') {
+	    include '**'
+	    into 'vendor'
+	}
+	archiveName 'rest-server-public-' + versionNamePublic + '.zip'
 	destinationDir file('release/')
 }
