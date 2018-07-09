@@ -19,7 +19,7 @@ class WebClient
     private $headers;
 
     /**
-    @param $baseUrl harus memiliki trailing slash
+    @param $baseUrl must have a trailing slash
      */
     public function __construct ($baseUrl)
     {
@@ -261,7 +261,7 @@ class WebClient
         $this->resetEachRequest = $reset;
     }
 
-    protected function reset ()
+    public function reset ()
     {
         $this->auth = null;
         $this->multipart = null;

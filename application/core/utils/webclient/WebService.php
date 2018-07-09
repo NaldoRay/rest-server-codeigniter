@@ -31,6 +31,11 @@ class WebService
         $this->webClient->resetEachRequest($reset);
     }
 
+    public function reset ()
+    {
+        $this->webClient->reset();
+    }
+
     public function acceptLanguage ($language)
     {
         $this->setHeader('Accept-Language', $language);
