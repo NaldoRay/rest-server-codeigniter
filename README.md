@@ -1,4 +1,7 @@
 ## Changelog
+v5.20.0
++ Add ip-based authorization, move client-specific authorization to `RestAccess`
+
 v5.15.0
 + Set WebClient::reset() visibility to public
 + Update `APP_REST_Controller` to use token

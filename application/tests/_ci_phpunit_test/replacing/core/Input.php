@@ -55,7 +55,7 @@ class CI_Input {
 	 *
 	 * @var	string
 	 */
-	protected $ip_address = FALSE;
+	protected $ip_address = '127.0.0.1';
 
 	/**
 	 * Allow GET array flag

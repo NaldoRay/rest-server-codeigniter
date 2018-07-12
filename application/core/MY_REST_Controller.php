@@ -14,6 +14,9 @@ class MY_REST_Controller extends REST_Controller
 {
     protected static $LANG_ENGLISH = 'english';
 
+    /** @var RestAccess */
+    private $restAccess;
+
     // this property is for debugging-only
     /** @var  ContextErrorException */
     private $contextError;
@@ -26,8 +29,6 @@ class MY_REST_Controller extends REST_Controller
         $language = $this->getLanguage();
         $this->setLanguage($language);
         $this->lang->load('messages');
-
-        $this->load->library(Rest_validation::class, null, 'validation');
 
         set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext)
         {
@@ -43,6 +44,25 @@ class MY_REST_Controller extends REST_Controller
             // bypass PHP error handler
             return true;
         });
+
+        // fix "Fatal error: Class 'CI_Model' not found"
+        require_once(BASEPATH.'core/Model.php');
+
+        try
+        {
+            $this->restAccess = new RestAccess();
+            $this->restAccess->check();
+
+            if ($this->shouldAuthorizeClient())
+                $this->authorizeClient();
+        }
+        catch (AuthorizationException $e)
+        {
+            $this->respondForbidden($e->getMessage(), 'API');
+            exit;
+        }
+
+        $this->load->library(Rest_validation::class, null, 'validation');
     }
 
     protected function getLanguage ()
@@ -53,6 +73,16 @@ class MY_REST_Controller extends REST_Controller
     private function setLanguage ($language)
     {
         $this->config->set_item('language', $language);
+    }
+
+    protected function shouldAuthorizeClient ()
+    {
+        return $this->restAccess->shouldAuthorizeClient();
+    }
+
+    protected function authorizeClient ()
+    {
+        // do nothing
     }
 
     private function handleContextError (ContextErrorException $exception)
