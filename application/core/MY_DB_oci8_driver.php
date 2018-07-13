@@ -88,6 +88,48 @@ class MY_DB_oci8_driver extends CI_DB_oci8_driver
 
 		return $result;
 	}
+
+    /**
+     * Fix package name cannot be empty.
+     * Based on oci8_driver.php - CI_DB_oci8_driver::stored_procedure().
+     */
+    public function stored_procedure($package, $procedure, array $params)
+    {
+        if (empty($procedure))
+        {
+            log_message('error', 'Invalid procedure: '.$procedure);
+            return ($this->db_debug) ? $this->display_error('db_invalid_query') : FALSE;
+        }
+        else if (!empty($package))
+        {
+            $procedure = $package.'.'.$procedure;
+        }
+
+        // Build the query string
+        $sql = 'BEGIN '.$procedure.'(';
+
+        /*
+         * Copied from oci8_driver.php CI_DB_oci8_driver::stored_procedure()
+         */
+        $have_cursor = FALSE;
+        foreach ($params as $param)
+        {
+            $sql .= $param['name'].',';
+
+            if (isset($param['type']) && $param['type'] === OCI_B_CURSOR)
+            {
+                $have_cursor = TRUE;
+            }
+        }
+        $sql = trim($sql, ',').'); END;';
+
+        $this->_reset_stmt_id = FALSE;
+        $this->stmt_id = oci_parse($this->conn_id, $sql);
+        $this->_bind_params($params);
+        $result = $this->query($sql, FALSE, $have_cursor);
+        $this->_reset_stmt_id = TRUE;
+        return $result;
+    }
 	
 	/**
      * Fix `field_data()` returns one-less fields (missing the last field) on subsequent queries after doing select query with `limit()`.
