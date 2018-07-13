@@ -343,23 +343,33 @@ class MY_Model extends CI_Model
     /**
      * Use this only for query that does not return result set e.g. create, update, delete.
      * @param string $sql
+     * @param array $params array of values [value1, value2] or param binds ([placeholder => value])
      * @throws TransactionException
      */
-    protected function executeRawQuery ($sql)
+    protected function executeRawQuery ($sql, array $params = null)
     {
-        $result = $this->db->query($sql);
+        if (empty($params))
+            $result = $this->db->query($sql);
+        else
+            $result = $this->db->query($sql, $params);
+
         if ($result === false)
             throw new TransactionException(sprintf('Failed to execute raw query: %s', $sql), $this->domain);
     }
 
     /**
      * @param string $sql
+     * @param array $params array of values [value1, value2] or param binds ([placeholder => value])
      * @return object[]
      */
-    protected function getAllEntitiesFromRawQuery ($sql)
+    protected function getAllEntitiesFromRawQuery ($sql, array $params = null)
     {
         /** @var CI_DB_result $result */
-        $result = $this->db->query($sql, false, true);
+        if (empty($params))
+            $result = $this->db->query($sql, false, true);
+        else
+            $result = $this->db->query($sql, $params, true);
+
         $rows = $result->result_array();
 
         // free the memory associated with the result and deletes the result resource ID.
