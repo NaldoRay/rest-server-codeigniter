@@ -8,7 +8,7 @@
  * @link       https://github.com/kenjis/ci-phpunit-test
  */
 
-class Validation_test extends TestCase
+class Validation_test extends UnitTestCase
 {
     /** @var Rest_validation */
     private $validation;

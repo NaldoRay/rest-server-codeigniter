@@ -64,7 +64,13 @@ class RestAccess
 
     private function isMethodAllowed ($method, array $access)
     {
-        return in_array($method, $access['methods']);
+        foreach ($access['methods'] as $methodPattern)
+        {
+            if (fnmatch($methodPattern, $method))
+                return true;
+        }
+
+        return false;
     }
 
     public function shouldAuthorizeClient ()

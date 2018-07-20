@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-requireClass(REST_Controller::class, 'libraries/');
+requireClass(REST_Controller::class, 'core/libraries/');
 
 // use namespace
 use Restserver\Libraries\REST_Controller;
@@ -396,7 +396,7 @@ class MY_REST_Controller extends REST_Controller
      */
     protected final function respondError ($statusCode, $message = '', $domain = 'Global', array $fields = null, array $batchFields = null)
     {
-		if (is_null($domain))
+        if (is_null($domain))
             $domain = 'Global';
 
         $response = array(

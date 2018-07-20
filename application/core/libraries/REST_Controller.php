@@ -437,7 +437,7 @@ abstract class REST_Controller extends \CI_Controller {
         }
 
         // Load the language file
-        $this->lang->load('rest_controller', $language, FALSE, TRUE, __DIR__."/../");
+        $this->lang->load('rest_controller', $language, FALSE, TRUE);
 
         // Initialise the response, request and rest objects
         $this->request = new stdClass();

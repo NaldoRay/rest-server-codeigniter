@@ -18,23 +18,55 @@ class MY_Loader extends CI_Loader
         include_once(APPPATH.'core/helpers/log_helper.php');
     }
 
+    public function library ($library, $params = NULL, $object_name = NULL)
+    {
+        /*
+         * Checks are copied/modified from CI_Loader
+         */
+        if (is_array($library))
+        {
+            foreach ($library as $key => $value)
+            {
+                // autoload library class from subfolders if any
+                if (is_int($key))
+                    class_exists(ucfirst($value), true);
+                else
+                    class_exists(ucfirst($key), true);
+            }
+        }
+        else
+        {
+            class_exists(ucfirst($library), true);
+            // set default object name similar as class name
+            if (empty($object_name))
+                $object_name = strtolower($library);
+        }
+
+        return parent::library($library, $params, $object_name);
+    }
+
+
     public function model ($model, $name = '', $db_conn = FALSE)
     {
+        /*
+         * Checks are copied/modified from CI_Loader
+         */
         if (is_array($model))
         {
             // copied from core
             foreach ($model as $key => $value)
             {
+                // autoload model class from subfolders if any
                 if (is_int($key))
-                    $this->model($value, '', $db_conn);
+                    class_exists($value, true);
                 else
-                    $this->model($key, $value, $db_conn);
+                    class_exists($key, true);
             }
-            return $this;
         }
-
-        // autoload model class from subfolders if any
-        class_exists($model, true);
+        else
+        {
+            class_exists($model, true);
+        }
 
         return parent::model($model, $name, $db_conn);
     }

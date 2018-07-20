@@ -21,7 +21,7 @@ class ValidatorFactoryCI extends ValidatorFactory
     }
 
     public function createFileValidator ($filePath, $label = 'File')
-{
+    {
         return new FileValidatorCI($filePath, $label);
     }
 }

@@ -113,6 +113,14 @@ class APP_REST_Controller extends MY_REST_Controller
         }
     }
 
+    protected function validateAclGroup ($groupId, $domain = 'API')
+    {
+        if ($this->shouldValidateAcl() && !$this->hasGroup($groupId))
+        {
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $domain), $domain);
+        }
+    }
+
     protected function shouldValidateAcl ()
     {
         return $this->shouldAuthorizeClient();
@@ -136,5 +144,15 @@ class APP_REST_Controller extends MY_REST_Controller
     protected function getAllKodeUnit ()
     {
         return isset($this->auth) ? $this->auth->unitArr : array();
+    }
+
+    protected function hasGroup ($groupId)
+    {
+        return in_array($groupId, $this->getAllGroupId());
+    }
+
+    protected function getAllGroupId ()
+    {
+        return isset($this->auth) ? $this->auth->groupArr : array();
     }
 }

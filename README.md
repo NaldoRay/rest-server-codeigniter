@@ -1,4 +1,8 @@
 ## Changelog
+
+v5.21.0
++ Move core files to `application/core`, fix unit tests
+
 v5.20.0
 + Add ip-based authorization, move client-specific authorization to `RestAccess`
 
