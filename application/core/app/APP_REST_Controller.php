@@ -105,19 +105,19 @@ class APP_REST_Controller extends MY_REST_Controller
         }
     }
 
-    protected function validateAclProdi ($kodeProdi, $domain = 'API')
+    protected function validateAclProdi ($kodeProdi, $resource = 'Resource', $domain = 'API')
     {
         if ($this->shouldValidateAcl() && !$this->hasProdi($kodeProdi))
         {
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $domain), $domain);
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $resource), $domain);
         }
     }
 
-    protected function validateAclGroup ($groupId, $domain = 'API')
+    protected function validateAclGroup ($groupId, $resource = 'Resource', $domain = 'API')
     {
         if ($this->shouldValidateAcl() && !$this->hasGroup($groupId))
         {
-            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $domain), $domain);
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $resource), $domain);
         }
     }
 
