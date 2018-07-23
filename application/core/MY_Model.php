@@ -1110,7 +1110,7 @@ class MY_Model extends CI_Model
      * @param array $fields
      * @param string $joinSuffix
      */
-    protected function join ($leftEntity, Closure $getRightEntity, array $fields, $joinSuffix = '')
+    protected function join ($leftEntity, Closure $getRightEntity, array $fields, $joinSuffix = null)
     {
         try
         {
@@ -1134,7 +1134,7 @@ class MY_Model extends CI_Model
      * @param array|null $fields
      * @param string $joinSuffix
      */
-    private function leftJoin ($leftEntity, $rightEntity, array $fields, $joinSuffix = '')
+    private function leftJoin ($leftEntity, $rightEntity, array $fields, $joinSuffix = null)
     {
         foreach ($fields as $field)
         {
