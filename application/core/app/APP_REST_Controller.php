@@ -9,7 +9,8 @@ class APP_REST_Controller extends MY_REST_Controller
 {
     private static $LANG_INDONESIA = 'indonesia';
 
-    private $auth;
+    private $username;
+    private $groupMap;
 
 
     public function __construct ()
@@ -59,7 +60,18 @@ class APP_REST_Controller extends MY_REST_Controller
         $authResponse = $aclServiceModel->getUserAuth($controller, $function, $accessToken);
         if ($authResponse->success)
         {
-            $this->auth = $authResponse->data;
+            $auth = $authResponse->data;
+
+            $this->username = $auth->username;
+            $this->groupMap = array();
+            foreach ($auth->groups as $group)
+            {
+                $groupId = $group->groupId;
+
+                $this->groupMap[$groupId]['unitArr'] = $group->unitArr;
+                $this->groupMap[$groupId]['prodiArr'] = $group->prodiArr;
+            }
+
 
             APP_Model::setDefaultInupby($this->getUsername());
         }
@@ -72,7 +84,7 @@ class APP_REST_Controller extends MY_REST_Controller
 
     protected function getUsername ()
     {
-        return isset($this->auth) ? $this->auth->username : null;
+        return isset($this->username) ? $this->username : null;
     }
 
     protected function validateAclProdiQuery (QueryParam $param)
@@ -126,24 +138,60 @@ class APP_REST_Controller extends MY_REST_Controller
         return $this->shouldAuthorizeClient();
     }
 
-    protected function hasProdi ($kodeProdi)
+    protected function hasProdi ($kodeProdi, $groupId = null)
     {
-        return in_array($kodeProdi, $this->getAllKodeProdi());
+        return in_array($kodeProdi, $this->getAllKodeProdi($groupId));
     }
 
-    protected function getAllKodeProdi ()
+    protected function getAllKodeProdi ($groupId = null)
     {
-        return isset($this->auth) ? $this->auth->prodiArr : array();
+        if (isset($this->groupMap))
+        {
+            if (is_null($groupId))
+            {
+                $kodeProdiMap = array();
+                foreach ($this->groupMap as $groupData)
+                {
+                    foreach ($groupData['prodiArr'] as $kodeProdi)
+                        $kodeProdiMap[$kodeProdi] = true;
+                }
+                return array_keys($kodeProdiMap);
+            }
+            else if (isset($this->groupMap[$groupId]))
+            {
+                return $this->groupMap[$groupId]['prodiArr'];
+            }
+        }
+
+        return array();
     }
 
-    protected function hasUnit ($kodeUnit)
+    protected function hasUnit ($kodeUnit, $groupId = null)
     {
-        return in_array($kodeUnit, $this->getAllKodeUnit());
+        return in_array($kodeUnit, $this->getAllKodeUnit($groupId));
     }
 
-    protected function getAllKodeUnit ()
+    protected function getAllKodeUnit ($groupId = null)
     {
-        return isset($this->auth) ? $this->auth->unitArr : array();
+        if (isset($this->groupMap))
+        {
+            if (is_null($groupId))
+            {
+                $kodeUnitMap = array();
+                foreach ($this->groupMap as $groupData)
+                {
+                    foreach ($groupData['unitArr'] as $kodeUnit)
+                        $kodeUnitMap[$kodeUnit] = true;
+                }
+                return array_keys($kodeUnitMap);
+            }
+            else if (isset($this->groupMap[$groupId]))
+            {
+                return $this->groupMap[$groupId]['unitArr'];
+            }
+        }
+
+        return array();
     }
 
     protected function hasGroup ($groupId)
@@ -153,6 +201,9 @@ class APP_REST_Controller extends MY_REST_Controller
 
     protected function getAllGroupId ()
     {
-        return isset($this->auth) ? $this->auth->groupArr : array();
+        if (isset($this->groupMap))
+            return array_keys($this->groupMap);
+        else
+            return array();
     }
 }

@@ -2,6 +2,7 @@
 
 v5.21.0
 + Move core files to `application/core`, fix unit tests
++ Refactor to allow filter/get acl prodi/unit by group
 
 v5.20.0
 + Add ip-based authorization, move client-specific authorization to `RestAccess`
