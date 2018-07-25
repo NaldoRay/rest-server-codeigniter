@@ -72,8 +72,7 @@ class APP_REST_Controller extends MY_REST_Controller
                 $this->groupMap[$groupId]['prodiArr'] = $group->prodiArr;
             }
 
-
-            APP_Model::setDefaultInupby($this->getUsername());
+            APP_Model::setInupby($this->getUsername());
         }
         else
         {

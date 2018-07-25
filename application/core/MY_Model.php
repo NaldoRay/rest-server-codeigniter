@@ -1057,7 +1057,7 @@ class MY_Model extends CI_Model
     {
         // convert valid ISO-8601 date & time to local timezone
         if ($this->isIso8601DateTime($value))
-            $value = date('Y-m-d H:i:s', strtotime($value));
+            $value = date('Y-m-d H:i:s.u', strtotime($value));
 
         return $value;
     }

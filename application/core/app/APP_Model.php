@@ -8,6 +8,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class APP_Model extends MY_Model
 {
     protected $writeOnlyFieldMap = [
+        'createdAt' => 'T_INSERT',
         'updatedAt' => 'T_UPDATE',
         'inupby' => 'V_INUPBY'
     ];
@@ -15,24 +16,25 @@ class APP_Model extends MY_Model
     protected $numberPrefixes = ['N_'];
     protected $dateTimePrefixes = ['T_'];
 
-    private static $defaultInupby = null;
+    private static $inupby = null;
 
 
     /**
      * @param string $inupby
      */
-    public static function setDefaultInupby ($inupby)
+    public static function setInupby ($inupby)
     {
-        self::$defaultInupby = $inupby;
+        self::$inupby = $inupby;
     }
 
     /**
      * @return string|null
      */
-    protected static function getDefaultInupby ()
+    protected static function getInupby ()
     {
-        return self::$defaultInupby;
+        return self::$inupby;
     }
+
 
     /**
      * @throws BadFormatException
@@ -41,11 +43,13 @@ class APP_Model extends MY_Model
      */
     protected function createEntities ($table, array $dataArr, array $allowedFields = null)
     {
-        for ($i = 0; $i < count($dataArr); $i++)
+        $createdAt = $this->getCurrentDateTime();
+        foreach ($dataArr as &$data)
         {
-            if (!isset($dataArr[$i]['inupby']))
-                $dataArr[$i]['inupby'] = self::$defaultInupby;
+            $data['createdAt'] = $createdAt;
+            $data['inupby'] = self::$inupby;
         }
+        unset($data);
 
         try
         {
@@ -67,8 +71,8 @@ class APP_Model extends MY_Model
      */
     protected function createEntity ($table, array $data, array $allowedFields = null)
     {
-        if (!isset($data['inupby']))
-            $data['inupby'] = self::$defaultInupby;
+        $data['createdAt'] = $this->getCurrentDateTime();
+        $data['inupby'] = self::$inupby;
 
         try
         {
@@ -87,15 +91,25 @@ class APP_Model extends MY_Model
      */
     protected function updateEntities ($table, array $dataArr, $indexField, array $filters = null, array $allowedFields = null)
     {
+        /*
+         * FIX ORA-00932: inconsistent datatypes: expected CHAR got TIMESTAMP.
+         * Because CodeIgniter use 'CASE WHEN :newTimestampInChar ELSE :oldTimestamp' when doing batch update
+         */
         $updatedAtField = 'updatedAt';
         $writeFieldMap = $this->getWriteFieldMap();
         if (isset($writeFieldMap[$updatedAtField]))
         {
             $updatedAtField = $writeFieldMap[$updatedAtField];
 
-            $updatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", date('Y-m-d H:i:s.u'));
+            $updatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
             $this->getDb()->set($updatedAtField, $updatedAt, false);
         }
+
+        foreach ($dataArr as &$data)
+        {
+            $data['inupby'] = self::$inupby;
+        }
+        unset($data);
 
         try
         {
@@ -118,9 +132,8 @@ class APP_Model extends MY_Model
      */
     protected function updateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
-        $data['updatedAt'] = date(DateTime::ISO8601);
-        if (!isset($data['inupby']))
-            $data['inupby'] = self::$defaultInupby;
+        $data['updatedAt'] = $this->getCurrentDateTime();
+        $data['inupby'] = self::$inupby;
 
         try
         {
@@ -143,9 +156,8 @@ class APP_Model extends MY_Model
      */
     protected function updateEntityWithCondition ($table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
-        $data['updatedAt'] = date(DateTime::ISO8601);
-        if (!isset($data['inupby']))
-            $data['inupby'] = self::$defaultInupby;
+        $data['updatedAt'] = $this->getCurrentDateTime();
+        $data['inupby'] = self::$inupby;
 
         try
         {
@@ -159,6 +171,11 @@ class APP_Model extends MY_Model
         {
             throw new TransactionException(sprintf('Gagal mengubah %s', $this->domain), $this->domain);
         }
+    }
+
+    private function getCurrentDateTime ()
+    {
+        return date('Y-m-d H:i:s.u');
     }
 
     /**
