@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.22.0
++ Rename core methods, add `createdAt`, add missing `inupby` on `APP_Model::updateEntities()`, always replace `inupby`
++ Remove `sortOnlyFieldMap` from `MY_Model`'s properties 
+
 v5.21.0
 + Move core files to `application/core`, fix unit tests
 + Refactor to allow filter/get acl prodi/unit by group

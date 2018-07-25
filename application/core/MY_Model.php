@@ -14,8 +14,6 @@ class MY_Model extends CI_Model
     protected $writeOnlyFieldMap = [];
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
-    /** for sort-only fields, not readable/writable (hidden) */
-    protected $sortOnlyFieldMap = [];
 
     /** prefix from column name with boolean data type, for auto-convert */
     protected $booleanPrefixes = [];
@@ -457,6 +455,10 @@ class MY_Model extends CI_Model
     }
 
     /**
+     * IMPORTANT: SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
+     * If this is a distinct query and there's a hidden read-only field in sorts,
+     * then we also need to select that field and hide it on the result.
+     *
      * @param string $table
      * @param QueryParam $param
      * @param array $fields
@@ -478,26 +480,6 @@ class MY_Model extends CI_Model
             $condition = $this->toTableCondition($condition);
         $fields = $this->getTableFields($fields);
         $sorts = $this->getTableSorts($sorts);
-
-        // SQL doesn't allow ORDER BY on field that is not selected on DISTINCT.
-        // If this is a distinct query and there's a hidden read-only field in sorts,
-        // then we also need to select that field and hide it on the result
-        if ($distinct && !empty($sorts) && !empty($this->sortOnlyFieldMap))
-        {
-            $tableSortFields = array_map(function ($sort)
-            {
-                return explode(' ', $sort)[0];
-            }, $sorts);
-            $hiddenSortFields = array_intersect($tableSortFields, array_values($this->sortOnlyFieldMap));
-
-            if (!empty($hiddenSortFields))
-            {
-                if (empty($fields))
-                    $fields = array_values($this->getReadFieldMap());
-
-                $fields = array_merge($fields, $hiddenSortFields);
-            }
-        }
 
         $rows = $this->getAllRows($table, $condition, $fields, $distinct, $sorts, $limit, $offset);
         return $this->toEntities($rows);
@@ -554,7 +536,7 @@ class MY_Model extends CI_Model
             $condition = clone $condition;
 
             $field = $condition->getField();
-            $fieldMap = $this->getFullReadFieldMap();
+            $fieldMap = $this->getReadFieldMap();
             if (isset($fieldMap[ $field ]))
             {
                 $field = $fieldMap[ $field ];
@@ -592,7 +574,7 @@ class MY_Model extends CI_Model
             $condition = clone $condition;
 
             $leftField = $condition->getLeftField();
-            $fieldMap = $this->getFullReadFieldMap();
+            $fieldMap = $this->getReadFieldMap();
             if (isset($fieldMap[ $leftField ]))
             {
                 $leftField = $fieldMap[ $leftField ];
@@ -717,16 +699,12 @@ class MY_Model extends CI_Model
     {
         if (!empty($sorts))
         {
-            if (!empty($this->sortOnlyFieldMap))
-            {
-                if (empty($fields))
-                    $fields = array_values($this->getFullReadFieldMap());
-                else
-                    $fields = array_merge($fields, array_values($this->sortOnlyFieldMap));
-            }
+            if (empty($fields))
+                $fields = array_values($this->getReadFieldMap());
 
             if (!empty($fields))
             {
+                // filter sorts based on fields selected
                 $sorts = array_filter($sorts, function ($sort) use ($fields)
                 {
                     $sortField = explode(' ', $sort)[0];
@@ -809,7 +787,7 @@ class MY_Model extends CI_Model
 
         $filterData = array();
 
-        $fieldMap = $this->getFullReadFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         foreach ($filters as $field => $value)
         {
             if (isset($fieldMap[$field]))
@@ -878,7 +856,7 @@ class MY_Model extends CI_Model
         }
 
         $sortData = array();
-        $fieldMap = $this->getFullReadFieldMap();
+        $fieldMap = $this->getReadFieldMap();
         foreach ($sorts as $sort)
         {
             if ($sort[0] === '-')
@@ -956,9 +934,6 @@ class MY_Model extends CI_Model
         unset($row['RNUM']);
 
         foreach ($this->writeOnlyFieldMap as $tableField)
-            unset($row[ $tableField ]);
-
-        foreach ($this->sortOnlyFieldMap as $tableField)
             unset($row[ $tableField ]);
 
         $entity = new stdClass();
@@ -1070,17 +1045,6 @@ class MY_Model extends CI_Model
     protected function getWriteFieldMap ()
     {
         return array_merge($this->fieldMap, $this->writeOnlyFieldMap);
-    }
-
-    /**
-     * @return array result of getReadFieldMap() file including hidden read-only field map
-     */
-    private function getFullReadFieldMap ()
-    {
-        if (empty($this->sortOnlyFieldMap))
-            return $this->getReadFieldMap();
-        else
-            return array_merge($this->getReadFieldMap(), $this->sortOnlyFieldMap);
     }
 
     private function getReadFieldMap ()
