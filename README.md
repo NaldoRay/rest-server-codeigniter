@@ -3,6 +3,7 @@
 v5.22.0
 + Rename core methods, add `createdAt`, add missing `inupby` on `APP_Model::updateEntities()`, always replace `inupby`
 + Remove `sortOnlyFieldMap` from `MY_Model`'s properties 
++ Add `hiddenReadFields` to `MY_Model`'s properties to hide entity fields
 
 v5.21.0
 + Move core files to `application/core`, fix unit tests

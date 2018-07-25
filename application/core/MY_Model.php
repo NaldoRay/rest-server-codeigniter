@@ -14,6 +14,8 @@ class MY_Model extends CI_Model
     protected $writeOnlyFieldMap = [];
     /** for view/read-only fields */
     protected $readOnlyFieldMap = [];
+    /** for hiding read fields */
+    protected $hiddenReadFields = [];
 
     /** prefix from column name with boolean data type, for auto-convert */
     protected $booleanPrefixes = [];
@@ -955,6 +957,10 @@ class MY_Model extends CI_Model
 
             $entity->{$field} = $value;
         }
+
+        foreach ($this->hiddenReadFields as $field)
+            unset($entity->{$field});
+
         return $entity;
     }
 
