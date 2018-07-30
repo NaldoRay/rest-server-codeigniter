@@ -523,6 +523,24 @@ $config['rewrite_short_tags'] = FALSE;
 $config['proxy_ips'] = '';
 
 /*
- * To log queries
+ * -------------------------------------------------------------------------
+ * Query Logging Configurations
+ * -------------------------------------------------------------------------
+ *
+ * 'app_name'
+ *
+ *      Log filename will be prefixed with this name e.g. Example_201807.txt
+ *
+ * 'app_log_category'
+ *
+ *      Log filename will be suffixed with this config e.g. Example_201807_week31.txt
+ *      Default will log monthly.
+ *      Available options are:
+ *
+ *      1 = logs Weekly
+ *      2 = logs Monthly
+ *      3 = logs Yearly
+ *
  */
 $config['app_name'] = 'Example';
+$config['app_log_category'] = 2;

@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.23.0
++ Add configuration for query logging category (weekly, monthly, yearly)
+
 v5.22.0
 + Rename core methods, add `createdAt`, add missing `inupby` on `APP_Model::updateEntities()`, always replace `inupby`
 + Remove `sortOnlyFieldMap` from `MY_Model`'s properties 

@@ -4,9 +4,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Author: Ray Naldo
  */
-defined('WEEKLY') OR define ('WEEKLY', 1);
-defined('MONTHLY') OR define ('MONTHLY', 2);
-defined('YEARLY') OR define ('YEARLY', 3);
+defined('LOG_WEEKLY') OR define ('LOG_WEEKLY', 1);
+defined('LOG_MONTHLY') OR define ('LOG_MONTHLY', 2);
+defined('LOG_YEARLY') OR define ('LOG_YEARLY', 3);
 defined('LOG_PATH') OR define ('LOG_PATH', APPPATH.'../logs/');
 
 
@@ -16,18 +16,33 @@ if (!function_exists('logQuery'))
      * Log query ke file.
      *
      * @param string $query query to be logged
-     * @param int $category to group logs; set MONTHLY (default), or YEARLY
+     * @param int $category to group logs; set LOG_MONTHLY (default), or LOG_YEARLY
      */
-    function logQuery ($query, $category = MONTHLY)
+    function logQuery ($query, $category = null)
     {
         $CI =& get_instance();
 
+        if (empty($category))
+        {
+            // read log category from config
+            $categoryConfig = $CI->config->item('app_log_category');
+            if (empty($categoryConfig))
+            {
+                // default to MONTHLY
+                $category = LOG_MONTHLY;
+            }
+            else
+            {
+                $category = $categoryConfig;
+            }
+        }
+
         switch ($category)
         {
-            case YEARLY:
+            case LOG_YEARLY:
                 $date = date("Y");
                 break;
-            case WEEKLY:
+            case LOG_WEEKLY:
                 $date = sprintf('%s-week%s', date('Ym'), date('W'));
                 break;
             default:
@@ -51,16 +66,31 @@ if (!function_exists('logQuery'))
 
 if (!function_exists('logFailedQuery'))
 {
-    function logFailedQuery ($query, $category = MONTHLY)
+    function logFailedQuery ($query, $category = null)
     {
         $CI =& get_instance();
 
+        if (empty($category))
+        {
+            // read log category from config
+            $categoryConfig = $CI->config->item('app_log_category');
+            if (empty($categoryConfig))
+            {
+                // default to MONTHLY
+                $category = LOG_MONTHLY;
+            }
+            else
+            {
+                $category = $categoryConfig;
+            }
+        }
+
         switch ($category)
         {
-            case YEARLY:
+            case LOG_YEARLY:
                 $date = date("Y");
                 break;
-            case WEEKLY:
+            case LOG_WEEKLY:
                 $date = sprintf('%s-week%s', date('Ym'), date('W'));
                 break;
             default:
