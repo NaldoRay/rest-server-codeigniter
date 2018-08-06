@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'core/libraries/validation-ci/ValidatorFactoryCI.php');
+require_once(APPPATH.'core/utils/validation-ci/ValidatorFactoryCI.php');
 
 /**
  * @author Ray Naldo

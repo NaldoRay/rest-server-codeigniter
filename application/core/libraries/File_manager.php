@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once('System.php');
-require_once(APPPATH.'third_party/viewer/FileViewer.php');
+require_once(APPPATH.'core/utils/viewer/FileViewer.php');
 
 /**
  * @author Ray Naldo
