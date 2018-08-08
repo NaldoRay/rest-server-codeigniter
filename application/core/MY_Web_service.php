@@ -26,7 +26,7 @@ class MY_Web_service
         return $this->webService->isResetEachRequest();
     }
 
-    public function resetEachRcequest ($reset = true)
+    public function resetEachRequest ($reset = true)
     {
         $this->webService->resetEachRequest($reset);
     }

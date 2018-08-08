@@ -1,5 +1,10 @@
 ## Changelog
 
+v5.24.0
++ Add `RawCondition` to support raw (query) condition
++ Fix method name in `MY_Web_service`
++ Add helper to check date (range) to `core_helper`
+
 v5.23.0
 + Add configuration for query logging category (weekly, monthly, yearly)
 

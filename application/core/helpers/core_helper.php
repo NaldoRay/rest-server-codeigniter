@@ -106,3 +106,69 @@ if (!function_exists('groupObjectArray'))
         return $groupedArr;
     }
 }
+
+if (!function_exists('isInDateRange'))
+{
+    /**
+     * @param string $startDateTimeStr date string
+     * @param string $endDateTimeStr date string
+     * @return bool true if current date (without time parts) is within range
+     */
+    function isInDateRange ($startDateTimeStr, $endDateTimeStr)
+    {
+        $now = getDateMillis();
+        return ($now >= getDateMillis($startDateTimeStr) && $now <= getDateMillis($endDateTimeStr));
+    }
+}
+
+if (!function_exists('isInDateTimeRange'))
+{
+    /**
+     * @param string $startDateTimeStr date string
+     * @param string $endDateTimeStr date string
+     * @return bool true if current date (without time parts) is within range
+     */
+    function isInDateTimeRange ($startDateTimeStr, $endDateTimeStr)
+    {
+        $now = getDateMillis();
+        return ($now >= getDateMillis($startDateTimeStr) && $now <= getDateMillis($endDateTimeStr));
+    }
+}
+
+if (!function_exists('getDateMillis'))
+{
+    /**
+     * @param string $dateTimeStr
+     * @return int unix timestamp in milliseconds with time parts dropped
+     */
+    function getDateMillis ($dateTimeStr = null)
+    {
+        if (empty($dateTimeStr))
+            $dateTimeStr = 'now';
+
+        $dateTime = new DateTime($dateTimeStr);
+        $dateTime->setTime(0, 0, 0);
+
+        // getTimestamp return unix timestamp in seconds, needs to be converted to milliseconds
+        return $dateTime->getTimestamp() * 1000;
+    }
+}
+
+if (!function_exists('getDateTimeMillis'))
+{
+    /**
+     * @param string $dateTimeStr date/time string
+     * @return int unix timestamp in milliseconds with time parts dropped
+     */
+    function getDateTimeMillis ($dateTimeStr = null)
+    {
+        if (empty($dateTimeStr))
+            $dateTimeStr = 'now';
+
+        // don't use strtotime() to keep consistent with getDateMillis()
+        $dateTime = new DateTime($dateTimeStr);
+
+        // getTimestamp return unix timestamp in seconds, needs to be converted to milliseconds
+        return $dateTime->getTimestamp()* 1000;
+    }
+}
