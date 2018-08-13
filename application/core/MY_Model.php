@@ -196,9 +196,9 @@ class MY_Model extends CI_Model
      * @param string $indexField
      * @param array $filters
      * @param array|null $allowedFields entity's fields
-     * @return int number of updated entities, should be equals to the $dataArr length
+     * @return int number of updated entities, might be less than or equals to $dataArr length
      * @throws BadFormatException
-     * @throws BadValueException if data is empty or one of entities are failed to be updated
+     * @throws BadValueException if data is empty
      * @throws TransactionException if all entities are failed to be updated because of db error
      * @throws Exception
      */
@@ -222,8 +222,6 @@ class MY_Model extends CI_Model
                 $count = $this->db->update_batch($table, $dataArr, $indexField);
                 if ($count === false)
                     throw new TransactionException('Failed to update entities', $this->domain);
-                else if ($count != count($dataArr))
-                    throw new BadValueException('Failed to update one of entities', $this->domain);
                 else
                     return $count;
             });

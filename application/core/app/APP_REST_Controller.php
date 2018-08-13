@@ -198,6 +198,15 @@ class APP_REST_Controller extends MY_REST_Controller
         return in_array($groupId, $this->getAllGroupId());
     }
 
+    protected function getFirstGroupId ()
+    {
+        $groupIdArr = $this->getAllGroupId();
+        if (empty($groupIdArr))
+            return null;
+        else
+            return $groupIdArr[0];
+    }
+
     protected function getAllGroupId ()
     {
         if (isset($this->groupMap))

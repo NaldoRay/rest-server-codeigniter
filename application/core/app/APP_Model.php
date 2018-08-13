@@ -117,7 +117,7 @@ class APP_Model extends MY_Model
         }
         catch (BadValueException $e)
         {
-            throw new BadValueException(sprintf('Gagal mengubah daftar %s', $this->domain), $this->domain);
+            throw new BadValueException(sprintf('Gagal mengubah daftar %s: data kosong', $this->domain), $this->domain);
         }
         catch (TransactionException $e)
         {
