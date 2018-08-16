@@ -537,10 +537,11 @@ $config['proxy_ips'] = '';
  *      Default will log monthly.
  *      Available options are:
  *
- *      1 = logs Weekly
- *      2 = logs Monthly
- *      3 = logs Yearly
+ *      1 = logs Daily
+ *      2 = logs Weekly
+ *      3 = logs Monthly
+ *      4 = logs Yearly
  *
  */
 $config['app_name'] = 'Example';
-$config['app_log_category'] = 2;
+$config['app_log_category'] = 3;

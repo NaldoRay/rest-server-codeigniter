@@ -4,9 +4,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Author: Ray Naldo
  */
-defined('LOG_WEEKLY') OR define ('LOG_WEEKLY', 1);
-defined('LOG_MONTHLY') OR define ('LOG_MONTHLY', 2);
-defined('LOG_YEARLY') OR define ('LOG_YEARLY', 3);
+defined('LOG_DAILY') OR define ('LOG_DAILY', 1);
+defined('LOG_WEEKLY') OR define ('LOG_WEEKLY', 2);
+defined('LOG_MONTHLY') OR define ('LOG_MONTHLY', 3);
+defined('LOG_YEARLY') OR define ('LOG_YEARLY', 4);
 defined('LOG_PATH') OR define ('LOG_PATH', APPPATH.'../logs/');
 
 
@@ -42,11 +43,14 @@ if (!function_exists('logQuery'))
             case LOG_YEARLY:
                 $date = date("Y");
                 break;
+            case LOG_MONTHLY:
+                $date = date("Ym");
+                break;
             case LOG_WEEKLY:
                 $date = sprintf('%s-week%s', date('Ym'), date('W'));
                 break;
             default:
-                $date = date("Ym");
+                $date = date("Ymd");
                 break;
         }
 
@@ -90,11 +94,14 @@ if (!function_exists('logFailedQuery'))
             case LOG_YEARLY:
                 $date = date("Y");
                 break;
+            case LOG_MONTHLY:
+                $date = date("Ym");
+                break;
             case LOG_WEEKLY:
                 $date = sprintf('%s-week%s', date('Ym'), date('W'));
                 break;
             default:
-                $date = date("Ym");
+                $date = date("Ymd");
                 break;
         }
 

@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.26.0
++ Allow log daily
+
 v5.25.0
 + Fix update batch failed even though doing it with raw query is success (only on MySQL because number of affected rows is less than the enumber of update rows)
 + Update batch now allows partial success because MySQL won't update rows that don't change i.e. the affected rows from MySQL might be less than number of update rows, different than Oracle which always return number of update rows whether the rows changed or not. 
