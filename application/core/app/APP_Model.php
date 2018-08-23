@@ -97,12 +97,21 @@ class APP_Model extends MY_Model
          */
         $updatedAtField = 'updatedAt';
         $writeFieldMap = $this->getWriteFieldMap();
-        if (isset($writeFieldMap[$updatedAtField]))
+        if (isset($writeFieldMap[$indexField]) && isset($writeFieldMap[ $updatedAtField ]))
         {
-            $updatedAtField = $writeFieldMap[$updatedAtField];
+            $tableIndexField = $writeFieldMap[ $indexField ];
+            $tableUpdatedAtField = $writeFieldMap[ $updatedAtField ];
+            $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
 
-            $updatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
-            $this->getDb()->set($updatedAtField, $updatedAt, false);
+            $tableUpdateArr = array();
+            foreach ($dataArr as $data)
+            {
+                $tableUpdateArr[] = [
+                    $tableIndexField => $this->escape($data[ $indexField ]),
+                    $tableUpdatedAtField => $tableUpdatedAt
+                ];
+            }
+            $this->getDb()->set_update_batch($tableUpdateArr, $tableIndexField, false);
         }
 
         foreach ($dataArr as &$data)

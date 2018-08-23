@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.26.1
++ Fix `APP_Model::updateEntities()` didn't update `updatedAt` field (cannot use `CI_DB_query_builder::set()`, must use `CI_DB_query_builder::set_update_batch()` before `CI_DB_query_builder::update_batch()`)
+
 v5.26.0
 + Allow log daily
 
