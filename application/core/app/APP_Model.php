@@ -91,29 +91,6 @@ class APP_Model extends MY_Model
      */
     protected function updateEntities ($table, array $dataArr, $indexField, array $filters = null, array $allowedFields = null)
     {
-        /*
-         * FIX ORA-00932: inconsistent datatypes: expected CHAR got TIMESTAMP.
-         * Because CodeIgniter use 'CASE WHEN :newTimestampInChar ELSE :oldTimestamp' when doing batch update
-         */
-        $updatedAtField = 'updatedAt';
-        $writeFieldMap = $this->getWriteFieldMap();
-        if (isset($writeFieldMap[$indexField]) && isset($writeFieldMap[ $updatedAtField ]))
-        {
-            $tableIndexField = $writeFieldMap[ $indexField ];
-            $tableUpdatedAtField = $writeFieldMap[ $updatedAtField ];
-            $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
-
-            $tableUpdateArr = array();
-            foreach ($dataArr as $data)
-            {
-                $tableUpdateArr[] = [
-                    $tableIndexField => $this->escape($data[ $indexField ]),
-                    $tableUpdatedAtField => $tableUpdatedAt
-                ];
-            }
-            $this->getDb()->set_update_batch($tableUpdateArr, $tableIndexField, false);
-        }
-
         foreach ($dataArr as &$data)
         {
             $data['inupby'] = self::$inupby;
@@ -122,7 +99,42 @@ class APP_Model extends MY_Model
 
         try
         {
-            return parent::updateEntities($table, $dataArr, $indexField, $filters, $allowedFields);
+            return $this->doTransaction(function () use ($table, $dataArr, $indexField, $filters, $allowedFields)
+            {
+                $count = parent::updateEntities($table, $dataArr, $indexField, $filters, $allowedFields);
+
+                /*
+                 * FIX CI_DB_query_builder::set() not working with update_batch.
+                 * Update `updatedAt` on separate update query.
+                 */
+                $updatedAtField = 'updatedAt';
+                $writeFieldMap = $this->getWriteFieldMap();
+                if (isset($writeFieldMap[ $updatedAtField ]))
+                {
+                    $db = $this->getDb();
+
+                    /*
+                     * FIX ORA-00932: inconsistent datatypes: expected CHAR got TIMESTAMP.
+                     * Because CodeIgniter use 'CASE WHEN :newTimestampInChar ELSE :oldTimestamp' when doing batch update
+                     */
+                    $tableUpdatedAtField = $writeFieldMap[ $updatedAtField ];
+                    $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
+                    $db->set($tableUpdatedAtField, $tableUpdatedAt, false);
+
+                    $tableFilters = $this->getTableFilters($filters);
+                    foreach ($tableFilters as $field => $value)
+                    {
+                        if (is_array($value))
+                            $db->where_in($field, $value);
+                        else
+                            $db->where($field, $value);
+                    }
+
+                    $db->update($table);
+                }
+
+                return $count;
+            });
         }
         catch (BadValueException $e)
         {

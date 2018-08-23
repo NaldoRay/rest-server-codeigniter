@@ -218,12 +218,25 @@ class MY_Model extends CI_Model
             // bulk update does not allow partial success i.e. transaction will be rollbacked if one them failed
             return $this->doTransaction(function () use ($table, $dataArr, $indexField, $filters)
             {
-                $this->setQueryFilters($filters);
-                $count = $this->db->update_batch($table, $dataArr, $indexField);
-                if ($count === false)
-                    throw new TransactionException('Failed to update entities', $this->domain);
-                else
-                    return $count;
+                /*
+                 * FIX CodeIgniter resetting WHERE condition set by `CI_DB_query_builder::where*()` when updating for the next batch.
+                 * Don't send rows more than batch size to CI_DB_query_builder.
+                 * e.g. rows #1-100 are updated with WHERE clause, but rows #101-XXX are updated without WHERE clause!
+                 */
+                $count = 0;
+                $batchSize = 100;
+                for ($i = 0, $totalCount = count($dataArr); $i < $totalCount; $i += $batchSize)
+                {
+                    // reset filters (WHERE condition) for each batch update request
+                    $this->setQueryFilters($filters);
+                    // don't send rows more than batch size to CI_DB_query_builder
+                    $updateResult = $this->db->update_batch($table, array_slice($dataArr, $i, $batchSize), $indexField, $batchSize);
+                    if ($updateResult === false)
+                        throw new TransactionException('Failed to update entities', $this->domain);
+                    else
+                        $count += $updateResult;
+                }
+                return $count;
             });
         }
         else
