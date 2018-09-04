@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.26.3
++ Log remote address read by server and 'real' client's ip address from custom header `X-Client-IP` (if any)
+
 v5.26.2
 + Fix `APP_Model::updateEntities()` didn't update `updatedAt` field
 + Fix `APP_Model::updateEntities()` doing some updates with missing filters 

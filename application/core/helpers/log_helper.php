@@ -60,6 +60,10 @@ if (!function_exists('logQuery'))
         $fileName = $prefix.'_'.$date.'.txt';
 
         $ipAddress = $CI->input->ip_address();
+        $clientIpAddress = $CI->input->get_request_header('X-Client-IP');
+        if (!is_null($clientIpAddress))
+            $ipAddress = sprintf('%s@%s', $clientIpAddress, $ipAddress);
+
         $timestamp = date("Y-m-d H:i:s");
         $logText = '['.$timestamp.'|'.$ipAddress.'|'.$query.']'.PHP_EOL;
 
@@ -112,6 +116,10 @@ if (!function_exists('logFailedQuery'))
         $filePath = LOG_PATH.$fileName;
 
         $ipAddress = $CI->input->ip_address();
+        $clientIpAddress = $CI->input->get_request_header('X-Client-IP');
+        if (!is_null($clientIpAddress))
+            $ipAddress = sprintf('%s@%s', $clientIpAddress, $ipAddress);
+
         $timestamp = date("Y-m-d H:i:s");
         $logText = '['.$timestamp.'|'.$ipAddress.'|'.$query.']'.PHP_EOL;
 

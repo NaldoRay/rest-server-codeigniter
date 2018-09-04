@@ -37,7 +37,7 @@ class RestAccess
 
     private function getAllClientAccess ()
     {
-        $clientIpAddress = $this->CI->input->ip_address();
+        $clientIpAddress = $this->getClientIpAddress();
 
         $clientAccessArr = $this->CI->config->item('rest_client_access');
         foreach ($clientAccessArr as $ipAddress => $accessArr)
@@ -84,11 +84,16 @@ class RestAccess
             }
             else
             {
-                $clientIpAddress = $this->CI->input->ip_address();
+                $clientIpAddress = $this->getClientIpAddress();
                 $this->shouldAuthorizeClient = in_array($clientIpAddress, $authClients);
             }
         }
 
         return $this->shouldAuthorizeClient;
+    }
+
+    private function getClientIpAddress ()
+    {
+        return $this->CI->input->ip_address();
     }
 }
