@@ -20,7 +20,7 @@ $config['rest_auth_clients'] = [];
 
 $config['rest_client_access'] = [
     // localhost
-    '127.0.0.1' => [
+    '0.0.0.0' => [
         [
             'uris' => [REST_ALL_URIS], // array of uri string, allow wildcards
             'methods' => [REST_ALL_METHODS] // array of http method constants, allow wildcards
