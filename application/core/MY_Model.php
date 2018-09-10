@@ -1064,7 +1064,7 @@ class MY_Model extends CI_Model
         return array_merge($this->fieldMap, $this->writeOnlyFieldMap);
     }
 
-    private function getReadFieldMap ()
+    protected function getReadFieldMap ()
     {
         if (empty($this->readOnlyFieldMap))
             return $this->fieldMap;
