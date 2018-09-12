@@ -14,6 +14,60 @@ class FieldsFilter
     private $fieldMap;
 
 
+    private function __construct (array $fieldMap)
+    {
+        $this->fieldMap = $fieldMap;
+    }
+
+    /**
+     * Get all fields filtered for current level.
+     * @return array
+     */
+    public function getFields ()
+    {
+        return array_keys($this->fieldMap);
+    }
+
+    public function getSubFields ($field)
+    {
+        if (isset($this->fieldMap[$field]))
+            return $this->fieldMap[$field];
+        else
+            return array();
+    }
+
+    public function fieldExists ($field)
+    {
+        return isset($this->fieldMap[$field]);
+    }
+
+    public function isEmpty ()
+    {
+        return empty($this->fieldMap);
+    }
+
+    public function addFromArray (array $fields)
+    {
+        if (!empty($fields))
+        {
+            $fieldMap = self::getFieldMap($fields);
+            $this->fieldMap = array_merge_recursive($this->fieldMap, $fieldMap);
+        }
+    }
+
+    /**
+     * Get FieldsFilter for current level field.
+     * @param string $field
+     * @return FieldsFilter|null fields filter for subfields/nested fields of the field if any, or null if not
+     */
+    public function getFieldsFilter ($field)
+    {
+        if (isset($this->fieldMap[$field]))
+            return self::fromArray($this->fieldMap[$field]);
+        else
+            return null;
+    }
+
     /**
      * @param string $fieldsParam
      * @return FieldsFilter
@@ -25,6 +79,12 @@ class FieldsFilter
     }
 
     public static function fromArray (array $fields)
+    {
+        $fieldMap = self::getFieldMap($fields);
+        return new FieldsFilter($fieldMap);
+    }
+
+    private static function getFieldMap (array $fields)
     {
         // create FieldsFilter for current level
         $fieldMap = array();
@@ -54,8 +114,7 @@ class FieldsFilter
                 $fieldMap[ $field ] = array();
             }
         }
-
-        return new FieldsFilter($fieldMap);
+        return $fieldMap;
     }
 
     private static function parseFields ($fieldsParam)
@@ -107,42 +166,5 @@ class FieldsFilter
             $fields[] = trim($field);
 
         return $fields;
-    }
-
-    private function __construct (array $fieldMap)
-    {
-        $this->fieldMap = $fieldMap;
-    }
-
-    /**
-     * Get all fields filtered for current level.
-     * @return array
-     */
-    public function getFields ()
-    {
-        return array_keys($this->fieldMap);
-    }
-
-    public function fieldExists ($field)
-    {
-        return isset($this->fieldMap[$field]);
-    }
-
-    public function isEmpty ()
-    {
-        return empty($this->fieldMap);
-    }
-
-    /**
-     * Get FieldsFilter for current level field.
-     * @param string $field
-     * @return FieldsFilter|null fields filter for subfields/nested fields of the field if any, or null if not
-     */
-    public function getFieldsFilter ($field)
-    {
-        if (isset($this->fieldMap[$field]))
-            return self::fromArray($this->fieldMap[$field]);
-        else
-            return null;
     }
 }

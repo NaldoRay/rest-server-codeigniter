@@ -839,7 +839,7 @@ class MY_REST_Controller extends REST_Controller
         if (is_null($expandsParam))
             $expands = array();
         else
-            $expands = explode(',', $expandsParam);
+            $expands = preg_split('/(?!\(\w*),(?![\w,]*\))/', $expandsParam);
 
         return $expands;
     }

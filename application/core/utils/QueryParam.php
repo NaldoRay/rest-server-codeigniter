@@ -11,8 +11,8 @@ class QueryParam
     private $filters;
     /** @var QueryCondition[] */
     private $searches;
-    /** @var array */
-    private $expands;
+    /** @var FieldsFilter */
+    private $fieldsFilter;
     /** @var array */
     private $sorts;
     private $limit;
@@ -117,15 +117,17 @@ class QueryParam
      */
     public function isExpanded ($field)
     {
-        if (empty($this->expands) || !in_array($field, $this->expands))
-            return false;
-        else
-            return true;
+        return $this->fieldsFilter->fieldExists($field);
     }
 
     public function getExpands ()
     {
-        return $this->expands;
+        return $this->fieldsFilter->getFields();
+    }
+
+    public function getSubExpands ($field)
+    {
+        return $this->fieldsFilter->getSubFields($field);
     }
 
     /**
@@ -135,13 +137,13 @@ class QueryParam
      */
     public function expand (array $expands)
     {
-        $this->expands = array_merge($this->expands, $expands);
+        $this->fieldsFilter->addFromArray($expands);
         return $this;
     }
 
     public function resetExpand ()
     {
-        $this->expands = array();
+        $this->fieldsFilter = FieldsFilter::fromArray([]);
         return $this;
     }
 
