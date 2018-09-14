@@ -153,7 +153,7 @@ class MY_Model extends CI_Model
             if ($count === false)
                 throw new TransactionException(sprintf('Failed to create entities', $this->domain), $this->domain);
             else if ($count != count($dataArr))
-                throw new BadValueException(sprintf('Failed to create entities', $this->domain), $this->domain);
+                throw new BadValueException(sprintf('Failed to create one of entities', $this->domain), $this->domain);
             else
                 return $count;
         });
@@ -561,16 +561,29 @@ class MY_Model extends CI_Model
                         $values = array();
                         foreach ($value as $val)
                         {
-                            $val = $this->toTableValue($field, $val);
-                            $values[] = $this->escape($val);
+                            try
+                            {
+                                $val = $this->toTableValue($field, $val);
+                                $values[] = $this->escape($val);
+                            }
+                            catch (BadFormatException $e)
+                            {}
                         }
 
                         $value = $values;
                     }
                     else
                     {
-                        $value = $this->toTableValue($field, $value);
-                        $value = $this->escape($value);
+                        try
+                        {
+                            $value = $this->toTableValue($field, $value);
+                            $value = $this->escape($value);
+                        }
+                        catch (BadFormatException $e)
+                        {
+                            // disable/remove this condition
+                            return null;
+                        }
                     }
                 }
                 $condition->setFieldValue($field, $value);
@@ -655,9 +668,15 @@ class MY_Model extends CI_Model
     protected function entityExistsWithCondition ($table, QueryCondition $condition)
     {
         $condition = $this->toTableCondition($condition);
-        $this->db->where($condition->getConditionString());
-
-        return $this->rowExists($table);
+        if (is_null($condition))
+        {
+            return false;
+        }
+        else
+        {
+            $this->db->where($condition->getConditionString());
+            return $this->rowExists($table);
+        }
     }
 
     /**
@@ -1064,7 +1083,16 @@ class MY_Model extends CI_Model
         return array_merge($this->fieldMap, $this->writeOnlyFieldMap);
     }
 
-    protected function getReadFieldMap ()
+    /**
+     * @return array all readable fields without the hidden fields
+     */
+    protected function getReadableFields ()
+    {
+        $readFieldMap = $this->getReadFieldMap();
+        return array_diff(array_keys($readFieldMap), $this->hiddenReadFields);
+    }
+
+    private function getReadFieldMap ()
     {
         if (empty($this->readOnlyFieldMap))
             return $this->fieldMap;
