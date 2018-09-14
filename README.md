@@ -1,5 +1,11 @@
 ## Changelog
 
+v5.27.0
++ Add `MY_Model::getReadableFields()`
++ Fix `MY_Model::toTableCondition()` throws `BadFormatException`
++ Query param `expands` format now loosely support XPath syntax
++ Upgrade `MY_Model::getReadFieldMap()` visibility to `protected`
+
 v5.26.3
 + Log remote address read by server and 'real' client's ip address from custom header `X-Client-IP` (if any)
 
