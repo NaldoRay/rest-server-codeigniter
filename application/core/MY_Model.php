@@ -459,7 +459,7 @@ class MY_Model extends CI_Model
     {
         $this->setQueryFilters($filters);
         $this->setQueryFields($fields);
-        $this->setQuerySorts($sorts, $fields);
+        $this->setQuerySorts($sorts);
 
         $result = $this->db->limit(1)
             ->get($table);
@@ -639,7 +639,10 @@ class MY_Model extends CI_Model
             $this->db->where($condition->getConditionString());
 
         $this->setQueryFields($fields);
-        $this->setQuerySorts($sorts, $fields);
+        if ($distinct)
+            $this->setDistinctQuerySorts($sorts, $fields);
+        else
+            $this->setQuerySorts($sorts);
         $this->setQueryDistinct($distinct);
         $this->setQueryLimit($limit, $offset);
 
@@ -725,9 +728,26 @@ class MY_Model extends CI_Model
 
     /**
      * @param array $sorts
-     * @param array $fields
      */
-    private function setQuerySorts (array $sorts = null, array $fields = null)
+    private function setQuerySorts (array $sorts = null)
+    {
+        if (!empty($sorts))
+        {
+            // filter sorts based on read fields
+            $allowedFields = array_values($this->getReadFieldMap());
+            $sorts = array_filter($sorts, function ($sort) use ($allowedFields)
+            {
+                $sortField = explode(' ', $sort)[0];
+                return in_array($sortField, $allowedFields);
+            });
+            $this->db->order_by(implode(',', $sorts));
+        }
+    }
+
+    /**
+     * @param array $sorts
+     */
+    private function setDistinctQuerySorts (array $sorts = null, array $fields = null)
     {
         if (!empty($sorts))
         {

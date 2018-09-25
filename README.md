@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.27.1
++ Fix `MY_Model::getAllEntities()` cannot sort some fields if the fields is not selected
+
 v5.27.0
 + Add `MY_Model::getReadableFields()`
 + Fix `MY_Model::toTableCondition()` throws `BadFormatException`
