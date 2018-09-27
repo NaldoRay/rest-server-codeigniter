@@ -247,6 +247,63 @@ class MY_Model extends CI_Model
 
     /**
      * @param string $table
+     * @param array $dataArr array of entity data entity's field => value
+     * @param string $indexField
+     * @param QueryCondition $condition
+     * @param array|null $allowedFields entity's fields
+     * @return int number of updated entities, might be less than or equals to $dataArr length
+     * @throws BadFormatException
+     * @throws BadValueException if data is empty
+     * @throws Exception
+     */
+    protected function updateEntitiesWithCondition ($table, array $dataArr, $indexField, QueryCondition $condition = null, array $allowedFields = null)
+    {
+        if (empty($dataArr))
+            throw new BadValueException(sprintf('Data must not be empty', $this->domain), $this->domain);
+
+        $fieldMap = $this->getWriteFieldMap();
+        if (isset($fieldMap[$indexField]))
+        {
+            $indexField = $fieldMap[ $indexField ];
+
+            $condition = $this->toTableCondition($condition);
+            foreach ($dataArr as $idx => $data)
+                $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
+
+            // bulk update does not allow partial success i.e. transaction will be rollbacked if one them failed
+            return $this->doTransaction(function () use ($table, $dataArr, $indexField, $condition)
+            {
+                /*
+                 * FIX CodeIgniter resetting WHERE condition set by `CI_DB_query_builder::where*()` when updating for the next batch.
+                 * Don't send rows more than batch size to CI_DB_query_builder.
+                 * e.g. rows #1-100 are updated with WHERE clause, but rows #101-XXX are updated without WHERE clause!
+                 */
+                $count = 0;
+                $batchSize = 100;
+                for ($i = 0, $totalCount = count($dataArr); $i < $totalCount; $i += $batchSize)
+                {
+                    // reset filters (WHERE condition) for each batch update request
+                    if (!is_null($condition))
+                        $this->db->where($condition->getConditionString());
+
+                    // don't send rows more than batch size to CI_DB_query_builder
+                    $updateResult = $this->db->update_batch($table, array_slice($dataArr, $i, $batchSize), $indexField, $batchSize);
+                    if ($updateResult === false)
+                        throw new TransactionException('Failed to update entities', $this->domain);
+                    else
+                        $count += $updateResult;
+                }
+                return $count;
+            });
+        }
+        else
+        {
+            throw new BadValueException('Index field not found', $this->domain);
+        }
+    }
+
+    /**
+     * @param string $table
      * @param array $data entity's field => value
      * @param QueryCondition $condition
      * @param array|null $allowedFields entity's fields
@@ -504,28 +561,28 @@ class MY_Model extends CI_Model
      * @return QueryCondition null if field is not found
      * @throws BadFormatException
      */
-    private function toTableCondition (QueryCondition $condition)
+    protected function toTableCondition (QueryCondition $condition)
     {
         if ($condition instanceof LogicalCondition)
         {
             $condition = clone $condition;
 
-            $tableConditions = array();
-            $queryConditions = $condition->getConditions();
-            foreach ($queryConditions as $queryCondition)
+            $tableSubConditions = array();
+            $subConditions = $condition->getConditions();
+            foreach ($subConditions as $subCondition)
             {
-                $tableCondition = $this->toTableCondition($queryCondition);
-                if (!is_null($tableCondition))
-                    $tableConditions[] = $tableCondition;
+                $tableSubCondition = $this->toTableCondition($subCondition);
+                if (!is_null($tableSubCondition))
+                    $tableSubConditions[] = $tableSubCondition;
             }
 
-            if (empty($tableConditions))
+            if (empty($tableSubConditions))
             {
                 return null;
             }
             else
             {
-                $condition->setConditions($tableConditions);
+                $condition->setConditions($tableSubConditions);
                 return $condition;
             }
         }
@@ -533,14 +590,15 @@ class MY_Model extends CI_Model
         {
             $condition = clone $condition;
 
-            $tableCondition = $this->toTableCondition($condition->getCondition());
-            if (is_null($tableCondition))
+            $subCondition = $condition->getCondition();
+            $tableSubCondition = $this->toTableCondition($subCondition);
+            if (is_null($tableSubCondition))
             {
                 return null;
             }
             else
             {
-                $condition->setCondition($tableCondition);
+                $condition->setCondition($tableSubCondition);
                 return $condition;
             }
         }

@@ -121,7 +121,7 @@ class APP_Model extends MY_Model
                     $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
                     $db->set($tableUpdatedAtField, $tableUpdatedAt, false);
 
-                    $tableFilters = $this->getTableFilters($filters);
+                   $tableFilters = $this->getTableFilters($filters);
                     foreach ($tableFilters as $field => $value)
                     {
                         if (is_array($value))
@@ -130,7 +130,79 @@ class APP_Model extends MY_Model
                             $db->where($field, $value);
                     }
 
+                    $indexFieldValues = array_map(function ($data) use ($indexField)
+                    {
+                        return $data[ $indexField ];
+                    }, $dataArr);
+                    $indexFieldCondition = new EqualsCondition($indexField, $indexFieldValues);
+                    $indexFieldCondition = $this->toTableCondition($indexFieldCondition);
+                    $db->where($indexFieldCondition->getConditionString());
+
                     $db->update($table);
+                }
+
+                return $count;
+            });
+        }
+        catch (BadValueException $e)
+        {
+            throw new BadValueException(sprintf('Gagal mengubah daftar %s: data kosong', $this->domain), $this->domain);
+        }
+        catch (TransactionException $e)
+        {
+            throw new TransactionException(sprintf('Gagal mengubah daftar %s', $this->domain), $this->domain);
+        }
+    }
+
+    /**
+     * @throws BadFormatException
+     * @throws BadValueException
+     * @throws TransactionException
+     */
+    protected function updateEntitiesWithCondition ($table, array $dataArr, $indexField, QueryCondition $condition = null, array $allowedFields = null)
+    {
+        foreach ($dataArr as &$data)
+        {
+            $data['inupby'] = self::$inupby;
+        }
+        unset($data);
+
+        try
+        {
+            return $this->doTransaction(function () use ($table, $dataArr, $indexField, $condition, $allowedFields)
+            {
+                $count = parent::updateEntitiesWithCondition($table, $dataArr, $indexField, $condition, $allowedFields);
+
+                /*
+                 * FIX CI_DB_query_builder::set() not working with update_batch.
+                 * Update `updatedAt` on separate update query.
+                 */
+                $updatedAtField = 'updatedAt';
+                $writeFieldMap = $this->getWriteFieldMap();
+                if (isset($writeFieldMap[ $updatedAtField ]))
+                {
+                    $db = $this->getDb();
+
+                    /*
+                     * FIX ORA-00932: inconsistent datatypes: expected CHAR got TIMESTAMP.
+                     * Because CodeIgniter use 'CASE WHEN :newTimestampInChar ELSE :oldTimestamp' when doing batch update
+                     */
+                    $tableUpdatedAtField = $writeFieldMap[ $updatedAtField ];
+                    $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
+                    $db->set($tableUpdatedAtField, $tableUpdatedAt, false);
+
+                    $indexFieldValues = array_map(function ($data) use ($indexField)
+                    {
+                        return $data[ $indexField ];
+                    }, $dataArr);
+                    $updateAtCondition = LogicalCondition::logicalAnd([
+                        $condition,
+                        new EqualsCondition($indexField, $indexFieldValues)
+                    ]);
+                    $updateAtCondition = $this->toTableCondition($updateAtCondition);
+
+                    $db->where($updateAtCondition->getConditionString())
+                        ->update($table);
                 }
 
                 return $count;

@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.28.0
++ Add `APP_Model::updateEntitiesWithCondition()`
++ Fix `APP_Model::updateEntities()` didn't filter index field (`$indexField`) when updating `updateAt` field
+
 v5.27.1
 + Fix `MY_Model::getAllEntities()` cannot sort some fields if the fields is not selected
 
