@@ -20,6 +20,6 @@ class NotContainsCondition extends FieldValueCondition
         if ($this->ignoreCase)
             return sprintf("LOWER(%s) NOT LIKE ('%%'||LOWER(%s)||'%%')", $this->getField(), $this->getValue());
         else
-            return sprintf("%s NOT LIKE '%%%s%%'", $this->getField(), $this->getValue());
+            return sprintf("%s NOT LIKE '%%'||%s||'%%'", $this->getField(), $this->getValue());
     }
 }

@@ -20,6 +20,6 @@ class ContainsCondition extends FieldValueCondition
         if ($this->ignoreCase)
             return sprintf("LOWER(%s) LIKE ('%%'||LOWER(%s)||'%%')", $this->getField(), $this->getValue());
         else
-            return sprintf("%s LIKE '%%%s%%'", $this->getField(), $this->getValue());
+            return sprintf("%s LIKE '%%'||%s||'%%'", $this->getField(), $this->getValue());
     }
 }

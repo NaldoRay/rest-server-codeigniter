@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.28.1
++ Fix 'missing right parenthesis' when using `ContainsCondition` and `NotContainsCondition` for case-sensitive operation 
+
 v5.28.0
 + Add `APP_Model::updateEntitiesWithCondition()`
 + Fix `APP_Model::updateEntities()` didn't filter index field (`$indexField`) when updating `updateAt` field
