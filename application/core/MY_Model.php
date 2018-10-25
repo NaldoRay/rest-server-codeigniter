@@ -110,21 +110,20 @@ class MY_Model extends CI_Model
      * @param $table
      * @param array $data entity's field => value
      * @param array $filters entity's filter field => filter value
-     * @param array|null $allowedFields entity's fields
      * @return object
      * @throws BadFormatException
      * @throws ResourceNotFoundException
      * @throws TransactionException
      */
-    protected function createOrUpdateEntity ($table, array $data, array $filters, array $allowedFields = null)
+    protected function createOrUpdateEntity ($table, array $data, array $filters)
     {
         if ($this->entityExists($table, $filters))
         {
-            return $this->updateEntity($table, $data, $filters, $allowedFields);
+            return $this->updateEntity($table, $data, $filters);
         }
         else
         {
-            return $this->createEntity($table, $data, $allowedFields);
+            return $this->createEntity($table, $data);
         }
     }
 
@@ -1136,7 +1135,6 @@ class MY_Model extends CI_Model
     private function isIso8601DateTime ($value)
     {
         return $this->validation->forValue($value)
-            ->nullable()
             ->notEmpty()
             ->validDateTime()
             ->validate();

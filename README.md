@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.28.3
++ Remove allowed fields param from `MY_Model::createOrUpdateEntity()`
++ Fix date field with `null` value formatted to 1 Jan 1970 in ISO-8601 format
+
 v5.28.1
 + Fix 'missing right parenthesis' when using `ContainsCondition` and `NotContainsCondition` for case-sensitive operation 
 
