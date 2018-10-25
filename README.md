@@ -1,6 +1,7 @@
 ## Changelog
 
-v5.28.3
+v5.28.4
++ Allow `null` and empty value when parsing search param
 + Remove allowed fields param from `MY_Model::createOrUpdateEntity()`
 + Fix date field with `null` value formatted to 1 Jan 1970 in ISO-8601 format
 
