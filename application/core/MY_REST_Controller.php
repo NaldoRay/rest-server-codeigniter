@@ -241,9 +241,9 @@ class MY_REST_Controller extends REST_Controller
     /**
      * Send custom successful response.
      * @param null $data
-     * @param int $httpCode
+     * @param int $statusCode
      */
-    protected final function respondSuccess ($data = null, $httpCode = self::HTTP_OK)
+    protected final function respondSuccess ($data = null, $statusCode = self::HTTP_OK)
     {
         if (is_null($data))
         {
@@ -262,7 +262,7 @@ class MY_REST_Controller extends REST_Controller
                 'data' => $data
             );
         }
-        $this->response($response, $httpCode);
+        $this->response($response, $statusCode);
     }
 
     private function filterData ($data)
@@ -399,33 +399,39 @@ class MY_REST_Controller extends REST_Controller
         if (is_null($domain))
             $domain = 'Global';
 
-        $response = array(
-            'error' => [
-                'domain' => $domain,
-                'message' => $message
-            ]
+        $error = array(
+            'domain' => $domain,
+            'message' => $message
         );
         if (!empty($fields))
         {
-            $response['error']['fields'] = $fields;
+            $error['fields'] = $fields;
         }
         if (!empty($batchFields))
         {
-            $response['error']['batchFields'] = $batchFields;
+            $error['batchFields'] = $batchFields;
         }
-        if (ENVIRONMENT !== 'production')
+        if (!is_null($this->contextError))
         {
-            if (!is_null($this->contextError))
+            $error['debug'] = [
+                'message' => $this->contextError->getMessage(),
+                'location' => $this->contextError->getFile() .' at line '. $this->contextError->getLine(),
+                'context' => $this->contextError->getContext(),
+                'backtrace' => $this->contextError->getBacktrace()
+            ];
+
+            // error has context, log this error
+            logContextError($statusCode, $error);
+
+            if (ENVIRONMENT === 'production')
             {
-                $response['error']['debug'] = [
-                    'message' => $this->contextError->getMessage(),
-                    'location' => $this->contextError->getFile() .' at line '. $this->contextError->getLine(),
-                    'context' => $this->contextError->getContext(),
-                    'backtrace' => $this->contextError->getBacktrace()
-                ];
+                unset($error['debug']);
             }
         }
 
+        $response = array(
+            'error' => $error
+        );
         $this->response($response, $statusCode);
     }
 
@@ -461,10 +467,10 @@ class MY_REST_Controller extends REST_Controller
     /**
      * Send custom response.
      * @param mixed|null $data
-     * @param int|null $http_code
+     * @param int|null $statusCode
      * @param bool $continue
      */
-    public final function response ($data = null, $http_code = null, $continue = false)
+    public final function response ($data = null, $statusCode = null, $continue = false)
     {
         if (!is_null($data))
         {
@@ -473,7 +479,7 @@ class MY_REST_Controller extends REST_Controller
             {
                 // reformat default error response from REST_Controller
                 $this->respondError(
-                    $http_code,
+                    $statusCode,
                     $data[$this->config->item('rest_message_field_name')],
                     'API'
                 );
@@ -481,7 +487,7 @@ class MY_REST_Controller extends REST_Controller
             }
         }
 
-        parent::response($data, $http_code, $continue);
+        parent::response($data, $statusCode, $continue);
     }
 
     /**

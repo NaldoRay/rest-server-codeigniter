@@ -55,7 +55,8 @@ class RestAccess
     {
         foreach ($access['uris'] as $uriPattern)
         {
-            if (fnmatch($uriPattern, $uri))
+            $pattern = sprintf('#%s#', $uriPattern);
+            if (preg_match($pattern, $uri))
                 return true;
         }
 
@@ -66,7 +67,8 @@ class RestAccess
     {
         foreach ($access['methods'] as $methodPattern)
         {
-            if (fnmatch($methodPattern, $method))
+            $pattern = sprintf('#%s#', $methodPattern);
+            if (preg_match($pattern, $method))
                 return true;
         }
 

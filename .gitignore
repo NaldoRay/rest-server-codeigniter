@@ -83,7 +83,8 @@ composer.lock
 
 ## Project-specific ##
 /upload/
-/logs/
+/logs/*
+/request-logs/*
 /release/
 /application/tests/_ci_phpunit_test/tmp/
 /application/tests/build/

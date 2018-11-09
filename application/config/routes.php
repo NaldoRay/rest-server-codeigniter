@@ -62,5 +62,10 @@ $route['examples'] = 'example_endpoint/examples';
 $route['examples/(:num)'] = 'example_endpoint/existingExample/$1';
 
 
+/*
+ * Request Log Viewer (should only be accessible to developer)
+ */
+$route['request-logs/view'] = Request_log_viewer::class . '/view';
+$route['request-logs/(:num)/requests'] = Request_log_viewer::class . '/requests/$1';
 
 

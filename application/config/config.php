@@ -23,7 +23,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/';
+$config['base_url'] = 'http://localhost/api/';
 
 /*
 |--------------------------------------------------------------------------
@@ -524,24 +524,81 @@ $config['proxy_ips'] = '';
 
 /*
  * -------------------------------------------------------------------------
- * Query Logging Configurations
+ *
+ */
+
+/*
+ * -------------------------------------------------------------------------
+ * Application Specific Configurations
  * -------------------------------------------------------------------------
  *
  * 'app_name'
  *
  *      Log filename will be prefixed with this name e.g. Example_201807.txt
  *
- * 'app_log_category'
- *
- *      Log filename will be suffixed with this config e.g. Example_201807_week31.txt
- *      Default will log monthly.
- *      Available options are:
- *
- *      1 = logs Daily
- *      2 = logs Weekly
- *      3 = logs Monthly
- *      4 = logs Yearly
+ */
+$config['app_name'] = 'Akademik';
+
+/*
+ * -------------------------------------------------------------------------
+ * App Logging Configurations
+ * -------------------------------------------------------------------------
  *
  */
-$config['app_name'] = 'Example';
-$config['app_log_category'] = 3;
+
+/*
+ * -------------------------------------------------------------------------
+ * Query Logging Configurations
+ * -------------------------------------------------------------------------
+ *
+ * 'app_query_log_path'
+ *
+ *      Application query log's path. Use a full server path with trailing slash.
+ *
+ * 'app_query_log_category'
+ *
+ *      Log filename will be suffixed with this config e.g. Example_201807_week31.txt
+ *      Available options are:
+ *
+ *      0 = disable logging
+ *      1 = logs daily
+ *      2 = logs weekly
+ *      3 = logs monthly
+ *      4 = logs yearly
+ *
+ *      Value other than the above options (including empty string or null value) will disable logging (same as `0`).
+ */
+$config['app_query_log_path'] = APPPATH.'../logs/';
+
+defined('LOG_DAILY') OR define ('LOG_DAILY', 1);
+defined('LOG_WEEKLY') OR define ('LOG_WEEKLY', 2);
+defined('LOG_MONTHLY') OR define ('LOG_MONTHLY', 3);
+defined('LOG_YEARLY') OR define ('LOG_YEARLY', 4);
+
+$config['app_query_log_category'] = LOG_DAILY;
+
+/*
+ * -------------------------------------------------------------------------
+ * REST Context Error Logging Configurations
+ * -------------------------------------------------------------------------
+ *
+ * Only logs errors which have context. Those without context will not be logged.
+ *
+ * 'app_context_error_log_path'
+ *
+ *      Application request log's path. Use a full server path with trailing slash.
+ *
+ * 'app_context_error_log_category'
+ *
+ *      Log filename will be suffixed with this config e.g. Example_request_201807_week31.txt
+ *      Available options are:
+ *
+ *      0 = disable logging
+ *      1 = logs daily
+ *      2 = logs weekly
+ *      3 = logs monthly
+ *      4 = logs yearly
+ *
+ */
+$config['app_context_error_log_path'] = APPPATH.'../request-logs/';
+$config['app_context_error_log_category'] = LOG_MONTHLY;

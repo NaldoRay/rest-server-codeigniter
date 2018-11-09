@@ -13,17 +13,25 @@ defined('HTTP_DELETE') OR define('HTTP_DELETE', 'DELETE');
 defined('HTTP_HEAD') OR define('HTTP_HEAD', 'HEAD');
 defined('HTTP_OPTIONS') OR define('HTTP_OPTIONS', 'OPTIONS');
 
-defined('REST_ALL_URIS') OR define('REST_ALL_URIS', '*');
-defined('REST_ALL_METHODS') OR define('REST_ALL_METHODS', '*');
+defined('REST_ALL_URIS') OR define('REST_ALL_URIS', '.*');
+defined('REST_ALL_METHODS') OR define('REST_ALL_METHODS', '.+');
 
 $config['rest_auth_clients'] = [];
 
 $config['rest_client_access'] = [
-    // localhost
+    // example for application
     '0.0.0.0' => [
         [
-            'uris' => [REST_ALL_URIS], // array of uri string, allow wildcards
-            'methods' => [REST_ALL_METHODS] // array of http method constants, allow wildcards
+            // all uri except request logs
+            'uris' => ['^(?!request-logs).+$'], // array of allowed uri string, allow regex
+            'methods' => [REST_ALL_METHODS] // array of allowed http method constants, allow regex
+        ]
+    ],
+    // example for developer
+    '100.100.100.100' => [
+        [
+            'uris' => [REST_ALL_URIS], // array of allowed uri string, allow regex
+            'methods' => [REST_ALL_METHODS] // array of allowed http method constants, allow regex
         ]
     ]
 ];

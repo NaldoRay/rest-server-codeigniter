@@ -1,5 +1,10 @@
 ## Changelog
 
+v5.29.0
++ Logs all error request-responses which have context. Access token / credentials in`Authorization` header won't be logged. 
++ Add simple UI/viewer to view error request logs
++ Change rest access config to allow regex (not supporting wildcard anymore)
+
 v5.28.4
 + Allow `null` and empty value when parsing search param
 + Remove allowed fields param from `MY_Model::createOrUpdateEntity()`
