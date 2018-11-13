@@ -21,6 +21,7 @@ $lang['validation_integer_positive'] = '{label} harus berupa angka bulat positif
 $lang['validation_float'] = '{label} harus berupa angka desimal';
 $lang['validation_float_positive'] = '{label} harus berupa angka desimal positif';
 $lang['validation_string'] = '{label} harus berupa teks';
+$lang['validation_digit'] = '{label} harus berupa digit';
 $lang['validation_numeric'] = '{label} harus berupa (teks) angka';
 $lang['validation_numeric_integer'] = '{label} harus berupa (teks) angka bulat';
 $lang['validation_numeric_integer_positive'] = '{label} harus berupa (teks) angka bulat positif';

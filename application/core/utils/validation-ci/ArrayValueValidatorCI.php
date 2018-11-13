@@ -135,6 +135,14 @@ class ArrayValueValidatorCI extends ArrayValueValidator
         return parent::onlyString($errorMessage);
     }
 
+    public function onlyDigit ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = $this->getString('validation_digit');
+
+        return parent::onlyDigit($errorMessage);
+    }
+
     public function onlyNumeric ($errorMessage = null)
     {
         if (is_null($errorMessage))

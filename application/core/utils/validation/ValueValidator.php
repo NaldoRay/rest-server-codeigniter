@@ -17,6 +17,7 @@ class ValueValidator implements Validation
     private static $IDX_ONLY_FLOAT = 1;
     private static $IDX_ONLY_STRING = 1;
     // can be string/integer/float
+    private static $IDX_ONLY_DIGIT = 1;
     private static $IDX_ONLY_NUMERIC = 1;
     private static $IDX_ONLY_ARRAY = 1;
     private static $IDX_ONLY_ONE_OF = 1;
@@ -308,7 +309,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validation pass only if value is truly an integer (not string)
+     * Validation pass only if value is truly an integer type (not string, float, etc)
      * @param string $errorMessage
      * @return $this
      */
@@ -326,7 +327,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validation pass only if value is truly an integer (not string) and >= 0
+     * Validation pass only if value is truly an integer (not string, float, etc) and >= 0
      * @param string $errorMessage
      * @return $this
      */
@@ -344,7 +345,7 @@ class ValueValidator implements Validation
     }
 
     /**
-     * Validation pass only if value is truly a float (not string)
+     * Validation pass only if value is truly a float (not string). Integer number is considered as a float.
      * @param string $errorMessage
      * @return $this
      */
@@ -392,6 +393,23 @@ class ValueValidator implements Validation
         $this->setValidation(self::$IDX_ONLY_STRING, function ($value)
         {
             return is_string($value);
+        }, $errorMessage);
+
+        return $this;
+    }
+
+    /**
+     * @param string $errorMessage
+     * @return $this
+     */
+    public function onlyDigit ($errorMessage = null)
+    {
+        if (is_null($errorMessage))
+            $errorMessage = '{label} must be all digits';
+
+        $this->setValidation(self::$IDX_ONLY_DIGIT, function ($value)
+        {
+            return ctype_digit(strval($value));
         }, $errorMessage);
 
         return $this;
@@ -492,7 +510,7 @@ class ValueValidator implements Validation
                 $number = $value+0; // convert numeric string to int or float
                 $strValue = (string) $number;
 
-                return ($strValue === $value) && (is_int($number) || is_float($number));
+                return ($strValue === $value);
             }
 
             return false;
@@ -525,6 +543,7 @@ class ValueValidator implements Validation
 
                 /*
                  * workaround to make "100.0", "2.50" returns true
+                 * remove extra "0" after the decimal point
                  */
                 // apply only if decimal point (".") exists
                 $decimalIdx = strpos($value, '.');
@@ -537,7 +556,7 @@ class ValueValidator implements Validation
                         $value = substr($value, 0, $decimalIdx);
                 }
 
-                return ($strValue === $value) && (is_int($number) || is_float($number)) && ($number >= 0);
+                return ($strValue === $value) && ($number >= 0);
             }
 
             return false;

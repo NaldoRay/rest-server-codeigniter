@@ -21,6 +21,7 @@ $lang['validation_integer_positive'] = '{label} must be positive integer number'
 $lang['validation_float'] = '{label} must be float number';
 $lang['validation_float_positive'] = '{label} must be positive float number';
 $lang['validation_string'] = '{label} must be text/string';
+$lang['validation_digit'] = '{label} must be all digits';
 $lang['validation_numeric'] = '{label} must be number or numeric string';
 $lang['validation_numeric_integer'] = '{label} must be integer number or integer string';
 $lang['validation_numeric_integer_positive'] = '{label} must be positive integer number or positive integer string';

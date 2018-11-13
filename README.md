@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.30.0
++ Add validation for digit(s) only 
+
 v5.29.0
 + Logs all error request-responses which have context. Access token / credentials in`Authorization` header won't be logged. 
 + Add simple UI/viewer to view error request logs
