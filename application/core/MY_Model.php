@@ -491,6 +491,25 @@ class MY_Model extends CI_Model
         return $this->doGetFirstEntity($table, $filters, $fields, $sorts);
     }
 
+    /**
+     * @param string $table
+     * @param QueryCondition|null $condition
+     * @param array|null $fields
+     * @param array|null $sorts
+     * @return null|object
+     * @throws BadFormatException
+     */
+    protected function getFirstEntityWithCondition ($table, QueryCondition $condition = null, array $fields = null, array $sorts = null)
+    {
+        if (!is_null($condition))
+            $condition = $this->toTableCondition($condition);
+
+        $this->db->where($condition->getConditionString());
+
+        return $this->doGetFirstEntity($table, null, $fields, $sorts);
+    }
+
+
     private function doGetFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $filters = $this->getTableFilters($filters);

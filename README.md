@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.31.0
++ Add `MY_Model::getFirstEntityWithCondition()`
+
 v5.30.0
 + Add validation for digit(s) only 
 

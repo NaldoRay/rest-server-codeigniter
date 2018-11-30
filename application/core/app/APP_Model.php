@@ -333,4 +333,17 @@ class APP_Model extends MY_Model
         else
             return $entity;
     }
+
+    /**
+     * @throws ResourceNotFoundException
+     */
+    protected function getFirstEntityWithCondition ($table, QueryCondition $condition = null, array $fields = null, array $sorts = null)
+    {
+        $entity = parent::getFirstEntityWithCondition($table, $condition, $fields, $sorts);
+
+        if (is_null($entity))
+            throw new ResourceNotFoundException(sprintf('%s tidak ditemukan', $this->domain), $this->domain);
+        else
+            return $entity;
+    }
 }
