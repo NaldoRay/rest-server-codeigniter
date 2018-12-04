@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.32.0
++ Fix bug filter with `null` value  is not used; fix bug cannot update/insert number field with `null` value
++ Add `InvalidStateException` that will return `409 Conflict` when thrown up to rest controller
+
 v5.31.0
 + Add `MY_Model::getFirstEntityWithCondition()`
 
