@@ -173,6 +173,14 @@ class MY_REST_Controller extends REST_Controller
                     $e->getBatchErrors()
                 );
             }
+            else if ($e instanceof InvalidStateException)
+            {
+                $this->respondError(
+                    self::HTTP_CONFLICT,
+                    $e->getMessage(),
+                    $e->getDomain()
+                );
+            }
             else
             {
                 $this->respondInternalError($e->getMessage(), $e->getDomain());
