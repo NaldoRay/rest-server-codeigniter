@@ -509,7 +509,6 @@ class MY_Model extends CI_Model
         return $this->doGetFirstEntity($table, null, $fields, $sorts);
     }
 
-
     private function doGetFirstEntity ($table, array $filters = null, array $fields = null, array $sorts = null)
     {
         $filters = $this->getTableFilters($filters);
@@ -1133,6 +1132,9 @@ class MY_Model extends CI_Model
      */
     protected function tryParseNumber ($value)
     {
+        if (is_null($value))
+            return null;
+
         if (is_numeric($value))
             return $value + 0;
         else
