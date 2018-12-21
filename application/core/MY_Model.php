@@ -882,9 +882,7 @@ class MY_Model extends CI_Model
         $fieldMap = $this->getWriteFieldMap();
         // default is to allow all fields
         if (empty($allowedFields))
-            $allowedFields = array_keys($fieldMap);
-        else
-            $allowedFields = array_merge($allowedFields, array_keys($this->writeOnlyFieldMap));
+            $allowedFields = array_keys($fieldMap);;
 
         $dataFields = array_keys($data);
         $writeFields = array_intersect($dataFields, $allowedFields);
@@ -1173,6 +1171,12 @@ class MY_Model extends CI_Model
     protected final function addWriteOnlyFieldMap (array $fieldMap)
     {
         $this->writeOnlyFieldMap = array_merge($this->writeOnlyFieldMap, $fieldMap);
+    }
+
+    protected final function removeWriteOnlyFieldMap (array $fields)
+    {
+        foreach ($fields as $field)
+            unset($this->writeOnlyFieldMap[$field]);
     }
 
     protected function getWriteFieldMap ()

@@ -51,6 +51,13 @@ class APP_Model extends MY_Model
         }
         unset($data);
 
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'createdAt';
+            $allowedFields[] = 'inupby';
+        }
+
         try
         {
             return parent::createEntities($table, $dataArr, $allowedFields);
@@ -74,6 +81,13 @@ class APP_Model extends MY_Model
         $data['createdAt'] = $this->getCurrentDateTime();
         $data['inupby'] = self::$inupby;
 
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'createdAt';
+            $allowedFields[] = 'inupby';
+        }
+
         try
         {
             return parent::createEntity($table, $data, $allowedFields);
@@ -96,6 +110,13 @@ class APP_Model extends MY_Model
             $data['inupby'] = self::$inupby;
         }
         unset($data);
+
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'updatedAt';
+            $allowedFields[] = 'inupby';
+        }
 
         try
         {
@@ -167,6 +188,13 @@ class APP_Model extends MY_Model
         }
         unset($data);
 
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'updatedAt';
+            $allowedFields[] = 'inupby';
+        }
+
         try
         {
             return $this->doTransaction(function () use ($table, $dataArr, $indexField, $condition, $allowedFields)
@@ -228,6 +256,13 @@ class APP_Model extends MY_Model
         $data['updatedAt'] = $this->getCurrentDateTime();
         $data['inupby'] = self::$inupby;
 
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'updatedAt';
+            $allowedFields[] = 'inupby';
+        }
+
         try
         {
             return parent::updateEntity($table, $data, $filters, $allowedFields);
@@ -251,6 +286,13 @@ class APP_Model extends MY_Model
     {
         $data['updatedAt'] = $this->getCurrentDateTime();
         $data['inupby'] = self::$inupby;
+
+        if (!empty($allowedFields))
+        {
+            // `updatedAt` and `inupby` always update-able
+            $allowedFields[] = 'updatedAt';
+            $allowedFields[] = 'inupby';
+        }
 
         try
         {

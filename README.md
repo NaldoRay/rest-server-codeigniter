@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.33.0
++ Fix `createdAt`, `updatedAt`, and `inupby` fields are not allowed on create/update if `allowedFields` param is used
++ Fix write-only fields are always allowed on create/update
+
 v5.32.0
 + Fix bug filter with `null` value  is not used; fix bug cannot update/insert number field with `null` value
 + Add `InvalidStateException` that will return `409 Conflict` when thrown up to rest controller
