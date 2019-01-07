@@ -142,7 +142,7 @@ class APP_Model extends MY_Model
                     $tableUpdatedAt = sprintf("TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS.ff6')", $this->getCurrentDateTime());
                     $db->set($tableUpdatedAtField, $tableUpdatedAt, false);
 
-                   $tableFilters = $this->getTableFilters($filters);
+                    $tableFilters = $this->getTableFilters($filters, true);
                     foreach ($tableFilters as $field => $value)
                     {
                         if (is_array($value))
@@ -156,7 +156,7 @@ class APP_Model extends MY_Model
                         return $data[ $indexField ];
                     }, $dataArr);
                     $indexFieldCondition = new EqualsCondition($indexField, $indexFieldValues);
-                    $indexFieldCondition = $this->toTableCondition($indexFieldCondition);
+                    $indexFieldCondition = $this->toTableCondition($indexFieldCondition, true);
                     $db->where($indexFieldCondition->getConditionString());
 
                     $db->update($table);
@@ -227,7 +227,7 @@ class APP_Model extends MY_Model
                         $condition,
                         new EqualsCondition($indexField, $indexFieldValues)
                     ]);
-                    $updateAtCondition = $this->toTableCondition($updateAtCondition);
+                    $updateAtCondition = $this->toTableCondition($updateAtCondition, true);
 
                     $db->where($updateAtCondition->getConditionString())
                         ->update($table);

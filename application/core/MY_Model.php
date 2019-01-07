@@ -210,7 +210,7 @@ class MY_Model extends CI_Model
         if (isset($fieldMap[$indexField]))
         {
             $indexField = $fieldMap[ $indexField ];
-            $filters = $this->getTableFilters($filters);
+            $filters = $this->getTableFilters($filters, true);
             foreach ($dataArr as $idx => $data)
                 $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
@@ -265,7 +265,7 @@ class MY_Model extends CI_Model
         {
             $indexField = $fieldMap[ $indexField ];
 
-            $condition = $this->toTableCondition($condition);
+            $condition = $this->toTableCondition($condition, true);
             foreach ($dataArr as $idx => $data)
                 $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
 
@@ -313,7 +313,7 @@ class MY_Model extends CI_Model
      */
     protected function updateEntityWithCondition ($table, array $data, QueryCondition $condition, array $allowedFields = null)
     {
-        $condition = $this->toTableCondition($condition);
+        $condition = $this->toTableCondition($condition, true);
         if (!is_null($condition))
             $this->db->where($condition->getConditionString());
 
@@ -332,7 +332,7 @@ class MY_Model extends CI_Model
      */
     protected function updateEntity ($table, array $data, array $filters, array $allowedFields = null)
     {
-        $filters = $this->getTableFilters($filters);
+        $filters = $this->getTableFilters($filters, true);
         $data = $this->toWriteTableData($data, $allowedFields);
 
         $success = $this->updateRow($table, $data, $filters);
@@ -372,12 +372,11 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param QueryCondition $condition
      * @throws BadFormatException
-     * @throws ResourceNotFoundException
      * @throws TransactionException if delete failed because of database error
      */
     protected function deleteEntityWithCondition ($table, QueryCondition $condition)
     {
-        $condition = $this->toTableCondition($condition);
+        $condition = $this->toTableCondition($condition, true);
         if (!is_null($condition))
             $this->db->where($condition->getConditionString());
 
@@ -388,11 +387,12 @@ class MY_Model extends CI_Model
      * @param string $table
      * @param array $filters entity's filter field => filter value
      * @return int number of deleted entities
-     * @throws TransactionException if delete failed because of database error
+     * @throws BadFormatException
+     * @throws TransactionException
      */
     protected function deleteEntity ($table, array $filters)
     {
-        $filters = $this->getTableFilters($filters);
+        $filters = $this->getTableFilters($filters, true);
 
         $this->setQueryFilters($filters);
 
@@ -575,10 +575,11 @@ class MY_Model extends CI_Model
     /**
      * Converts condition's field/value to table's field/value, and escape identifiers & values.
      * @param QueryCondition $condition
+     * @param bool $strict throws error if one of condition fields is not found
      * @return QueryCondition null if field is not found
      * @throws BadFormatException
      */
-    protected function toTableCondition (QueryCondition $condition)
+    protected function toTableCondition (QueryCondition $condition, $strict = false)
     {
         if ($condition instanceof LogicalCondition)
         {
@@ -588,7 +589,7 @@ class MY_Model extends CI_Model
             $subConditions = $condition->getConditions();
             foreach ($subConditions as $subCondition)
             {
-                $tableSubCondition = $this->toTableCondition($subCondition);
+                $tableSubCondition = $this->toTableCondition($subCondition, $strict);
                 if (!is_null($tableSubCondition))
                     $tableSubConditions[] = $tableSubCondition;
             }
@@ -608,7 +609,7 @@ class MY_Model extends CI_Model
             $condition = clone $condition;
 
             $subCondition = $condition->getCondition();
-            $tableSubCondition = $this->toTableCondition($subCondition);
+            $tableSubCondition = $this->toTableCondition($subCondition, $strict);
             if (is_null($tableSubCondition))
             {
                 return null;
@@ -665,6 +666,10 @@ class MY_Model extends CI_Model
 
                 return $condition;
             }
+            else if ($strict)
+            {
+                throw new BadFormatException(sprintf('Condition field `%s` is not found', $field));
+            }
             else
             {
                 return null;
@@ -688,6 +693,14 @@ class MY_Model extends CI_Model
 
                     return $condition;
                 }
+                else if ($strict)
+                {
+                    throw new BadFormatException(sprintf('Condition field `%s` is not found', $rightField));
+                }
+            }
+            else if ($strict)
+            {
+                throw new BadFormatException(sprintf('Condition field `%s` is not found', $leftField));
             }
 
             return null;
@@ -882,7 +895,7 @@ class MY_Model extends CI_Model
         $fieldMap = $this->getWriteFieldMap();
         // default is to allow all fields
         if (empty($allowedFields))
-            $allowedFields = array_keys($fieldMap);;
+            $allowedFields = array_keys($fieldMap);
 
         $dataFields = array_keys($data);
         $writeFields = array_intersect($dataFields, $allowedFields);
@@ -903,9 +916,11 @@ class MY_Model extends CI_Model
     /**
      * Maps all filters to table format.
      * @param array $filters entity's filter field => filter value
+     * @param bool $strict throws error if one of filter fields is not found
      * @return array
+     * @throws BadFormatException
      */
-    protected function getTableFilters (array $filters = null)
+    protected function getTableFilters (array $filters = null, $strict = false)
     {
         if (empty($filters))
             return array();
@@ -925,6 +940,10 @@ class MY_Model extends CI_Model
                 }
                 catch (BadFormatException $e)
                 {}
+            }
+            else if ($strict)
+            {
+                throw new BadFormatException(sprintf('Filter field %s is not found', $field));
             }
         }
 
@@ -1267,5 +1286,13 @@ class MY_Model extends CI_Model
             return null;
         else
             return $line;
+    }
+
+    public static function getDbManager ()
+    {
+        if (!isset(self::$dbManager))
+            self::$dbManager = new DbManager();
+
+        return self::$dbManager;
     }
 }

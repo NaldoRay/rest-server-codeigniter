@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.34.0
++ All update and delete functions of `MY_Model` now check if field exists strictly i.e. throws error if filter/condition field is not found
+
 v5.33.2
 + Add `OracleEqualsCondition` and `OracleNotEqualsCondition` to fix `ORA-01795: maximum number of expressions in a list is 1000` 
 when using `EqualsCondition` and `NotEqualsCondition` on Oracle SQL with IN values more than 1,000 elements
