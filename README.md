@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.35.0
++ Add new getter `MY_Model::getEntityFromRawQuery()` to get first row from raw query result
+
 v5.34.0
 + All update and delete functions of `MY_Model` now check if field exists strictly i.e. throws error if filter/condition field is not found
 

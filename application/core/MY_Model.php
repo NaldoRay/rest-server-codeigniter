@@ -445,10 +445,31 @@ class MY_Model extends CI_Model
     }
 
     /**
+     * @param string $sql
+     * @param array $params array of values [value1, value2] or param binds ([placeholder => value])
+     * @return object
+     */
+    protected function getEntityFromRawQuery ($sql, array $params = null)
+    {
+        /** @var CI_DB_result $result */
+        if (empty($params))
+            $result = $this->db->query($sql, false, true);
+        else
+            $result = $this->db->query($sql, $params, true);
+
+        $row = $result->row_array();
+
+        // free the memory associated with the result and deletes the result resource ID.
+        $result->free_result();
+        return $this->toEntity($row);
+    }
+
+    /**
      * @param string $table
      * @param array $filters entity's filter field => filter value, e.g. ['id' => 1]
      * @param array $fields entity's fields
      * @return null|object
+     * @throws BadFormatException
      */
     protected function getEntity ($table, array $filters, array $fields = null)
     {
