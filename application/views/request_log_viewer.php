@@ -207,7 +207,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
             function formatDate (date)
             {
-                var formattedDate = moment(date).format('YYYY-MM-DD hh:mm:ss');
+                var formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
                 return '<span style="font-weight: bold;">' + formattedDate + '</span>';
             }
 

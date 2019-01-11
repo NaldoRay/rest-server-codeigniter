@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * @author  Ray Naldo
  */
-class Request_log_viewer extends APP_REST_Controller
+class Query_log_viewer extends APP_REST_Controller
 {
     public function view_get ()
     {
@@ -39,44 +39,61 @@ class Request_log_viewer extends APP_REST_Controller
         $data = [
             'logs' => $logs
         ];
-        $this->load->view('request_log_viewer', $data);
+        $this->load->view('query_log_viewer', $data);
     }
 
-    public function requests_get ($requestIdx)
+    public function logs_get ($logIdx)
     {
-        $requests = array();
+        $logs = array();
 
         $files = $this->getFiles();
-        if (isset($files[$requestIdx]))
+        if (isset($files[$logIdx]))
         {
-            $file = $files[$requestIdx];
+            $file = $files[$logIdx];
 
             $filePath = $file->getPathname();
             if ($file = fopen($filePath, 'r'))
             {
                 while (($line = fgets($file)) !== false)
                 {
-                    if (!empty($line))
+                    $line = trim($line, " \t\n\r\0\x0B[]");
+                    if (empty($line))
+                        continue;
+
+                    $parts = preg_split('/(?<!\|)\|(?!\|)/', $line);
+
+                    $date = $parts[0];
+                    $ipAddress = null;
+                    $query = null;
+
+                    $count = count($parts);
+                    if ($count > 1)
                     {
-                        $request = json_decode($line);
-                        if (!is_null($request))
-                            $requests[] = json_decode($line);
+                        $ipAddress = $parts[1];
+                        if ($count > 2)
+                            $query = $parts[2];
                     }
+
+                    $logs[] = [
+                        'date' => $date,
+                        'ipAddress' => $ipAddress,
+                        'query' => $query
+                    ];
                 }
 
                 fclose($file);
             }
         }
-        // display last row (latest log) first
-        $requests = array_reverse($requests);
-        $this->respondSuccess($requests);
+        // tampilkan baris paling terakhir terlebih dahulu
+        $logs = array_reverse($logs);
+        $this->respondSuccess($logs);
     }
 
     private function getFiles ()
     {
         $files = array();
 
-        $logPath = $this->config->item('app_context_error_log_path');
+        $logPath = $this->config->item('app_query_log_path');
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($logPath));
         foreach ($iterator as $file)
         {

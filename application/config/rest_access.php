@@ -22,8 +22,8 @@ $config['rest_client_access'] = [
     // example for application
     '0.0.0.0' => [
         [
-            // all uri except request logs
-            'uris' => ['^(?!request-logs).+$'], // array of allowed uri string, allow regex
+            // all uri except request & query logs viewer
+            'uris' => ['^(?!request-logs|query-logs).+$'], // array of allowed uri string, allow regex
             'methods' => [REST_ALL_METHODS] // array of allowed http method constants, allow regex
         ]
     ],

@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.36.0
++ Add query log viewer
++ update request log viewer: fix hour format to 24H, skip empty log line
+
 v5.35.0
 + Add new getter `MY_Model::getEntityFromRawQuery()` to get first row from raw query result
 
