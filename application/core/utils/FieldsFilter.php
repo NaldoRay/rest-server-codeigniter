@@ -25,7 +25,16 @@ class FieldsFilter
      */
     public function getFields ()
     {
-        return array_keys($this->fieldMap);
+        $fields = array();
+        // convert `[a => [b,x/y], abc => [x,y,z]]` to `[a(b,x/y),abc(x,y,z)]`
+        foreach ($this->fieldMap as $field => $subFields)
+        {
+            if (empty($subFields))
+                $fields[] = $field;
+            else
+                $fields[] = sprintf('%s(%s)', $field, implode(',', $subFields));
+        }
+        return $fields;
     }
 
     public function getSubFields ($field)
@@ -92,7 +101,7 @@ class FieldsFilter
         {
             if (preg_match('#^(\w+)/([\w(,)/]+)$#', $field, $matches))
             {
-                // e.g. a/b and a/x/y will be splitted into [a => [b, x/y]]
+                // e.g. a/b and a/x/y will be splitted into [a => [b,x/y]]
                 $field = $matches[1];
                 if (!isset($fieldMap[ $field ]))
                     $fieldMap[ $field ] = array();

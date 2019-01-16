@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.36.1
++ Fix `FieldsFilter::getFields()` only returns first-level field array (should return 'original' array)
+
 v5.36.0
 + Add query log viewer
 + update request log viewer: fix hour format to 24H, skip empty log line
