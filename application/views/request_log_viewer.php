@@ -176,9 +176,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                        alert("Failed to load requests");
                    });
                });
-
-               // auto-load first (latest) log file
-               $('.log-file')[0].click();
             });
 
             function formatMethod (method)
