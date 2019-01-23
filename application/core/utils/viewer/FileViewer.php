@@ -24,9 +24,9 @@ class FileViewer
         }
     }
 
-    public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null, $caFilePath = null)
+    public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl, $caFilePath);
+        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl, $headers, $caFilePath);
         $shown = $this->view($tmpFilePath);
         if ($shown)
         {
@@ -46,9 +46,9 @@ class FileViewer
         return $this->view($filePath, $renamedFilename);
     }
 
-    public function viewRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
+    public function viewRemoteFile ($fileUrl, $renamedFilename = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $caFilePath);
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $headers, $caFilePath);
         return $this->view($tmpFilePath, $renamedFilename);
     }
 
@@ -57,13 +57,13 @@ class FileViewer
         return $this->download($filePath, $renamedFilename);
     }
 
-    public function downloadRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
+    public function downloadRemoteFile ($fileUrl, $renamedFilename = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $caFilePath);
+        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $headers, $caFilePath);
         return $this->download($tmpFilePath, $renamedFilename);
     }
 
-    private function createTemporaryRemoteFile ($fileUrl, $caFilePath = null)
+    private function createTemporaryRemoteFile ($fileUrl, array $headers = null, $caFilePath = null)
     {
         if (empty($caFilePath))
         {
@@ -81,6 +81,18 @@ class FileViewer
                     'verify_peer' => true,
                     'cafile' => $caFilePath
                 ]
+            ];
+        }
+
+        if (!empty($headers))
+        {
+            $httpHeaders = array();
+            foreach ($headers as $key => $value)
+                $httpHeaders[] = sprintf('%s: %s', $key, $value);
+
+            $contextOptions['http'] = [
+                'method' => 'GET',
+                'header' => implode('\\r\\n', $httpHeaders)
             ];
         }
 
@@ -150,5 +162,45 @@ class FileViewer
             return ($result !== false);
         }
         return false;
+    }
+
+    public function readRemoteFile ($fileUrl, array $headers = null, $caFilePath = null)
+    {
+        if (empty($caFilePath))
+        {
+            $contextOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false
+                ]
+            ];
+        }
+        else
+        {
+            $contextOptions = [
+                'ssl' => [
+                    'verify_peer' => true,
+                    'cafile' => $caFilePath
+                ]
+            ];
+        }
+
+        if (!empty($headers))
+        {
+            $httpHeaders = array();
+            foreach ($headers as $key => $value)
+                $httpHeaders[] = sprintf('%s: %s', $key, $value);
+
+            $contextOptions['http'] = [
+                'method' => 'GET',
+                'header' => implode('\\r\\n', $httpHeaders)
+            ];
+        }
+
+        $content = @file_get_contents($fileUrl, null, stream_context_create($contextOptions));
+        if ($content === false)
+            return null;
+        else
+            return $content;
     }
 }

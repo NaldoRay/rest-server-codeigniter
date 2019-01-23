@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.37.0
++ Add new function to read and return remote file content: `readRemoteFile()` to `FileViewer`, `File_manager`, and `readFile()` to `APP_Web_service`
+
 v5.36.1
 + Fix `FieldsFilter::getFields()` only returns first-level field array (should return 'original' array)
 

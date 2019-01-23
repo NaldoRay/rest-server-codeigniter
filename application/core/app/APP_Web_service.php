@@ -7,36 +7,69 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class APP_Web_service extends MY_Web_service
 {
-    private $inupby = null;
+    private $fileViewer;
 
 
-    public function setInupby ($inupby)
+    public function __construct ($baseUrl)
     {
-        $this->inupby = $inupby;
-        return $this;
+        parent::__construct($baseUrl);
+
+        $this->fileViewer = new FileViewer();
+    }
+
+    public function get ($uri = '', GetParam $param = null)
+    {
+        $this->setRequestHeaders();
+
+        return parent::get($uri, $param);
     }
 
     public function post ($uri = '', array $params = null)
     {
-        if (!is_null($this->inupby))
-            $this->setHeader('API-User', $this->inupby);
+        $this->setRequestHeaders();
 
         return parent::post($uri, $params);
     }
 
     public function put ($uri = '', array $params = null)
     {
-        if (!is_null($this->inupby))
-            $this->setHeader('API-User', $this->inupby);
+        $this->setRequestHeaders();
 
         return parent::put($uri, $params);
     }
 
     public function patch ($uri = '', array $params = null)
     {
-        if (!is_null($this->inupby))
-            $this->setHeader('API-User', $this->inupby);
+        $this->setRequestHeaders();
 
         return parent::patch($uri, $params);
+    }
+
+    public function delete ($uri = '', array $params = null)
+    {
+        $this->setRequestHeaders();
+
+        return parent::delete($uri, $params);
+    }
+
+    public function viewFile ($uri = '', $renamedFilename = null, array $headers = null, $caFilePath = null)
+    {
+        $this->fileViewer->viewRemoteFile($this->getEndpointUrl($uri), $renamedFilename, $headers, $caFilePath);
+    }
+
+    public function downloadFile ($uri = '', $renamedFilename = null, array $headers = null, $caFilePath = null)
+    {
+        $this->fileViewer->downloadRemoteFile($this->getEndpointUrl($uri), $renamedFilename, $headers, $caFilePath);
+    }
+
+    public function readFile ($uri = '', array $headers = null, $caFilePath = null)
+    {
+        return $this->fileViewer->readRemoteFile($this->getEndpointUrl($uri), $headers, $caFilePath);
+    }
+
+    private function setRequestHeaders ()
+    {
+        $CI =& get_instance();
+        $this->setHeader('X-Client-IP', $CI->input->ip_address());
     }
 }

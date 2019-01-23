@@ -2,7 +2,6 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 require_once('System.php');
-require_once(APPPATH.'core/utils/viewer/FileViewer.php');
 
 /**
  * @author Ray Naldo
@@ -73,9 +72,9 @@ class File_manager
             show_404();
     }
 
-    public function viewRemoteFile ($fileUrl, $renamedFilename = null, $caFilePath = null)
+    public function viewRemoteFile ($fileUrl, $renamedFilename = null, array $headers = null, $caFilePath = null)
     {
-        $shown = $this->fileViewer->viewRemoteFile($fileUrl, $renamedFilename, $caFilePath);
+        $shown = $this->fileViewer->viewRemoteFile($fileUrl, $renamedFilename, $headers, $caFilePath);
         if (!$shown)
             show_404();
     }
@@ -88,11 +87,16 @@ class File_manager
             show_404();
     }
 
-    public function downloadRemoteFile ($fileUrl, $renamedFilename, $caFilePath = null)
+    public function downloadRemoteFile ($fileUrl, $renamedFilename, array $headers = null, $caFilePath = null)
     {
-        $shown = $this->fileViewer->downloadRemoteFile($fileUrl, $renamedFilename, $caFilePath);
+        $shown = $this->fileViewer->downloadRemoteFile($fileUrl, $renamedFilename, $headers, $caFilePath);
         if (!$shown)
             show_404();
+    }
+
+    public function readRemoteFile ($fileUrl, array $headers = null, $caFilePath = null)
+    {
+        return $this->fileViewer->readRemoteFile($fileUrl, $headers, $caFilePath);
     }
 
     public function uploadFile ($field, $filePath)
