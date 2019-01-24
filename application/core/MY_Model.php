@@ -209,6 +209,9 @@ class MY_Model extends CI_Model
         $fieldMap = $this->getWriteFieldMap();
         if (isset($fieldMap[$indexField]))
         {
+            // index field must be allowed because it'll be used by update_batch() later
+            $allowedFields[] = $indexField;
+
             $indexField = $fieldMap[ $indexField ];
             $filters = $this->getTableFilters($filters, true);
             foreach ($dataArr as $idx => $data)
