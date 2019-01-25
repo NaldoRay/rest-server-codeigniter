@@ -210,7 +210,9 @@ class MY_Model extends CI_Model
         if (isset($fieldMap[$indexField]))
         {
             // index field must be allowed because it'll be used by update_batch() later
-            $allowedFields[] = $indexField;
+            // only add to allowed fields if not empty (because empty defaults to allow all fields)
+            if (!empty($allowedFields))
+                $allowedFields[] = $indexField;
 
             $indexField = $fieldMap[ $indexField ];
             $filters = $this->getTableFilters($filters, true);
