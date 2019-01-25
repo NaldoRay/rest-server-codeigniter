@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.37.2
++ `MY_Model::updateEntities()` throws error when `$allowedFields` param is empty
++ Fix error "One or more rows submitted for batch updating is missing the specified index." when calling `MY_Model::updateEntities()` when `$indexField` is not exists in `$allowedFields`
+
 v5.37.0
 + Add new function to read and return remote file content: `readRemoteFile()` to `FileViewer`, `File_manager`, and `readFile()` to `APP_Web_service`
 
