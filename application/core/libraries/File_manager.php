@@ -31,6 +31,25 @@ class File_manager
         $this->baseFilePath = $baseFilePath;
     }
 
+    public function viewImage ($imagePath, $imageNotFoundPath = null)
+    {
+        $imagePath = $this->getFullPath($imagePath);
+        $imageNotFoundPath = $this->getFullPath($imageNotFoundPath);
+
+        $shown = $this->fileViewer->viewImage($imagePath, $imageNotFoundPath);
+        if (!$shown)
+            show_404();
+    }
+
+    public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null, array $headers = null, $caFilePath = null)
+    {
+        $imageNotFoundPath = $this->getFullPath($imageNotFoundPath);
+
+        $shown = $this->fileViewer->viewRemoteImage($imageUrl, $imageNotFoundPath, $headers, $caFilePath);
+        if (!$shown)
+            show_404();
+    }
+
     /**
      * Needs Imagick extension.
      * @param string $filePath relative to base file path, or full path if base path is null
