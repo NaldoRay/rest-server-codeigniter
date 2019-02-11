@@ -1,5 +1,10 @@
 ## Changelog
 
+v5.38.0
++ Add new methods to view image: `File_manager::viewImage()` and `File_manager::viewRemoteImage()
++ Fix error "One or more rows submitted for batch updating is missing the specified index." when calling `MY_Model::updateEntitiesWithCondition()` when `$indexField` is not exists in `$allowedFields`
++ Fix scroll jumps/skips to the end of content view when viewing between log files
+
 v5.37.2
 + `MY_Model::updateEntities()` throws error when `$allowedFields` param is empty
 + Fix error "One or more rows submitted for batch updating is missing the specified index." when calling `MY_Model::updateEntities()` when `$indexField` is not exists in `$allowedFields`
