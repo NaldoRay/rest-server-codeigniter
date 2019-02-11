@@ -268,8 +268,12 @@ class MY_Model extends CI_Model
         $fieldMap = $this->getWriteFieldMap();
         if (isset($fieldMap[$indexField]))
         {
-            $indexField = $fieldMap[ $indexField ];
+            // index field must be allowed because it'll be used by update_batch() later
+            // only add to allowed fields if not empty (because empty defaults to allow all fields)
+            if (!empty($allowedFields))
+                $allowedFields[] = $indexField;
 
+            $indexField = $fieldMap[ $indexField ];
             $condition = $this->toTableCondition($condition, true);
             foreach ($dataArr as $idx => $data)
                 $dataArr[ $idx ] = $this->toWriteTableData($data, $allowedFields);
