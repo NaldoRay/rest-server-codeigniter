@@ -248,10 +248,11 @@ class MY_REST_Controller extends REST_Controller
 
     /**
      * Send custom successful response.
-     * @param null $data
+     * @param mixed $data
      * @param int $statusCode
+     * @param mixed $metadata
      */
-    protected final function respondSuccess ($data = null, $statusCode = self::HTTP_OK)
+    protected final function respondSuccess ($data = null, $statusCode = self::HTTP_OK, $metadata = null)
     {
         if (is_null($data))
         {
@@ -269,6 +270,9 @@ class MY_REST_Controller extends REST_Controller
             $response = array(
                 'data' => $data
             );
+
+            if (!is_null($metadata))
+                $response['metadata'] = $metadata;
         }
         $this->response($response, $statusCode);
     }
