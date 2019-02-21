@@ -2,7 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Proxy class for {@see WebService}.
+ * Wrapper class for accessing web service.
+ * @see WebService
  * @author Ray Naldo
  */
 class MY_Web_service

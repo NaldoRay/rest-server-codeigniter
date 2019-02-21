@@ -2,7 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Extends {@see CI_URI} class to auto-rawurldecode URI.
+ * Extends CI's URI class to auto-rawurl-decode URI.
+ * @see CI_URI
  * @author Ray Naldo
  */
 class MY_URI extends CI_URI
