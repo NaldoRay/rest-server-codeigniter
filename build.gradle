@@ -1,4 +1,4 @@
-def version = "5.38.0"
+def version = "5.39.0"
 def versionPublic = "1.0.0"
 def systemVersion = "3.1.4"
 
