@@ -48,7 +48,15 @@ class RestAccess
             }
         }
 
-        return [];
+        // return default/other config if any
+        if (isset($clientAccessArr[ REST_OTHER_IP_ADDRESSES ]))
+        {
+            return $clientAccessArr[ REST_OTHER_IP_ADDRESSES ];
+        }
+        else
+        {
+            return [];
+        }
     }
 
     private function isUriAllowed ($uri, array $access)

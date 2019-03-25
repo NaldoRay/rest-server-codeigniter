@@ -13,6 +13,7 @@ defined('HTTP_DELETE') OR define('HTTP_DELETE', 'DELETE');
 defined('HTTP_HEAD') OR define('HTTP_HEAD', 'HEAD');
 defined('HTTP_OPTIONS') OR define('HTTP_OPTIONS', 'OPTIONS');
 
+defined('REST_OTHER_IP_ADDRESSES') OR define('REST_OTHER_IP_ADDRESSES', '*');
 defined('REST_ALL_URIS') OR define('REST_ALL_URIS', '.*');
 defined('REST_ALL_METHODS') OR define('REST_ALL_METHODS', '.+');
 
@@ -32,6 +33,13 @@ $config['rest_client_access'] = [
         [
             'uris' => [REST_ALL_URIS], // array of allowed uri string, allow regex
             'methods' => [REST_ALL_METHODS] // array of allowed http method constants, allow regex
+        ]
+    ],
+    // example default config
+    REST_OTHER_IP_ADDRESSES => [
+        [
+            'uris' => ['examples'], // only allowed to access `examples` endpoint
+            'methods' => [HTTP_GET] // only allowed to use HTTP method `GET`
         ]
     ]
 ];
