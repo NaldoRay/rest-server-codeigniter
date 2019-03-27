@@ -70,6 +70,11 @@ class APP_Web_service extends MY_Web_service
     private function setRequestHeaders ()
     {
         $CI =& get_instance();
-        $this->setHeader('X-Client-IP', $CI->input->ip_address());
+
+        $clientIP = $CI->input->get_request_header('X-Client-IP');
+        if (is_null($clientIP))
+            $clientIP = $CI->input->ip_address();
+
+        $this->setHeader('X-Client-IP', $clientIP);
     }
 }
