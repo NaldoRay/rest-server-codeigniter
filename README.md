@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.39.1
++ Fix `X-Client-IP` header not forwarded from client when making request to another web service
+
 v5.39.0
 + Support configuring rest access for other ip addresses i.e. ip addresses which is not configured explicitly, using constant `REST_OTHER_IP_ADDRESSES`
 
