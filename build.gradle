@@ -29,8 +29,10 @@ task releasePublic (type: Zip) {
 	from('.') {
         include 'README-public.md'
         rename 'README-public.md', 'README.md'
-        include '.htaccess'
-        include 'index.php'
+        include '.htaccess-public'
+        rename '.htaccess-public', '.htaccess'
+        include 'index-public.php'
+        rename 'index-public.php', 'index.php'
         include 'application/**'
         exclude 'application/tests/**'
         exclude 'application/core/app/APP_REST_Controller.php'
@@ -38,6 +40,9 @@ task releasePublic (type: Zip) {
         exclude 'application/core/app/APP_Web_service.php'
         exclude 'application/services/acl/**'
         include 'system/**'
+        include 'files'
+        include 'logs'
+        include 'request-logs'
     }
 	from('vendor-production') {
 	    include '**'
