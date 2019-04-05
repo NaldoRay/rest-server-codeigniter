@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.39.2
++ Fix missing `indonesia` language in system directory
+
 v5.39.1
 + Fix `X-Client-IP` header not forwarded from client when making request to another web service
 
