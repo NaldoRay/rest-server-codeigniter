@@ -24,9 +24,9 @@ class OracleEqualsCondition extends EqualsCondition
 
                 $multiValues = array();
                 foreach ($value as $val)
-                    $multiValues[] = sprintf("('magic',%s)", $val);
+                    $multiValues[] = sprintf("(1,%s)", $val);
 
-                return sprintf("('magic',%s) IN (%s)", $this->getField(), implode(',', $multiValues));
+                return sprintf("(1,%s) IN (%s)", $this->getField(), implode(',', $multiValues));
             }
         }
 

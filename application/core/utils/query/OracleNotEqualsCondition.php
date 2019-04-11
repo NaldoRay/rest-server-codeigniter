@@ -23,9 +23,9 @@ class OracleNotEqualsCondition extends NotEqualsCondition
                  */
                 $multiValues = array();
                 foreach ($value as $val)
-                    $multiValues[] = sprintf("('magic',%s)", $val);
+                    $multiValues[] = sprintf("(1,%s)", $val);
 
-                return sprintf("('magic',%s) NOT IN (%s)", $this->getField(), implode(',', $multiValues));
+                return sprintf("(1,%s) NOT IN (%s)", $this->getField(), implode(',', $multiValues));
             }
         }
 
