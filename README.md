@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.39.3
++ Change key-value for multi-value comparison `'magic'` to `1`
+
 v5.39.2
 + Fix missing `indonesia` language in system directory
 
