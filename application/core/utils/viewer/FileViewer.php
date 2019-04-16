@@ -96,7 +96,7 @@ class FileViewer
             ];
         }
 
-        $content = file_get_contents($fileUrl, null, stream_context_create($contextOptions));
+        $content = @file_get_contents($fileUrl, null, stream_context_create($contextOptions));
         if ($content === false)
             return null;
 
