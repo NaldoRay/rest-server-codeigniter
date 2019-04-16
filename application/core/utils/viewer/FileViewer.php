@@ -26,8 +26,7 @@ class FileViewer
 
     public function viewRemoteImage ($imageUrl, $imageNotFoundPath = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($imageUrl, $headers, $caFilePath);
-        $shown = $this->view($tmpFilePath);
+        $shown = $this->viewRemoteFile($imageUrl, null, $headers, $caFilePath);
         if ($shown)
         {
             return true;
@@ -48,8 +47,24 @@ class FileViewer
 
     public function viewRemoteFile ($fileUrl, $renamedFilename = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $headers, $caFilePath);
-        return $this->view($tmpFilePath, $renamedFilename);
+        $response = $this->getResponse($fileUrl, $headers, $caFilePath);
+        if (is_null($response))
+            return false;
+
+        if (empty($renamedFilename))
+            header('Content-Disposition: inline');
+        else
+            header('Content-Disposition: inline; filename="'.$renamedFilename.'"');
+
+        header('Content-Type: ' . $response['headerMap']['Content-Type']);
+        header('Content-Length: ' . $response['headerMap']['Content-Length']);
+        // jangan di-cache
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Expires: 0');
+
+        echo $response['content'];
+
+        return true;
     }
 
     public function downloadFile ($filePath, $renamedFilename = null)
@@ -59,53 +74,24 @@ class FileViewer
 
     public function downloadRemoteFile ($fileUrl, $renamedFilename = null, array $headers = null, $caFilePath = null)
     {
-        $tmpFilePath = $this->createTemporaryRemoteFile($fileUrl, $headers, $caFilePath);
-        return $this->download($tmpFilePath, $renamedFilename);
-    }
+        $response = $this->getResponse($fileUrl, $headers, $caFilePath);
+        if (is_null($response))
+            return false;
 
-    private function createTemporaryRemoteFile ($fileUrl, array $headers = null, $caFilePath = null)
-    {
-        if (empty($caFilePath))
-        {
-            $contextOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false
-                ]
-            ];
-        }
+        if (empty($renamedFilename))
+            header('Content-Disposition: attachment');
         else
-        {
-            $contextOptions = [
-                'ssl' => [
-                    'verify_peer' => true,
-                    'cafile' => $caFilePath
-                ]
-            ];
-        }
+            header('Content-Disposition: attachment; filename="' . $renamedFilename . '"');
 
-        if (!empty($headers))
-        {
-            $httpHeaders = array();
-            foreach ($headers as $key => $value)
-                $httpHeaders[] = sprintf('%s: %s', $key, $value);
+        header('Content-Type: ' . $response['headerMap']['Content-Type']);
+        header('Content-Length: ' . $response['headerMap']['Content-Length']);
+        // ga perlu di-cache
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Expires: 0');
 
-            $contextOptions['http'] = [
-                'method' => 'GET',
-                'header' => implode('\\r\\n', $httpHeaders)
-            ];
-        }
+        echo $response['content'];
 
-        $content = @file_get_contents($fileUrl, null, stream_context_create($contextOptions));
-        if ($content === false)
-            return null;
-
-        // automatically deleted when the script ends
-        $this->tmpFile = tmpfile();
-        fwrite($this->tmpFile, $content);
-
-        $metaDatas = stream_get_meta_data($this->tmpFile);
-        return $metaDatas['uri'];
+        return true;
     }
 
     private function view ($filePath, $renamedFilename = null)
@@ -127,7 +113,7 @@ class FileViewer
             header('Cache-Control: no-cache, no-store, must-revalidate');
             header('Expires: 0');
 
-            //Baca file dan kirim ke client.
+            // read and send file content to client
             $ret = readfile($filePath);
 
             return ($ret !== false);
@@ -166,6 +152,15 @@ class FileViewer
 
     public function readRemoteFile ($fileUrl, array $headers = null, $caFilePath = null)
     {
+        $response = $this->getResponse($fileUrl, $headers, $caFilePath);
+        if (is_null($response))
+            return null;
+        else
+            return $response['content'];
+    }
+
+    private function getResponse ($url, array $headers = null, $caFilePath = null)
+    {
         if (empty($caFilePath))
         {
             $contextOptions = [
@@ -197,10 +192,21 @@ class FileViewer
             ];
         }
 
-        $content = @file_get_contents($fileUrl, null, stream_context_create($contextOptions));
+        $content = @file_get_contents($url, null, stream_context_create($contextOptions));
         if ($content === false)
             return null;
-        else
-            return $content;
+
+        $headerMap = array();
+        foreach ($http_response_header as $headerStr)
+        {
+            $headerPair = explode(':', $headerStr, 2);
+            if (isset($headerPair[1]))
+                $headerMap[ trim($headerPair[0]) ] = trim($headerPair[1]);
+        }
+
+        return [
+            'headerMap' => $headerMap,
+            'content' => $content
+        ];
     }
 }
