@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.39.5
++ Refactor `FileViewer`: remove temporary file creation when viewing/downloading remote file
++ Silence error on `file_get_contents` when creating temporary file from remote file
+
 v5.39.3
 + Change key-value for multi-value comparison `'magic'` to `1`
 
