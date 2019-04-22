@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.39.6
++ Fix regex error (in CI core) in `OracleEqualsCondition` and `OracleNotEqualsCondition` when multi-value comparison condition is too long
+
 v5.39.5
 + Refactor `FileViewer`: remove temporary file creation when viewing/downloading remote file
 + Silence error on `file_get_contents` when creating temporary file from remote file
