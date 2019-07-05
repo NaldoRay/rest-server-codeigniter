@@ -37,6 +37,7 @@ class ValueValidator implements Validation
     private $label;
 
     private $nullable = false;
+    private $allowEmpty = false;
 
     /** @var array */
     private $validations = array();
@@ -73,6 +74,12 @@ class ValueValidator implements Validation
         return $this;
     }
 
+    public function allowEmpty ()
+    {
+        $this->allowEmpty = true;
+        return $this;
+    }
+
     /**
      * Validation failed if value equals to null, empty string, or empty array.
      * @param string $errorMessage custom error message
@@ -86,7 +93,7 @@ class ValueValidator implements Validation
         $this->setValidation(self::$IDX_NOT_EMPTY, function ($value)
         {
             // extra checks so 0, 0.0, "0", and false are not considered as empty by empty() method
-            return !empty($value) || is_numeric($value) || is_bool($value);
+            return !$this->isEmpty($value);
         }, $errorMessage);
 
         return $this;
@@ -759,6 +766,8 @@ class ValueValidator implements Validation
 
         if (is_null($this->value) && $this->nullable)
             return true;
+        if ($this->isEmpty($this->value) && $this->allowEmpty)
+            return true;
 
         $indexes = array_keys($this->validations);
         sort($indexes);
@@ -776,6 +785,11 @@ class ValueValidator implements Validation
         }
 
         return true;
+    }
+
+    private function isEmpty ($value)
+    {
+        return empty($value) && !is_numeric($value) && !is_bool($value);
     }
 
     /**
