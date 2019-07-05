@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.40.0
++ Add `ValueValidator::allowEmpty()` to allow empty value (`null`, `''`)
+
 v5.39.6
 + Fix regex error (in CI core) in `OracleEqualsCondition` and `OracleNotEqualsCondition` when multi-value comparison condition is too long
 
