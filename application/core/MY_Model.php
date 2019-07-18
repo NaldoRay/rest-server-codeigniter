@@ -816,6 +816,42 @@ class MY_Model extends CI_Model
         return ($result->num_rows() > 0);
     }
 
+    protected function countAllEntities ($table, array $filters = null, $distinct = false)
+    {
+        $filters = $this->getTableFilters($filters);
+
+        $this->setQueryFilters($filters);
+        $this->setQueryDistinct($distinct);
+
+        $result = $this->db->select('COUNT(1) AS N_COUNT', false)
+            ->get($table);
+
+        $row = $result->row_array();
+        if (empty($row))
+            return 0;
+        else
+            return $row['N_COUNT'];
+    }
+
+    protected function countAllEntitiesWithCondition ($table, QueryCondition $condition = null, $distinct = false)
+    {
+        if (!is_null($condition))
+        {
+            $condition = $this->toTableCondition($condition);
+            $this->db->where($condition->getConditionString());
+        }
+        $this->setQueryDistinct($distinct);
+
+        $result = $this->db->select('COUNT(1) AS N_COUNT', false)
+            ->get($table);
+
+        $row = $result->row_array();
+        if (empty($row))
+            return 0;
+        else
+            return $row['N_COUNT'];
+    }
+
     /**
      * @param array $fields
      */
@@ -992,8 +1028,10 @@ class MY_Model extends CI_Model
         if ($this->isBooleanField($field))
         {
             // set field only if it has valid value
-            $value = $this->tryParseBoolean($value);
-            return ($value ? '1' : '0');
+            if (is_null($value))
+                return null;
+            else
+                return ($this->tryParseBoolean($value) ? '1' : '0');
         }
         else if ($this->isNumberField($field))
         {
@@ -1116,7 +1154,8 @@ class MY_Model extends CI_Model
         {
             if ($this->isBooleanField($field))
             {
-                $value = (bool)$value;
+                if (!is_null($value))
+                    $value = (bool) $value;
             }
             else if ($this->isDateTimeField($field))
             {
