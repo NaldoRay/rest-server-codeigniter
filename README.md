@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.41.0
++ Add `MY_Model` functions to count all entities
++ Don't read/write `null` value as boolean even though boolean fields, keep it as `null`
+
 v5.40.0
 + Add `ValueValidator::allowEmpty()` to allow empty value (`null`, `''`)
 
