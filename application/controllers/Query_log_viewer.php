@@ -42,6 +42,9 @@ class Query_log_viewer extends APP_REST_Controller
         $this->load->view('query_log_viewer', $data);
     }
 
+    /**
+     * @param $logIdx
+     */
     public function logs_get ($logIdx)
     {
         $logs = array();
@@ -50,45 +53,79 @@ class Query_log_viewer extends APP_REST_Controller
         if (isset($files[$logIdx]))
         {
             $file = $files[$logIdx];
-
             $filePath = $file->getPathname();
-            if ($file = fopen($filePath, 'r'))
+
+            $search = $this->get('search');
+            if (is_null($search ))
             {
-                while (($line = fgets($file)) !== false)
+                if ($file = fopen($filePath, 'r'))
                 {
-                    $line = trim($line, " \t\n\r\0\x0B[]");
-                    if (empty($line))
-                        continue;
-
-                    $parts = preg_split('/(?<!\|)\|(?!\|)/', $line);
-
-                    $date = $parts[0];
-                    $ipAddress = null;
-                    $query = null;
-
-                    $count = count($parts);
-                    if ($count > 1)
+                    while (($line = fgets($file)) !== false)
                     {
-                        $ipAddress = $parts[1];
-                        if ($count > 2)
-                            $query = $parts[2];
+                        $log = $this->parseLog($line);
+                        if (!is_null($log))
+                            $logs[] = $log;
                     }
 
-                    $logs[] = [
-                        'date' => $date,
-                        'ipAddress' => $ipAddress,
-                        'query' => $query
-                    ];
+                    fclose($file);
                 }
-
-                fclose($file);
             }
+            else
+            {
+                $command = sprintf('cat "%s" | grep -i "%s" 2>&1',
+                    addcslashes($filePath, '"'),
+                    addcslashes($search, '"')
+                );
+                $output = shell_exec($command);
+
+                $separator = PHP_EOL;
+                $line = strtok($output, $separator);
+                while ($line !== false)
+                {
+                    $log = $this->parseLog($line);
+                    if (!is_null($log))
+                        $logs[] = $log;
+
+                    $line = strtok($separator);
+                }
+            }
+            // tampilkan baris paling terakhir terlebih dahulu
+            $logs = array_reverse($logs);
         }
-        // tampilkan baris paling terakhir terlebih dahulu
-        $logs = array_reverse($logs);
+
         $this->respondSuccess($logs);
     }
 
+    private function parseLog ($line)
+    {
+        $line = trim($line, " \t\n\r\0\x0B[]");
+        if (empty($line))
+            return null;
+
+        $parts = preg_split('/(?<!\|)\|(?!\|)/', $line);
+
+        $date = $parts[0];
+        $ipAddress = null;
+        $query = null;
+
+        $count = count($parts);
+        if ($count > 1)
+        {
+            $ipAddress = $parts[1];
+            if ($count > 2)
+                $query = $parts[2];
+        }
+
+        return [
+            'date' => $date,
+            'ipAddress' => $ipAddress,
+            'query' => $query
+        ];
+    }
+
+    /**
+     * @return array
+     */
     private function getFiles ()
     {
         $files = array();

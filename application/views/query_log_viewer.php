@@ -32,6 +32,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         .log-file-active {
             background: #fff176;
         }
+        .search {
+            display: none;
+            padding: 8px;
+            background-color: #fff176;
+        }
+        div.sticky {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            padding: 16px;
+            background-color: #ffffa8;
+        }
         #list {
             width: 100%;
             max-height: 640px;
@@ -94,14 +106,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     <div style="float: left; flex: 1">
         <h1 style="padding: 0; margin: 0">Queries</h1>
         <br />
-        <div id="queries-panel">
-            <!-- TODO <input type="text" class="search" placeholder="Search" disabled/> -->
-            &nbsp;&nbsp;
-            <br />
+        <div id="queries-panel" class="sticky">
+            <div class="search">
+                <form id="searchForm">
+                    <input type="text" id="searchText" placeholder="Search"/> &nbsp; <input type="submit" value="Search">
+                </form>
+                <br />
+                <button id="collapseButton">Collapse All</button>
+            </div>
             <br />
             <div id="list" class="clusterize-scroll">
                 <div id="list-content" class="clusterize-content">
-
                 </div>
             </div>
         </div>
@@ -118,78 +133,23 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             $('.log-file').removeClass('log-file-active');
             $(this).addClass('log-file-active');
 
-            if (cluster != null)
-                cluster.clear();
-            $('#list-content').html('<div class="clusterize-no-data">Loading data…</div>');
+            $('.search').show();
+            $('#list-content').html('');
+        });
 
-            var id = $(this).data('id');
-            var url = '/api/query-logs/' + id + '/logs';
-            $.get(url, function (response)
-            {
-                var list = [];
+        $('#searchForm').submit(function(ev)
+        {
+            ev.preventDefault();
 
-                response.data.forEach(function (log)
-                {
-                    var queryDiv = '<div class="query">';
+            var id = $('.log-file-active:first').data('id');
+            var search = $('#searchText').val();
 
-                    var query = log.query;
-                    var previewQuery = getPreviewQuery(log.query);
-                    var ipAddress = '<code>' + log.ipAddress + '</code>';
+            refreshLogs(id, search);
+        });
 
-                    queryDiv +=
-                        '<div class="js-query" style="display: table; cursor: pointer;">' +
-                        '<div style="float: left; width: 192px" class="date">' + formatDate(log.date) + '</div>' +
-                        '<div style="float: left; min-width: 480px">' +
-                        previewQuery + '<br />' + ipAddress +
-                        '</div>' +
-                        '</div>';
-
-                    queryDiv += '<div>' +
-                        '<button class="tooltip js-copy-button">Copy Query' +
-                        '<span class="tooltiptext" style="display:none">Copied</span>' +
-                        '<span style="display:none" class="info">' + query + '</span>' +
-                        '</button>' +
-                        '</div>';
-
-                    queryDiv += '<div class="query-view"><code>' + query + '</code></div>';
-
-                    queryDiv += '</div>';
-                    list.push(queryDiv);
-                });
-
-                if (clipboard != null)
-                    clipboard.destroy();
-
-                clipboard = new ClipboardJS('.js-copy-button', {
-                    text: function(trigger) {
-                        return trigger.getElementsByClassName('info')[0].innerHTML;
-                    }
-                });
-                clipboard.on('success', function (e)
-                {
-                    $(e.trigger).find('> .tooltiptext')
-                        .show()
-                        .delay(2000)
-                        .fadeOut();
-                });
-
-                if (cluster == null)
-                {
-                    cluster = new Clusterize({
-                        rows: list,
-                        scrollId: 'list',
-                        contentId: 'list-content'
-                    });
-                }
-                else
-                {
-                    cluster.append(list);
-                    cluster.refresh();
-                }
-            }).fail(function ()
-            {
-                alert("Gagal memuat log");
-            });
+        $('#collapseButton').click(function(ev)
+        {
+            $('.query-view').hide();
         });
 
         $(document).on('click', '.js-query', function (ev)
@@ -197,6 +157,89 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             $(this).siblings('.query-view').fadeToggle();
         });
     });
+
+    function refreshLogs (id, search)
+    {
+        if (cluster != null)
+            cluster.clear();
+
+        $('#searchButton').attr('disabled', true);
+        $('#list-content').html('<div class="clusterize-no-data">Loading data…</div>');
+
+        var url = '/api/query-logs/' + id + '/logs?search=' + encodeURIComponent(search);
+        $.get(url, function (response)
+        {
+            var list = [];
+
+            response.data.forEach(function (log)
+            {
+                var queryDiv = '<div class="query">';
+
+                var query = log.query;
+                var previewQuery = getPreviewQuery(log.query);
+                var ipAddress = '<code>' + log.ipAddress + '</code>';
+
+                queryDiv +=
+                    '<div class="js-query" style="display: table; cursor: pointer;">' +
+                    '<div style="float: left; width: 192px" class="date">' + formatDate(log.date) + '</div>' +
+                    '<div style="float: left; min-width: 480px">' +
+                    previewQuery + '<br />' + ipAddress +
+                    '</div>' +
+                    '</div>';
+
+                queryDiv += '<div>' +
+                    '<button class="tooltip js-copy-button">Copy Query' +
+                    '<span class="tooltiptext" style="display:none">Copied</span>' +
+                    '<span style="display:none" class="info">' + query + '</span>' +
+                    '</button>' +
+                    '</div>';
+
+                queryDiv += '<div class="query-view"><code>' + query + '</code></div>';
+
+                queryDiv += '</div>';
+                list.push(queryDiv);
+            });
+
+            if (clipboard != null)
+                clipboard.destroy();
+
+            clipboard = new ClipboardJS('.js-copy-button', {
+                text: function(trigger) {
+                    return trigger.getElementsByClassName('info')[0].innerHTML;
+                }
+            });
+            clipboard.on('success', function (e)
+            {
+                $(e.trigger).find('> .tooltiptext')
+                    .show()
+                    .delay(2000)
+                    .fadeOut();
+            });
+
+            if (cluster == null)
+            {
+                cluster = new Clusterize({
+                    rows: list,
+                    scrollId: 'list',
+                    contentId: 'list-content'
+                });
+            }
+            else
+            {
+                cluster.append(list);
+                cluster.refresh();
+            }
+
+            if (list.length == 0)
+                $('#list-content').html('Empty result');
+
+            $('#searchButton').attr('disabled', false);
+
+        }).fail(function ()
+        {
+            alert("Gagal memuat log");
+        });
+    }
 
     function formatDate (date)
     {
