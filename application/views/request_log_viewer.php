@@ -3,227 +3,292 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Request Log Viewer</title>
+<head>
+    <title>Request Log Viewer</title>
 
-        <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-3.3.1.min.js"></script>
 
-        <!-- jquery-jsonview -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js"></script>
+    <!-- jquery-jsonview -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-jsonview/1.2.3/jquery.jsonview.min.js"></script>
 
-        <!-- moment -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+    <!-- moment -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
 
-        <!-- clipboard.js -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+    <!-- clipboard.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
 
-        <!-- List.js -->
-        <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+    <!-- Clusterize.js -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.min.css" rel="stylesheet">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/clusterize.js/0.18.0/clusterize.min.js"></script>
 
-        <style>
-            * {
-                color: #444;
-            }
-            .log-file {
-                height: 32px;
-                margin-bottom: 8px;
-                cursor: pointer;
-            }
-            .log-file-active {
-                background: #fff176;
-            }
-            .request:first-of-type {
-                border-top: 1px solid #aaa;
-            }
-            .request {
-                padding: 8px;
-                border-bottom: 1px solid #aaa;
-            }
-            .request:after {
-                content: "";
-                display: table;
-                clear: both;
-            }
-            .json-view {
-                display: none;
-            }
+    <style>
+        * {
+            color: #444;
+        }
+        .log-file {
+            height: 32px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .log-file-active {
+            background: #fff176;
+        }
+        .search {
+            display: none;
+            padding: 8px;
+            background-color: #fff176;
+        }
+        div.sticky {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            padding: 16px;
+            background-color: #ffffa8;
+        }
+        #list {
+            width: 100%;
+            max-height: 640px;
+        }
+        .request:first-of-type {
+            border-top: 1px solid #aaa;
+        }
+        .request {
+            padding: 8px;
+            border-bottom: 1px solid #aaa;
+        }
+        .request:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+        .json-view {
+            padding: 16px;
+            background: #eee;
+            display: none;
+        }
 
-            /* Tooltip - https://www.w3schools.com/css/css_tooltip.asp */
-            .tooltip {
-                position: relative;
-                display: inline-block;
-            }
-            .tooltip .tooltiptext {
-                width: 64px;
-                background-color: black;
-                color: #fff;
-                text-align: center;
-                border-radius: 6px;
-                padding: 5px 0;
+        /* Tooltip - https://www.w3schools.com/css/css_tooltip.asp */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            width: 64px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
 
-                /* Position the tooltip */
-                position: absolute;
-                z-index: 1;
-                top: -5px;
-                left: 105%;
+            /* Position the tooltip */
+            position: absolute;
+            z-index: 1;
+            top: -5px;
+            left: 105%;
+        }
+    </style>
+</head>
+<body style="padding: 16px">
+<div style="display: flex">
+    <div class="logs-panel" style="float: left; min-width: 256px; padding-right: 16px;">
+        <h1 style="padding: 0; margin: 0">Logs</h1>
+        <br />
+        <ul>
+            <?php
+            foreach ($logs as $log)
+            {
+                echo '<li class="log-file" data-id="'. $log->id .'">'. $log->name .'</li>';
             }
-        </style>
-    </head>
-    <body style="padding: 16px">
-        <div style="display: flex">
-            <div class="logs-panel" style="float: left; min-width: 256px; padding-right: 16px;">
-                <h1 style="padding: 0; margin: 0">Logs</h1>
+            ?>
+        </ul>
+    </div>
+    <div style="float: left; flex: 1">
+        <h1 style="padding: 0; margin: 0">Requests</h1>
+        <br />
+        <div id="requests-panel" class="sticky">
+            <div class="search">
+                <form id="searchForm">
+                    <input type="text" id="searchText" placeholder="Search" /> &nbsp; <input type="submit" value="Search">
+                </form>
                 <br />
-                <ul>
-                <?php
-                foreach ($logs as $log)
-                {
-                    echo '<li class="log-file" data-id="'. $log->id .'">'. $log->name .'</li>';
-                }
-                ?>
-                </ul>
+                <button id="collapseButton">Collapse All</button>
             </div>
-            <div style="float: left; flex: 1">
-                <h1 style="padding: 0; margin: 0">Requests</h1>
-                <br />
-                <div id="requests-panel">
-                    <input type="text" class="search" placeholder="Search" />
-                    &nbsp;&nbsp;
-                    <button class="sort" data-sort="date">Sort by date</button>
-                    <br />
-                    <br />
-                    <div class="list"></div>
+            <br />
+            <div id="list" class="clusterize-scroll">
+                <div id="list-content" class="clusterize-content">
                 </div>
             </div>
         </div>
-        <script type="text/javascript">
-            var clipboard = null;
-            var requestList = null;
+    </div>
+</div>
+<script type="text/javascript">
+    var cluster = null;
+    var clipboard = null;
 
-            $(document).ready(function ()
+    $(document).ready(function ()
+    {
+        $('.log-file').click(function (ev)
+        {
+            $('.log-file').removeClass('log-file-active');
+            $(this).addClass('log-file-active');
+
+            $('.search').show();
+            $('#list-content').html('<div class="clusterize-no-data"></div>');
+        });
+
+        $('#searchForm').submit(function (ev)
+        {
+            ev.preventDefault();
+
+            var id = $('.log-file-active:first').data('id');
+            var search = $('#searchText').val();
+            refreshLogs(id, search);
+        });
+
+        $('#collapseButton').click(function(ev)
+        {
+            $('.json-view').hide();
+        });
+    });
+
+    function refreshLogs (id, search)
+    {
+        if (cluster != null)
+            cluster.clear();
+
+        $('#searchButton').attr('disabled', true);
+        $('#list-content').html('<div class="clusterize-no-data">Loading data…</div>');
+
+        var url = '/api/request-logs/' + id + '/requests?search=' + encodeURIComponent(search);
+        $.get(url, function (response)
+        {
+            var list = [];
+
+            response.data.forEach(function (request, idx)
             {
-                requestList = new List('requests-panel', {
-                    valueNames: [ 'date', 'info' ]
-                });
+                var requestDiv = '<div class="request">';
 
-               $('.log-file').click(function (ev)
-               {
-                   $('.log-file').removeClass('log-file-active');
-                   $(this).addClass('log-file-active');
+                requestDiv +=
+                    '<div class="js-request" style="cursor: pointer" data-idx="' + idx + '">' +
+                    '<div style="float: left; width: 20%" class="date">' + formatDate(request.date) + '</div>' +
+                    '<div style="float: left; width: 80%" class="info">' +
+                    formatMethod(request.method) + ' ' + formatUri(request.uri) +
+                    '<br />' + formatErrorMessage(request.responseBody.message) + ' [' + formatStatusCode(request.statusCode) + ']' +
+                    '</div>' +
+                    '</div>';
 
-                   var id = $(this).data('id');
-                   var url = '/api/request-logs/' + id + '/requests';
-                   $.get(url, function (response)
-                   {
-                       var listPanel = $('#requests-panel > .list');
-                       listPanel.html('');
+                var requestBodyJson = JSON.stringify(request.requestBody);
+                requestDiv +=
+                    '<button class="tooltip js-copy-button">Copy Request Body' +
+                    '<span class="tooltiptext" style="display:none">Copied</span>' +
+                    '</button>';
+                requestDiv += '<span style="display:none">' + requestBodyJson + '</span>';
 
-                       response.data.forEach(function (request)
-                       {
-                           var requestDiv = '<div class="request">';
+                requestDiv += '<div class="json-view"></div>';
 
-                           requestDiv +=
-                               '<div class="js-request" style="cursor: pointer">' +
-                                   '<div style="float: left; width: 20%" class="date">' + formatDate(request.date) + '</div>' +
-                                   '<div style="float: left; width: 80%" class="info">' +
-                                        formatMethod(request.method) + ' ' + formatUri(request.uri) +
-                                        '<br />' + formatErrorMessage(request.responseBody.message) + ' [' + formatStatusCode(request.statusCode) + ']' +
-                                   '</div>' +
-                               '</div>';
-
-                           var requestBodyJson = JSON.stringify(request.requestBody);
-                           requestDiv +=
-                               '<button class="tooltip js-copy-button">Copy Request Body' +
-                                   '<span class="tooltiptext" style="display:none">Copied</span>' +
-                               '</button>';
-                           requestDiv += '<span style="display:none">' + requestBodyJson + '</span>';
-
-                           requestDiv += '<div class="json-view"></div>';
-
-                           requestDiv += '</div>';
-                           listPanel.append(requestDiv);
-
-                           // with options
-                           $(".json-view").last().JSONView(request, { collapsed: true });
-                       });
-
-                       $('.js-request').click(function (ev)
-                       {
-                            $(this).siblings('.json-view').fadeToggle();
-                       });
-
-                       if (clipboard != null)
-                           clipboard.destroy();
-
-                       clipboard = new ClipboardJS('.js-copy-button', {
-                           text: function(trigger) {
-                               return trigger.nextElementSibling.innerHTML;
-                           }
-                       });
-                       clipboard.on('success', function (e)
-                       {
-                            $(e.trigger).find('> .tooltiptext')
-                                .show()
-                                .delay(2000)
-                                .fadeOut();
-                       });
-
-                       requestList.reIndex();
-
-                   }).fail(function ()
-                   {
-                       alert("Failed to load requests");
-                   });
-               });
+                requestDiv += '</div>';
+                list.push(requestDiv);
             });
 
-            function formatMethod (method)
-            {
-                var color;
-                switch (method)
-                {
-                    case 'POST':
-                        color = '#ff6f00';
-                        break;
-                    case 'PUT':
-                        color = '#428bca';
-                        break;
-                    case 'DELETE':
-                        color = '#f50057';
-                        break;
-                    case 'GET':
-                        color = '#00b248';
-                        break;
-                    default:
-                        color = '#000';
-                        break;
+            if (clipboard != null)
+                clipboard.destroy();
+
+            clipboard = new ClipboardJS('.js-copy-button', {
+                text: function(trigger) {
+                    return trigger.nextElementSibling.innerHTML;
                 }
-                return '<span style="color: ' + color + '; font-weight: bold;">' + method + '</span>';
-            }
-
-            function formatDate (date)
+            });
+            clipboard.on('success', function (e)
             {
-                var formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
-                return '<span style="font-weight: bold;">' + formattedDate + '</span>';
-            }
+                $(e.trigger).find('> .tooltiptext')
+                    .show()
+                    .delay(2000)
+                    .fadeOut();
+            });
 
-            function formatUri (uri)
+            if (cluster == null)
             {
-                return '<span style="font-weight: bold;">' + uri + '</span>';
+                cluster = new Clusterize({
+                    rows: list,
+                    scrollId: 'list',
+                    contentId: 'list-content'
+                });
             }
-
-            function formatErrorMessage (errorMessage)
+            else
             {
-                return errorMessage;
+                cluster.append(list);
+                cluster.refresh();
             }
 
-            function formatStatusCode (statusCode)
-            {
-                return '<span style="color: red; font-weight: bold;">' + statusCode + '</span>';
-            }
+            if (list.length == 0)
+                $('#list-content').html('<div class="clusterize-no-data">Empty result</div>');
 
-        </script>
-    </body>
+            $('#searchButton').attr('disabled', false);
+
+            $('#list-content').on('click', 'div.js-request', function() {
+                var jsonView = $(this).siblings('div.json-view');
+                if (jsonView.html().trim() == '')
+                {
+                    var idx = $(this).data('idx');
+                    jsonView.JSONView(response.data[idx], { collapsed: true });
+                }
+
+                jsonView.fadeToggle();
+            });
+
+        }).fail(function ()
+        {
+            alert("Failed to load requests");
+        });
+    }
+
+    function formatMethod (method)
+    {
+        var color;
+        switch (method)
+        {
+            case 'POST':
+                color = '#ff6f00';
+                break;
+            case 'PUT':
+                color = '#428bca';
+                break;
+            case 'DELETE':
+                color = '#f50057';
+                break;
+            case 'GET':
+                color = '#00b248';
+                break;
+            default:
+                color = '#000';
+                break;
+        }
+        return '<span style="color: ' + color + '; font-weight: bold;">' + method + '</span>';
+    }
+
+    function formatDate (date)
+    {
+        var formattedDate = moment(date).format('YYYY-MM-DD HH:mm:ss');
+        return '<span style="font-weight: bold;">' + formattedDate + '</span>';
+    }
+
+    function formatUri (uri)
+    {
+        return '<span style="font-weight: bold;">' + uri + '</span>';
+    }
+
+    function formatErrorMessage (errorMessage)
+    {
+        return errorMessage;
+    }
+
+    function formatStatusCode (statusCode)
+    {
+        return '<span style="color: red; font-weight: bold;">' + statusCode + '</span>';
+    }
+
+</script>
+</body>
 </html>
 

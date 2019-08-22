@@ -42,6 +42,9 @@ class Request_log_viewer extends APP_REST_Controller
         $this->load->view('request_log_viewer', $data);
     }
 
+    /**
+     * @param $requestIdx
+     */
     public function requests_get ($requestIdx)
     {
         $requests = array();
@@ -50,21 +53,41 @@ class Request_log_viewer extends APP_REST_Controller
         if (isset($files[$requestIdx]))
         {
             $file = $files[$requestIdx];
-
             $filePath = $file->getPathname();
-            if ($file = fopen($filePath, 'r'))
+
+            $search = $this->get('search');
+            if (is_null($search ))
             {
-                while (($line = fgets($file)) !== false)
+                if ($file = fopen($filePath, 'r'))
                 {
-                    if (!empty($line))
+                    while (($line = fgets($file)) !== false)
                     {
-                        $request = json_decode($line);
+                        $request = $this->parseLog($line);
                         if (!is_null($request))
                             $requests[] = json_decode($line);
                     }
-                }
 
-                fclose($file);
+                    fclose($file);
+                }
+            }
+            else
+            {
+                $command = sprintf('cat "%s" | grep -i "%s" 2>&1',
+                    addcslashes($filePath, '"'),
+                    addcslashes($search, '"')
+                );
+                $output = shell_exec($command);
+
+                $separator = PHP_EOL;
+                $line = strtok($output, $separator);
+                while ($line !== false)
+                {
+                    $request = $this->parseLog($line);
+                    if (!is_null($request))
+                        $requests[] = $request;
+
+                    $line = strtok($separator);
+                }
             }
         }
         // display last row (latest log) first
@@ -72,6 +95,9 @@ class Request_log_viewer extends APP_REST_Controller
         $this->respondSuccess($requests);
     }
 
+    /**
+     * @return array
+     */
     private function getFiles ()
     {
         $files = array();
@@ -95,5 +121,14 @@ class Request_log_viewer extends APP_REST_Controller
         });
 
         return $files;
+    }
+
+    private function parseLog ($line)
+    {
+        if (!empty($line))
+        {
+            return json_decode($line);
+        }
+        return null;
     }
 }
