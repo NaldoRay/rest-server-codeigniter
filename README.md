@@ -1,5 +1,9 @@
 ## Changelog
 
+v5.42.0
++ Add search function, collapse all query view in request log viewer
++ Add search function, collapse all query view in query log viewer
+
 v5.41.0
 + Add `MY_Model` functions to count all entities
 + Don't read/write `null` value as boolean even though boolean fields, keep it as `null`
