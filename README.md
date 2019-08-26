@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.42.3
++ Remove unused config `crypto`
+
 v5.42.2
 + Fix query & request log viewer
   - fix json-view onclick listener in request log called multiple times
