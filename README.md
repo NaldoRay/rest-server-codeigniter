@@ -1,5 +1,11 @@
 ## Changelog
 
+v5.42.2
++ Fix query & request log viewer
+  - fix json-view onclick listener in request log called multiple times
+  - fix search button haven't been disabled on search
+  - fix list content is not emptied when clicking another log file after scrolling the list to the end
+
 v5.42.0
 + Add search function, collapse all query view in request log viewer
 + Add search function, collapse all query view in query log viewer
