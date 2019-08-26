@@ -109,7 +109,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <div id="queries-panel" class="sticky">
             <div class="search">
                 <form id="searchForm">
-                    <input type="text" id="searchText" placeholder="Search"/> &nbsp; <input type="submit" value="Search">
+                    <input type="text" id="searchText" placeholder="Search"/> &nbsp; <input type="submit" id="searchButton" value="Search">
                 </form>
                 <br />
                 <button id="collapseButton">Collapse All</button>
@@ -134,7 +134,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             $(this).addClass('log-file-active');
 
             $('.search').show();
-            $('#list-content').html('');
+
+            if (cluster != null)
+                cluster.clear();
+            $('#list-content').html('<div class="clusterize-no-data"></div>');
         });
 
         $('#searchForm').submit(function(ev)
@@ -233,11 +236,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             if (list.length == 0)
                 $('#list-content').html('Empty result');
 
-            $('#searchButton').attr('disabled', false);
-
         }).fail(function ()
         {
             alert("Gagal memuat log");
+        }).always(function ()
+        {
+            $('#searchButton').attr('disabled', false);
         });
     }
 

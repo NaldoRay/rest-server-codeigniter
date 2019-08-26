@@ -109,7 +109,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         <div id="requests-panel" class="sticky">
             <div class="search">
                 <form id="searchForm">
-                    <input type="text" id="searchText" placeholder="Search" /> &nbsp; <input type="submit" value="Search">
+                    <input type="text" id="searchText" placeholder="Search" /> &nbsp; <input type="submit" id="searchButton" value="Search">
                 </form>
                 <br />
                 <button id="collapseButton">Collapse All</button>
@@ -125,6 +125,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <script type="text/javascript">
     var cluster = null;
     var clipboard = null;
+    var requests;
 
     $(document).ready(function ()
     {
@@ -134,6 +135,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             $(this).addClass('log-file-active');
 
             $('.search').show();
+
+            if (cluster != null)
+                cluster.clear();
             $('#list-content').html('<div class="clusterize-no-data"></div>');
         });
 
@@ -150,6 +154,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         {
             $('.json-view').hide();
         });
+
+        $('#list-content').on('click', 'div.js-request', function ()
+        {
+            var jsonView = $(this).siblings('div.json-view');
+            if (jsonView.html().trim() == '')
+            {
+                var idx = $(this).data('idx');
+                jsonView.JSONView(requests[idx], { collapsed: true });
+            }
+            jsonView.fadeToggle();
+        });
     });
 
     function refreshLogs (id, search)
@@ -163,9 +178,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         var url = '/api/request-logs/' + id + '/requests?search=' + encodeURIComponent(search);
         $.get(url, function (response)
         {
-            var list = [];
+            requests = response.data;
 
-            response.data.forEach(function (request, idx)
+            var list = [];
+            requests.forEach(function (request, idx)
             {
                 var requestDiv = '<div class="request">';
 
@@ -224,22 +240,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             if (list.length == 0)
                 $('#list-content').html('<div class="clusterize-no-data">Empty result</div>');
 
-            $('#searchButton').attr('disabled', false);
-
-            $('#list-content').on('click', 'div.js-request', function() {
-                var jsonView = $(this).siblings('div.json-view');
-                if (jsonView.html().trim() == '')
-                {
-                    var idx = $(this).data('idx');
-                    jsonView.JSONView(response.data[idx], { collapsed: true });
-                }
-
-                jsonView.fadeToggle();
-            });
-
         }).fail(function ()
         {
             alert("Failed to load requests");
+        }).always(function ()
+        {
+            $('#searchButton').attr('disabled', false);
         });
     }
 
@@ -287,7 +293,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     {
         return '<span style="color: red; font-weight: bold;">' + statusCode + '</span>';
     }
-
 </script>
 </body>
 </html>
