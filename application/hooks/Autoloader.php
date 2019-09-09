@@ -24,6 +24,7 @@ class Autoloader
 
     public function init ()
     {
+        spl_autoload_register('self::autoloadLibraryClass');
         spl_autoload_register(function ($class) {
             self::autoloadClass($this->includeDirectories, $class);
         });
@@ -53,6 +54,24 @@ class Autoloader
                     $subDirectories = glob($directory . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
                     self::autoloadClass($subDirectories, $class);
                 }
+            }
+        }
+    }
+
+    /**
+     * Autoload namespaced library class.
+     * @param string $class
+     */
+    private function autoloadLibraryClass ($class)
+    {
+        $directory = APPPATH.'libraries';
+        if (!in_array($directory, $this->excludeDirectories))
+        {
+            $filePath = $directory . DIRECTORY_SEPARATOR . str_replace('\\', '/', $class) . '.php';
+            if (file_exists($filePath))
+            {
+                require_once ($filePath);
+                return;
             }
         }
     }
