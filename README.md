@@ -1,5 +1,8 @@
 ## Changelog
 
+v5.42.4
++ Fix MySql update on unchanged row throws resource not found exception
+
 v5.42.3
 + Remove unused config `crypto`
 
