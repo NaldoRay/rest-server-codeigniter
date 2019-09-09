@@ -347,7 +347,11 @@ class MY_Model extends CI_Model
         $success = $this->updateRow($table, $data, $filters);
         if ($success)
         {
-            if ($this->db->affected_rows() > 0)
+            /*
+             * In MySQL, affected rows will return 0 when update does not change anything.
+             * If affected rows = 0, then it's still a successful update if and only if the row exists.
+             */
+            if ($this->db->affected_rows() > 0 || $this->rowExists($table, $filters))
                 return $this->toEntity($data);
             else
                 throw new ResourceNotFoundException(sprintf('%s not found', $this->domain), $this->domain);
